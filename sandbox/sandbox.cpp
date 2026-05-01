@@ -12,6 +12,9 @@
 #include <iostream>
 #include <vector>
 
+#include <vulkan/vulkan.hpp>
+
+#include "vkContext.h"
 
 
 int main() {
@@ -47,6 +50,7 @@ int main() {
     layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
 
+    LT::vkContext::Init();
 
     // Poll for user input.
     bool stillRunning = true;
@@ -69,6 +73,10 @@ int main() {
 
         SDL_Delay(10);
     }
+
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    LT::vkContext::Release();
 
 	return 0;
 }

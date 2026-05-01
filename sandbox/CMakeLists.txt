@@ -16,4 +16,5 @@ target_include_directories(sandbox
     PRIVATE 
         "${CMAKE_SOURCE_DIR}/vkRenderer/include"
         "${SDL2_INSTALLED_DIR}/Include"
+		"${Vulkan_INCLUDE_DIRS}"
 )
