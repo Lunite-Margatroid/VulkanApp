@@ -1,0 +1,4 @@
+namespace LT {
+	class vkContext {};
+
+}
