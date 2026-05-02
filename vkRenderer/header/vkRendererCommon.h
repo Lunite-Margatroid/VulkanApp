@@ -4,6 +4,10 @@
 #include <vector>
 #include <chrono>
 #include <ctime>
+#include <optional>
+
+#define NOMINMAX
+#include <windows.h>
 
 #define LOG(strLog) do{ \
 		std::time_t curTime = std::time(nullptr);\

@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <vector>
+#include <optional>
 
 #include <vulkan/vulkan.hpp>
 
@@ -33,24 +34,20 @@ int main() {
         return 1;
     }
 
-    // Get WSI extensions from SDL (we can add more if we like - we just can't remove these)
-    unsigned extension_count;
-    if (!SDL_Vulkan_GetInstanceExtensions(window, &extension_count, NULL)) {
-        std::cout << "Could not get the number of required instance extensions from SDL." << std::endl;
-        return 1;
-    }
-    std::vector<const char*> extensions(extension_count);
-    if (!SDL_Vulkan_GetInstanceExtensions(window, &extension_count, extensions.data())) {
-        std::cout << "Could not get the names of required instance extensions from SDL." << std::endl;
-        return 1;
-    }
+    // Surface Win32Surface SwapChain
+    std::vector<const char*> extensions{vk::KHRWin32SurfaceExtensionName,vk::KHRSurfaceExtensionName };
+
+
     // Use validation layers if this is a debug build
     std::vector<const char*> layers;
 #if defined(_DEBUG)
     layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
 
-    LT::vkContext::Init();
+    SDL_SysWMinfo windowInfo;
+    SDL_VERSION(&windowInfo.version);
+    SDL_GetWindowWMInfo(window, &windowInfo);
+    LT::vkContext::Init(extensions, windowInfo.info.win.window);
 
     // Poll for user input.
     bool stillRunning = true;

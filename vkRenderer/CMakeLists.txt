@@ -3,6 +3,7 @@
 # 源文件
 file(GLOB SOURCES 
     "src/*.cpp"
+	"SwapChain/*.cpp"
 )
 
 set(HEADERS
@@ -15,6 +16,7 @@ file(GLOB PUBLIC_HEADERS
 
 file(GLOB PRIVATE_HEADERS
     "header/*.h"
+	"SwapChain/*.h"
 )
 
 # 创建静态库
@@ -27,6 +29,7 @@ target_include_directories(vkRenderer
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
     PRIVATE 
         "${CMAKE_CURRENT_SOURCE_DIR}/header"
+		"${CMAKE_CURRENT_SOURCE_DIR}/SwapChain"
         "${GLM_INSTALLED_DIR}/Include"
     
 )
