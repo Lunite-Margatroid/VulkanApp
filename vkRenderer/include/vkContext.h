@@ -18,6 +18,8 @@ namespace LT {
 		vk::Queue m_vkQueue;
 		vk::Queue m_vkQueueForSurface;
 
+		std::unique_ptr<SwapChain> m_pSwapChain;
+
 		// 获取的命令队列的索引 来自物理设备
 		std::optional<uint32_t> m_nQueueFamilyIndex;
 		std::optional<uint32_t> m_nQueueIndexForSurface;
@@ -28,11 +30,15 @@ namespace LT {
 		void PickPhyDevice();
 		void CreateVkDevice();
 		void CreateSurface(HWND hWnd = NULL);
-		// 找到了一个同时支持Surface和Graphics的Queue
-		inline bool IsGraphicsSurfaceSameQueue() const noexcept;
+
 	public:
+		// 找到了一个同时支持Surface和Graphics的Queue且只创建了一个Queue
+		inline bool IsGraphicsSurfaceSameQueue() const noexcept;
+
 		inline vk::Queue GetCmdQueue() noexcept;
 		inline vk::Queue GetCmdQueueForSurface()noexcept;
+
+
 
 		~vkContext();
 
@@ -43,6 +49,9 @@ namespace LT {
 		static void Init(const std::vector<const char* >& extensions, HWND hWnd = NULL);
 		static void Release();
 		static vkContext& GetInstance();
+
+		static void InitSwapChain();
+		static void ReleaseSwapChain();
 	};
 
 }

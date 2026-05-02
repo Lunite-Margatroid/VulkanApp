@@ -12,8 +12,10 @@
 #include <iostream>
 #include <vector>
 #include <optional>
+#include <memory>
 
 #include <vulkan/vulkan.hpp>
+
 
 #include "vkContext.h"
 
@@ -48,7 +50,7 @@ int main() {
     SDL_VERSION(&windowInfo.version);
     SDL_GetWindowWMInfo(window, &windowInfo);
     LT::vkContext::Init(extensions, windowInfo.info.win.window);
-
+    LT::vkContext::InitSwapChain();
     // Poll for user input.
     bool stillRunning = true;
     while (stillRunning) {
@@ -71,6 +73,7 @@ int main() {
         SDL_Delay(10);
     }
 
+    LT::vkContext::ReleaseSwapChain();
     SDL_DestroyWindow(window);
     SDL_Quit();
     LT::vkContext::Release();

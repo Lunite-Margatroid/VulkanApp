@@ -1,5 +1,6 @@
 #include "vkRendererCommon.h"
 #include "vkContext.h"
+#include "SwapChain.h"
 
 namespace LT {
 	vkContext* vkContext::s_pVkContext = nullptr;
@@ -10,9 +11,13 @@ namespace LT {
 
 		CreateSurface(hWnd);
 		CreateVkDevice();
+
+		
 	}
 
 	vkContext::~vkContext() {
+		m_pSwapChain.reset();
+
 		m_vkDevice.destroy();
 
 		m_vkInstance.destroySurfaceKHR(m_vkSurface);
@@ -22,6 +27,16 @@ namespace LT {
 	vkContext& vkContext::GetInstance() {
 		assert(s_pVkContext);
 		return *s_pVkContext;
+	}
+
+	void vkContext::InitSwapChain()
+	{
+		GetInstance().m_pSwapChain.reset(new SwapChain());
+	}
+
+	void vkContext::ReleaseSwapChain()
+	{
+		GetInstance().m_pSwapChain.reset();
 	}
 
 	void vkContext::Release() {

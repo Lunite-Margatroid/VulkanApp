@@ -5,6 +5,8 @@
 #include <chrono>
 #include <ctime>
 #include <optional>
+#include <memory>
+#include <algorithm>
 
 #define NOMINMAX
 #include <windows.h>
