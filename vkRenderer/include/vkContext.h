@@ -15,6 +15,7 @@ namespace LT {
 
 		vk::SurfaceKHR m_vkSurface;
 		// vk命令队列
+		// 使用GetCmdQueue和GetCmdQueueForSurface获取命令队列
 		vk::Queue m_vkQueue;
 		vk::Queue m_vkQueueForSurface;
 
@@ -48,7 +49,8 @@ namespace LT {
 	public:
 		static void Init(const std::vector<const char* >& extensions, HWND hWnd = NULL);
 		static void Release();
-		static vkContext& GetInstance();
+		inline static vkContext& GetInstance() noexcept;
+		inline static vk::Device& GetVkDevice() noexcept;
 
 		static void InitSwapChain();
 		static void ReleaseSwapChain();

@@ -24,7 +24,7 @@ namespace LT {
 		m_vkInstance.destroy();
 	}
 
-	vkContext& vkContext::GetInstance() {
+	vkContext& vkContext::GetInstance() noexcept{
 		assert(s_pVkContext);
 		return *s_pVkContext;
 	}
@@ -54,6 +54,9 @@ namespace LT {
 
 
 	void vkContext::CreateVkInstance(const std::vector<const char* >& extensions) {
+
+		LOG_INFO("Create Vk Instance.\n");
+
 		vk::ApplicationInfo appInfo;
 		appInfo.setPApplicationName("vkRenderer")
 			.setApplicationVersion(1)
@@ -85,18 +88,32 @@ namespace LT {
 			LOG_ERROR("vkInstance Create Failed.\n");
 		}
 
+		for (const char* layer : layers)
+		{
+			LOG_INFO("Enabled layers: %s\n", layer);
+		}
+
 		for (const char* extension : extensions)
 		{
-			LOG_INFO("set extension: %s\n", extension);
+			LOG_INFO("Enabled extensions: %s\n", extension);
 		}
+
+		LOG_INFO("Create Vk Instance End.\n");
 	}
 
 	void vkContext::PickPhyDevice() {
+		// 获取所有的图形设备
 		auto phyDevices = m_vkInstance.enumeratePhysicalDevices();
+		for (int i = 0; i < phyDevices.size(); i++)
+		{
+			LOG_INFO("PhysicalDevice[%d]:%s\n", i, static_cast<const char*>(phyDevices[i].getProperties().deviceName.data()));
+		}
+
+
 		m_phyDevice = phyDevices[0];
 		// 第一个图形设备
 		// m_phyDevice.getFeatures(); // 支持的特性
-		LOG_INFO("Physical Device: %s\n", static_cast<const char*>(m_phyDevice.getProperties().deviceName.data()));
+		LOG_INFO("Pick Physical Device: %s\n", static_cast<const char*>(m_phyDevice.getProperties().deviceName.data()));
 	}
 
 	void vkContext::CreateVkDevice() {
@@ -156,6 +173,8 @@ namespace LT {
 		}
 		else
 		{
+			// 如果支持Graphics和支持Surface的指令队列不是同一个命令队列
+			// 则创建两个命令队列
 			vk::DeviceQueueCreateInfo queueCreateInfoForSurface;
 			queueCreateInfoForSurface
 				.setPQueuePriorities(&priority)
@@ -170,7 +189,7 @@ namespace LT {
 		}
 
 		// 设备扩展
-		// 交换链扩展
+		// 支持交换链
 		std::vector<const char*> extensions{ vk::KHRSwapchainExtensionName };
 		deviceCreateInfo
 			.setEnabledExtensionCount(extensions.size())
@@ -220,5 +239,9 @@ namespace LT {
 		else {
 			return m_vkQueueForSurface;
 		}
+	}
+
+	vk::Device& vkContext::GetVkDevice() noexcept{
+		return GetInstance().m_vkDevice;
 	}
 }
