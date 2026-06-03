@@ -47,3 +47,5 @@ add_subdirectory(sandbox)
 
 # 拷贝dll
 include(cmake/cpydll.cmake)
+# 拷贝着色器文件
+include(cmake/cpyslang.cmake)

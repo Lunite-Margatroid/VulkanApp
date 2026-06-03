@@ -7,6 +7,9 @@
 #include <optional>
 #include <memory>
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <array>
 
 #define NOMINMAX
 #include <windows.h>
@@ -26,4 +29,18 @@
 #define LOG_DEBUG(...) do{ LOG("[debug]");  printf(__VA_ARGS__);}while(false)
 #define LOG_TRACING(...) do{ LOG("[trace]"); printf(__VA_ARGS__); }while(false)
 
-#define LOG_ERROR_WITH_FILE(...) do { LOG("[error]"); PRINT_FILE_LINE() printf(__VA_ARGS__);} while(false)
+#define LOG_ERROR_WITH_FILE(...) do { LOG("[error]"); PRINT_FILE_LINE(); printf(__VA_ARGS__);} while(false)
+
+
+inline std::string ReadText(const std::filesystem::path& filePath) {
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        LOG_ERROR("Can not open file %s.", filePath.generic_string().c_str());
+    }
+
+    std::string content;
+    content.reserve(std::filesystem::file_size(filePath)); // ‘§∑÷≈‰ø’º‰
+    content.assign(std::istreambuf_iterator<char>(file),
+        std::istreambuf_iterator<char>());
+    return content;
+}
