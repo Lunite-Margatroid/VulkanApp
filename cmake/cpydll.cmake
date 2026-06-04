@@ -21,7 +21,7 @@ endif()
 
 # øΩ±¥slang±‡“Îdll
 if(EXISTS "${ENV_VULKAN_PATH}/Bin/slang.dll")
-	message(STATUS "Copy dll: ${ENV_VULKAN_PATH}/Bin/slang.dll")
+	message(STATUS "Copy dll: ${ENV_VULKAN_PATH}/Bin/slang.dll  glslang.dll")
 	
 	add_custom_command(
 		TARGET CopyDLLs
@@ -31,6 +31,15 @@ if(EXISTS "${ENV_VULKAN_PATH}/Bin/slang.dll")
 			"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/slang.dll"
 		COMMENT "Coping slang.dll to output directory"
 	)
+
+		add_custom_command(
+		TARGET CopyDLLs
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			"${ENV_VULKAN_PATH}/Bin/glslang.dll"
+			"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/glslang.dll"
+		COMMENT "Coping glslang.dll to output directory"
+	)
 else()
-	message(FATAL_ERROR, "File does NOT exist: ${ENV_VULKAN_PATH}/Bin/slang.dll")
+	message(FATAL_ERROR, "File does NOT exist: ${ENV_VULKAN_PATH}/Bin/slang.dll  glslang.dll")
 endif()

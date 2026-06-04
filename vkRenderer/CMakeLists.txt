@@ -23,6 +23,8 @@ file(GLOB PRIVATE_HEADERS
 add_library(vkRenderer STATIC ${SOURCES} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
 # 链接vulkan
 target_link_libraries(vkRenderer PRIVATE Vulkan::Vulkan)
+# 链接slang
+target_link_libraries(vkRenderer PRIVATE "$ENV{VK_SDK_PATH}/Lib/slang.lib")
 
 # 设置包含目录
 target_include_directories(vkRenderer 
@@ -30,6 +32,5 @@ target_include_directories(vkRenderer
     PRIVATE 
         "${CMAKE_CURRENT_SOURCE_DIR}/header"
 		"${CMAKE_CURRENT_SOURCE_DIR}/SwapChain"
-        "${GLM_INSTALLED_DIR}/Include"
-    
+        "${GLM_INSTALLED_DIR}/Include"    
 )

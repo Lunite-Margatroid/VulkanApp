@@ -14,3 +14,9 @@ VertexOutput VertMain(uint vid : SV_VertexID){
 	output.sv_position = float4(position[vid], 0.0, 1.0);
 	return output;
 }
+
+[shader("fragment")]
+float4 FragMain():SV_Target
+{
+	return float4(1.0,0.0,0.0,1.0);
+}

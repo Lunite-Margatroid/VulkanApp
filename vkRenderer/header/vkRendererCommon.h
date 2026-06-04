@@ -23,17 +23,18 @@
 		}while(false)
 #define PRINT_FILE_LINE() printf("[file: %s, line: %d]", __FILE__, __LINE__)
 
-#define LOG_INFO(...) do{ LOG("[info]");  printf(__VA_ARGS__);}while(false)
-#define LOG_WARNING(...) do{ LOG("[warn]");  printf(__VA_ARGS__);}while(false)
-#define LOG_ERROR(...) do{ LOG("[error]");  printf(__VA_ARGS__);}while(false)
-#define LOG_DEBUG(...) do{ LOG("[debug]");  printf(__VA_ARGS__);}while(false)
-#define LOG_TRACING(...) do{ LOG("[trace]"); printf(__VA_ARGS__); }while(false)
+#define LOG_INFO(...) do{ LOG("[info]");  printf(__VA_ARGS__);printf("\n");}while(false)
+#define LOG_WARNING(...) do{ LOG("[warn]");  printf(__VA_ARGS__);printf("\n");}while(false)
+#define LOG_ERROR(...) do{ LOG("[error]");  printf(__VA_ARGS__);printf("\n");}while(false)
+#define LOG_DEBUG(...) do{ LOG("[debug]");  printf(__VA_ARGS__);printf("\n");}while(false)
+#define LOG_TRACING(...) do{ LOG("[trace]"); printf(__VA_ARGS__); printf("\n");}while(false)
 
-#define LOG_ERROR_WITH_FILE(...) do { LOG("[error]"); PRINT_FILE_LINE(); printf(__VA_ARGS__);} while(false)
+#define LOG_ERROR_WITH_FILE(...) do { LOG("[error]"); PRINT_FILE_LINE(); printf(__VA_ARGS__);printf("\n");} while(false)
 
 
 inline std::string ReadText(const std::filesystem::path& filePath) {
-    std::ifstream file(filePath);
+    std::string strFilePath = filePath.generic_string();
+    std::ifstream file(strFilePath);
     if (!file.is_open()) {
         LOG_ERROR("Can not open file %s.", filePath.generic_string().c_str());
     }

@@ -2,6 +2,8 @@
 #include "SlangComplier.h"
 
 namespace LT {
+	SlangComplier* SlangComplier::s_pInstance = nullptr;
+
 	SlangComplier::SlangComplier() {
 		slang::createGlobalSession(m_pGlobalSession.writeRef());
 
@@ -144,5 +146,18 @@ namespace LT {
 		vecOutCode.resize(pSprivCode->getBufferSize());
 		memcpy(vecOutCode.data(), pSprivCode->getBufferPointer(), pSprivCode->getBufferSize());
 		return vecOutCode;
+	}
+
+	SlangComplier& SlangComplier::GetInstance() {
+		if (s_pInstance)
+		{
+			return *s_pInstance;
+		}
+		else
+		{
+			LOG_WARNING("SlangComplier::GetInstance(). It does not init.");
+			Init();
+			return *s_pInstance;
+		}
 	}
 }

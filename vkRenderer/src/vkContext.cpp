@@ -2,6 +2,7 @@
 #include "vkContext.h"
 #include "SwapChain.h"
 
+#include "SlangComplier.h"
 namespace LT {
 	vkContext* vkContext::s_pVkContext = nullptr;
 
@@ -12,7 +13,10 @@ namespace LT {
 		CreateSurface(hWnd);
 		CreateVkDevice();
 
-		
+		SlangComplier::Init();
+		std::vector<std::string> vecEntryPoint = {"VertMain", "FragMain"};
+		std::filesystem::path shaderPath = "./slang/HelloTriangleShader.slang";
+		auto buffer = SlangComplier::GetInstance().CompileFromFile(shaderPath, vecEntryPoint);
 	}
 
 	vkContext::~vkContext() {
@@ -22,6 +26,8 @@ namespace LT {
 
 		m_vkInstance.destroySurfaceKHR(m_vkSurface);
 		m_vkInstance.destroy();
+
+		SlangComplier::Release();
 	}
 
 	vkContext& vkContext::GetInstance() noexcept{

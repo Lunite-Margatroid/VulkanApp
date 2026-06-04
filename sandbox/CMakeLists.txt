@@ -18,3 +18,9 @@ target_include_directories(sandbox
         "${SDL2_INSTALLED_DIR}/Include"
 		"${Vulkan_INCLUDE_DIRS}"
 )
+
+set_target_properties(
+    sandbox PROPERTIES
+    VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)"
+
+)

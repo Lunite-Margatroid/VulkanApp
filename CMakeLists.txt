@@ -37,7 +37,7 @@ set(GLM_INSTALLED_DIR "${ENV_VULKAN_PATH}" CACHE PATH "glm installed dir")
 message(STATUS "SDL2_INSTALLED_DIR = ${SDL2_INSTALLED_DIR}")
 message(STATUS "GLM_INSTALLED_DIR = ${GLM_INSTALLED_DIR}")
 
-# ¼ì²évulkan
+# ¼ì²évulkan Slang
 include(cmake/checkvulkan.cmake)
 
 
