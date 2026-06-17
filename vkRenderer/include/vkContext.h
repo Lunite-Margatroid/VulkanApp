@@ -8,11 +8,15 @@ namespace LT {
 	class SwapChain;
 
 	class vkContext final{
+
+		friend class SwapChain;
+
 	private:
 		vk::Instance m_vkInstance;
-	public:
+	private:
 		vk::PhysicalDevice m_phyDevice;
 		vk::Device m_vkDevice;
+
 
 		vk::SurfaceKHR m_vkSurface;
 		// vk命令队列
@@ -20,11 +24,30 @@ namespace LT {
 		vk::Queue m_vkQueue;
 		vk::Queue m_vkQueueForSurface;
 
+
+		// Command Pool
+		vk::CommandPool m_vkCommandPool;
+		std::vector<vk::CommandBuffer> m_vecCommandBuffers;
+
+
 		std::unique_ptr<SwapChain> m_pSwapChain;
 
 		// 获取的命令队列的索引 来自物理设备
-		std::optional<uint32_t> m_nQueueFamilyIndex;
-		std::optional<uint32_t> m_nQueueIndexForSurface;
+		std::optional<uint32_t> m_nQueueFamilyIndex; // 支持图形的命令队列
+		std::optional<uint32_t> m_nQueueIndexForSurface; // 支持sruface的命令队列
+
+
+		// debug shader
+		vk::ShaderModule m_vkDebugShaderMod;
+
+		vk::PipelineLayout m_vkDebugPipelineLayout;
+		vk::Pipeline m_vkDebugPipeline;
+
+		vk::Semaphore m_vkSemPresentComplete;
+		vk::Semaphore m_vkSemRenderFinish;
+		vk::Semaphore m_vkSemRenderFinish0;
+		vk::Semaphore m_vkSemRenderFinish1;
+		vk::Fence m_vkFenceDraw;
 	private:
 		vkContext(const std::vector<const char* >& extensions, HWND hWnd = NULL);
 		
@@ -33,14 +56,38 @@ namespace LT {
 		void CreateVkDevice();
 		void CreateSurface(HWND hWnd = NULL);
 
+		void CreateDebugShaderModule();
+
+		void CreateDebugPipeline();
+
+
+		void CreateCommandPool();
+		void CreateCommandBuffer();
+
+		void CreateDebugSyncObjects();
+
+
+
+		void RecordCommandBufferDebug(unsigned int imageIndex);
+
+		void TransitionImageLayout(
+			uint32_t nImageIndex,
+			vk::ImageLayout oldLayout,
+			vk::ImageLayout newLayout,
+			vk::AccessFlags2 srcAccessFlag,
+			vk::AccessFlags2 dstAccessFlag,
+			vk::PipelineStageFlags2 srcStageFlag,
+			vk::PipelineStageFlags2 dstStageFlag
+		);
+
 	public:
 		// 找到了一个同时支持Surface和Graphics的Queue且只创建了一个Queue
 		inline bool IsGraphicsSurfaceSameQueue() const noexcept;
 
-		inline vk::Queue GetCmdQueue() noexcept;
-		inline vk::Queue GetCmdQueueForSurface()noexcept;
+		inline vk::Queue& GetCmdQueue() noexcept;
+		inline vk::Queue& GetCmdQueueForSurface()noexcept;
 
-
+		void DrawFrameDebug();
 
 		~vkContext();
 
@@ -52,9 +99,13 @@ namespace LT {
 		static void Release();
 		inline static vkContext& GetInstance() noexcept;
 		inline static vk::Device& GetVkDevice() noexcept;
+		static vk::SwapchainKHR& GetSwapChain() noexcept;
+
 
 		static void InitSwapChain();
 		static void ReleaseSwapChain();
+
+		static void DebugFrame();
 	};
 
 }

@@ -13,13 +13,44 @@ namespace LT {
 		CreateSurface(hWnd);
 		CreateVkDevice();
 
+		// 着色器编译器初始化
 		SlangComplier::Init();
-		std::vector<std::string> vecEntryPoint = {"VertMain", "FragMain"};
-		std::filesystem::path shaderPath = "./slang/HelloTriangleShader.slang";
-		auto buffer = SlangComplier::GetInstance().CompileFromFile(shaderPath, vecEntryPoint);
+
+		CreateDebugShaderModule();
+
+		CreateDebugPipeline();
+
+		CreateCommandPool();
+		CreateCommandBuffer();
+
+		CreateDebugSyncObjects();
+
 	}
 
 	vkContext::~vkContext() {
+		// 销毁异步对象
+		m_vkDevice.destroySemaphore(m_vkSemPresentComplete);
+		m_vkDevice.destroySemaphore(m_vkSemRenderFinish);
+		m_vkDevice.destroySemaphore(m_vkSemRenderFinish0);
+		m_vkDevice.destroySemaphore(m_vkSemRenderFinish1);
+		m_vkDevice.destroyFence(m_vkFenceDraw);
+
+
+		// 销毁Command Pool
+		m_vkDevice.destroyCommandPool(m_vkCommandPool);
+		// command buffer会跟随command pool 自动释放
+		m_vecCommandBuffers.clear();
+
+
+		// 销毁debug pipeline
+		m_vkDevice.destroyPipeline(m_vkDebugPipeline);
+
+		// 销毁debug shader module
+		m_vkDevice.destroyShaderModule(m_vkDebugShaderMod);
+
+		m_vkDevice.destroyPipelineLayout(m_vkDebugPipelineLayout);
+
+
 		m_pSwapChain.reset();
 
 		m_vkDevice.destroy();
@@ -27,22 +58,39 @@ namespace LT {
 		m_vkInstance.destroySurfaceKHR(m_vkSurface);
 		m_vkInstance.destroy();
 
+
+
 		SlangComplier::Release();
 	}
 
-	vkContext& vkContext::GetInstance() noexcept{
-		assert(s_pVkContext);
+	vkContext& vkContext::GetInstance() noexcept {
+		RENDERER_ASSERT(s_pVkContext, "vkContext Did not init.");
 		return *s_pVkContext;
 	}
 
 	void vkContext::InitSwapChain()
 	{
-		GetInstance().m_pSwapChain.reset(new SwapChain());
+		if (!(GetInstance().m_pSwapChain))
+		{
+			GetInstance().m_pSwapChain.reset(new SwapChain());
+		}
+		else
+		{
+			LOG_WARNING("Repeating Init Swap Chain.");
+		}
 	}
 
 	void vkContext::ReleaseSwapChain()
 	{
-		GetInstance().m_pSwapChain.reset();
+		if (GetInstance().m_pSwapChain)
+		{
+			GetInstance().m_pSwapChain.reset();
+		}
+	}
+
+	void vkContext::DebugFrame()
+	{
+		GetInstance().DrawFrameDebug();
 	}
 
 	void vkContext::Release() {
@@ -187,7 +235,7 @@ namespace LT {
 				.setQueueCount(1)
 				.setQueueFamilyIndex(m_nQueueIndexForSurface.value());
 
-			std::array queueCreateInfos = {queueCreateInfo, queueCreateInfoForSurface};
+			std::array queueCreateInfos = { queueCreateInfo, queueCreateInfoForSurface };
 
 			deviceCreateInfo
 				.setQueueCreateInfos(queueCreateInfos)
@@ -197,13 +245,37 @@ namespace LT {
 		// 设备扩展
 		// 支持交换链
 		std::vector<const char*> extensions{ vk::KHRSwapchainExtensionName };
+		extensions.push_back(vk::KHRShaderDrawParametersExtensionName);
+		extensions.push_back(vk::KHRDynamicRenderingExtensionName);
 		deviceCreateInfo
 			.setEnabledExtensionCount(extensions.size())
 			.setPEnabledExtensionNames(extensions);
 		for (const char* extension : extensions)
 		{
-			LOG_INFO("Device extension: %s\n", extension);
+			LOG_INFO("Device extension: %s", extension);
 		}
+
+		// 设备特性
+		vk::PhysicalDeviceFeatures2 pdf2 = {};
+		vk::PhysicalDeviceVulkan11Features pdv11f;
+		pdv11f.setShaderDrawParameters(vk::True);
+		vk::PhysicalDeviceVulkan13Features pdv13f;
+		pdv13f.setDynamicRendering(vk::True);
+		pdv13f.setSynchronization2(vk::True);
+		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT pdedsfe;
+		pdedsfe.setExtendedDynamicState(vk::True);
+		vk::StructureChain<
+			vk::PhysicalDeviceFeatures2,
+			vk::PhysicalDeviceVulkan11Features,
+			vk::PhysicalDeviceVulkan13Features,
+			vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT> featureChain = {
+			pdf2,
+			pdv11f,
+			pdv13f,
+			pdedsfe
+		};
+
+		deviceCreateInfo.setPNext(&(featureChain.get<vk::PhysicalDeviceFeatures2>()));
 
 
 		m_vkDevice = m_phyDevice.createDevice(deviceCreateInfo);
@@ -218,7 +290,7 @@ namespace LT {
 	void vkContext::CreateSurface(HWND hWnd) {
 		if (!hWnd)
 			return;
-		
+
 		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
 		surfaceCreateInfo
 			.setHwnd(hWnd)
@@ -228,17 +300,176 @@ namespace LT {
 		m_vkSurface = m_vkInstance.createWin32SurfaceKHR(surfaceCreateInfo);
 	}
 
+	void vkContext::CreateCommandPool()
+	{
+		vk::CommandPoolCreateInfo cpci;
+		cpci.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
+			.setQueueFamilyIndex(m_nQueueFamilyIndex.value());
+
+		m_vkCommandPool = m_vkDevice.createCommandPool(cpci);
+	}
+
+	void vkContext::CreateCommandBuffer()
+	{
+		RENDERER_ASSERT(m_vkCommandPool, "Command Pool did not Init.");
+
+		vk::CommandBufferAllocateInfo cbai;
+		cbai.setCommandPool(m_vkCommandPool)
+			.setLevel(vk::CommandBufferLevel::ePrimary)
+			.setCommandBufferCount(1);
+
+		m_vecCommandBuffers = m_vkDevice.allocateCommandBuffers(cbai);
+
+	}
+
+	void vkContext::CreateDebugSyncObjects()
+	{
+		m_vkSemPresentComplete = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
+		m_vkSemRenderFinish = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
+		m_vkSemRenderFinish0 = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
+		m_vkSemRenderFinish1 = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
+		m_vkFenceDraw = m_vkDevice.createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
+	}
+
+	void vkContext::RecordCommandBufferDebug(unsigned int imageIndex)
+	{
+		auto debugCommandBuffer = m_vecCommandBuffers[0];
+
+		// 开始录入
+		vk::CommandBufferBeginInfo cbbi;
+		debugCommandBuffer.begin(cbbi);
+		// 录入图像转换
+		TransitionImageLayout(
+			imageIndex,
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eColorAttachmentOptimal,
+			{},
+			vk::AccessFlagBits2::eColorAttachmentWrite,
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput
+		);
+
+		vk::ClearValue clearValue = vk::ClearColorValue(0.f, 0.f, 0.f, 1.f);
+
+		// 录入读写渲染目标操作
+		vk::RenderingAttachmentInfo rai;
+		rai
+			.setImageView(m_pSwapChain->m_imageViews[imageIndex])
+			.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
+			.setLoadOp(vk::AttachmentLoadOp::eClear)
+			.setStoreOp(vk::AttachmentStoreOp::eStore)
+			.setClearValue(clearValue)
+			;
+
+		// 录入渲染操作
+		vk::RenderingInfo ri;
+		ri
+			.setRenderArea(
+				{
+					{ 0,0 },
+					{static_cast<unsigned int>(m_pSwapChain->m_sSwapChainInfo.width), static_cast<unsigned int>(m_pSwapChain->m_sSwapChainInfo.height)}
+				})
+			.setLayerCount(1)
+			.setColorAttachmentCount(1)
+			.setPColorAttachments(&rai)
+			;
+
+		debugCommandBuffer.beginRendering(ri);
+
+
+		// 绑定图形管线
+		debugCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkDebugPipeline);
+
+
+		// Viewport 和 Scissor 被指定为动态状态
+		// 创建并绑定
+
+		// Viewport
+		vk::Viewport viewport;
+		viewport
+			.setX(0)
+			.setY(0)
+			.setWidth(static_cast<float>(m_pSwapChain->m_sSwapChainInfo.width))
+			.setHeight(static_cast<float>(m_pSwapChain->m_sSwapChainInfo.height))
+			.setMinDepth(0.f)
+			.setMaxDepth(1.0f);
+
+		// scissor
+		vk::Rect2D scissor;
+		scissor.setOffset(vk::Offset2D(0, 0));
+		scissor.setExtent(vk::Extent2D(m_pSwapChain->m_sSwapChainInfo.width, m_pSwapChain->m_sSwapChainInfo.height));
+
+		debugCommandBuffer.setViewport(0, viewport);
+		debugCommandBuffer.setScissor(0, scissor);
+
+		debugCommandBuffer.draw(3, 1, 0, 0);
+
+		debugCommandBuffer.endRendering();
+
+		TransitionImageLayout(
+			imageIndex,
+			vk::ImageLayout::eColorAttachmentOptimal,
+			vk::ImageLayout::ePresentSrcKHR,
+			vk::AccessFlagBits2::eColorAttachmentWrite,
+			{},
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+			vk::PipelineStageFlagBits2::eBottomOfPipe
+		);
+
+		debugCommandBuffer.end();
+	}
+
+	void vkContext::TransitionImageLayout(
+		uint32_t nImageIndex,
+		vk::ImageLayout oldLayout,
+		vk::ImageLayout newLayout,
+		vk::AccessFlags2 srcAccessFlag,
+		vk::AccessFlags2 dstAccessFlag,
+		vk::PipelineStageFlags2 srcStageFlag,
+		vk::PipelineStageFlags2 dstStageFlag)
+	{
+		vk::ImageMemoryBarrier2 imageBarrier;
+		imageBarrier
+			.setSrcAccessMask(srcAccessFlag)
+			.setSrcStageMask(srcStageFlag)
+			.setDstAccessMask(dstAccessFlag)
+			.setDstStageMask(dstStageFlag)
+			.setOldLayout(oldLayout)
+			.setNewLayout(newLayout)
+			.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+			.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+			.setImage(m_pSwapChain->m_sSwapChainInfo.images[nImageIndex])
+			.setSubresourceRange(
+				vk::ImageSubresourceRange(
+					vk::ImageAspectFlagBits::eColor,
+					0,	// base mipmap level
+					1,	// level count
+					0,	// base array layer
+					1	// layer count
+				)
+			)
+			;
+
+		vk::DependencyInfo di;
+		di.setDependencyFlags({})
+			.setImageMemoryBarrierCount(1)
+			.setPImageMemoryBarriers(&imageBarrier)
+			;
+
+		m_vecCommandBuffers[0].pipelineBarrier2(di);
+	}
+
 	inline bool vkContext::IsGraphicsSurfaceSameQueue() const noexcept {
 		return m_nQueueFamilyIndex.has_value() && \
 			m_nQueueIndexForSurface.has_value() && \
 			m_nQueueFamilyIndex.value() == m_nQueueIndexForSurface.value();
 	}
 
-	inline vk::Queue vkContext::GetCmdQueue() noexcept {
+	inline vk::Queue& vkContext::GetCmdQueue() noexcept {
 		return m_vkQueue;
 	}
 
-	inline vk::Queue vkContext::GetCmdQueueForSurface() noexcept {
+	inline vk::Queue& vkContext::GetCmdQueueForSurface() noexcept {
 		if (IsGraphicsSurfaceSameQueue()) {
 			return GetCmdQueue();
 		}
@@ -247,7 +478,222 @@ namespace LT {
 		}
 	}
 
-	vk::Device& vkContext::GetVkDevice() noexcept{
+	void vkContext::DrawFrameDebug()
+	{
+		// 等待上一帧绘制完成
+		vk::Result result = m_vkDevice.waitForFences(m_vkFenceDraw, vk::True, UINT64_MAX);
+
+		RENDERER_ASSERT(result == vk::Result::eSuccess, "Failed to wait fence.");
+
+		m_vkDevice.resetFences(m_vkFenceDraw);
+
+		// 获取渲染缓冲
+		// 等待交换链交换缓冲完成
+		auto imageIndex = m_vkDevice.acquireNextImageKHR(
+			GetSwapChain(),
+			UINT64_MAX,
+			m_vkSemPresentComplete // 完成后发射信号
+		);
+
+		RENDERER_ASSERT(imageIndex.has_value(), "Acquire Image Failed.");
+
+		unsigned int nImgIndex = imageIndex.value;
+
+		// 录入渲染命令
+		RecordCommandBufferDebug(nImgIndex);
+
+		// 提交渲染命令
+		vk::PipelineStageFlags flagWaitDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+
+		vk::Semaphore* pSemRenderFinish = nullptr;
+		if (nImgIndex == 0)
+		{
+			pSemRenderFinish = &m_vkSemRenderFinish0;
+		}
+		else if (nImgIndex == 1)
+		{
+			pSemRenderFinish = &m_vkSemRenderFinish1;
+		}
+		else
+		{
+			pSemRenderFinish = &m_vkSemRenderFinish;
+		}
+
+
+		vk::SubmitInfo si;
+		si.setWaitSemaphoreCount(1)
+			.setPWaitSemaphores(&m_vkSemPresentComplete) // 等待交换链交换完成
+			.setPWaitDstStageMask(&flagWaitDstStageMask)
+			.setCommandBufferCount(1)
+			.setPCommandBuffers(&m_vecCommandBuffers[0])
+			.setSignalSemaphoreCount(1)
+			.setPSignalSemaphores(pSemRenderFinish)	// 完成后发出信号
+			;
+		GetCmdQueue().submit(
+			si,
+			m_vkFenceDraw // 渲染完成之前 禁止获取缓冲
+		);
+
+		// 交换链命令
+		vk::PresentInfoKHR pi;
+		pi.setWaitSemaphoreCount(1)
+			.setPWaitSemaphores(pSemRenderFinish)	// 等待渲染完成
+			.setSwapchainCount(1)
+			.setPSwapchains(&GetSwapChain())
+			.setPImageIndices(&nImgIndex)
+			;
+		// 提交交换链命令
+		vk::Result resultPresent = GetCmdQueueForSurface().presentKHR(pi);
+		RENDERER_ASSERT(resultPresent == vk::Result::eSuccess, "Present Failed.");
+
+
+
+	}
+
+	vk::Device& vkContext::GetVkDevice() noexcept {
 		return GetInstance().m_vkDevice;
 	}
-}
+
+	vk::SwapchainKHR& vkContext::GetSwapChain() noexcept
+	{
+		// TODO: 在此处插入 return 语句
+		return GetInstance().m_pSwapChain->NativeVKSwapChain();
+	}
+
+	void vkContext::CreateDebugShaderModule() {
+		std::vector<std::string> vecEntryPoint = { "VertMain", "FragMain" };
+		std::filesystem::path shaderPath = "./slang/HelloTriangleShader.slang";
+		auto buffer = SlangComplier::GetInstance().CompileFromFile(shaderPath, vecEntryPoint);
+
+		vk::ShaderModuleCreateInfo smci(
+			{},
+			static_cast<uint32_t>(buffer.size()),
+			reinterpret_cast<uint32_t*>(buffer.data()),
+			nullptr
+		);
+
+		m_vkDebugShaderMod = m_vkDevice.createShaderModule(smci);
+
+
+	}
+
+	void vkContext::CreateDebugPipeline()
+	{
+		// 顶点着色器 输入状态
+		vk::PipelineVertexInputStateCreateInfo pvisci;
+
+
+		// 顶点装配状态
+		vk::PipelineInputAssemblyStateCreateInfo piasci;
+		// 图元类型
+		// vk::PrimitiveTopology
+		piasci.setTopology(vk::PrimitiveTopology::eTriangleList); // 三角形列表
+
+		// 指定动态状态
+		std::array<vk::DynamicState, 2> dss = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+		vk::PipelineDynamicStateCreateInfo pdsci;
+		pdsci.setPDynamicStates(dss.data());
+		pdsci.setDynamicStateCount(dss.size());
+		// Viewport 创建信息
+		vk::PipelineViewportStateCreateInfo pvsci;
+		pvsci.setViewportCount(1);
+		pvsci.setScissorCount(1);
+		// 由于动态状态Viewport Scissor
+		// Viewport 和 Scissor在Pipeline运行中可以动态改变
+		// 不需要指定 Viewport 和 Scissor
+		//pvsci.setPViewports(&viewport);
+		//pvsci.setPScissors(&scissor);
+
+		// 光栅化状态
+		vk::PipelineRasterizationStateCreateInfo prsci;
+		prsci
+			.setDepthClampEnable(vk::False)
+			.setRasterizerDiscardEnable(vk::False)
+			.setPolygonMode(vk::PolygonMode::eFill)
+			.setCullMode(vk::CullModeFlagBits::eBack)
+			.setFrontFace(vk::FrontFace::eCounterClockwise)
+			.setDepthBiasEnable(vk::False)
+			.setLineWidth(1.f)
+			;
+
+		// 超采样
+		vk::PipelineMultisampleStateCreateInfo pmsci;
+		pmsci
+			.setRasterizationSamples(vk::SampleCountFlagBits::e1)
+			.setSampleShadingEnable(vk::False)
+			;
+
+		// 混合状态
+		vk::PipelineColorBlendAttachmentState pcbas;
+		pcbas
+			.setBlendEnable(vk::True)
+			.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+			.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+			.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
+			.setColorBlendOp(vk::BlendOp::eAdd)
+			.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+			.setDstAlphaBlendFactor(vk::BlendFactor::eZero)
+			.setAlphaBlendOp(vk::BlendOp::eAdd)
+			;
+
+		vk::PipelineColorBlendStateCreateInfo pcbsci;
+		pcbsci
+			.setLogicOpEnable(vk::False)
+			.setAttachmentCount(1)
+			.setPAttachments(&pcbas)
+			;
+
+		// Pipeline Layout
+		vk::PipelineLayoutCreateInfo plci;
+		plci
+			.setSetLayoutCount(0)
+			.setPushConstantRangeCount(0)
+			;
+		m_vkDebugPipelineLayout = m_vkDevice.createPipelineLayout(plci);
+
+
+		vk::PipelineShaderStageCreateInfo pssciVert;
+		pssciVert.setModule(m_vkDebugShaderMod);
+		pssciVert.setStage(vk::ShaderStageFlagBits::eVertex);
+		pssciVert.setPName("VertMain");
+
+		vk::PipelineShaderStageCreateInfo pssciFrag;
+		pssciFrag.setModule(m_vkDebugShaderMod);
+		pssciFrag.setStage(vk::ShaderStageFlagBits::eFragment);
+		pssciFrag.setPName("FragMain");
+
+		std::array<vk::PipelineShaderStageCreateInfo, 2> stages = { pssciVert, pssciFrag };
+
+		vk::GraphicsPipelineCreateInfo gpci;
+		gpci.setStageCount(stages.size());
+		gpci.setPStages(stages.data());
+		gpci.setPVertexInputState(&pvisci);
+		gpci.setPInputAssemblyState(&piasci);
+		gpci.setPViewportState(&pvsci);
+		gpci.setPRasterizationState(&prsci);
+		gpci.setPMultisampleState(&pmsci);
+		gpci.setPColorBlendState(&pcbsci);
+		gpci.setPDynamicState(&pdsci);
+		gpci.setLayout(m_vkDebugPipelineLayout);
+		gpci.setRenderPass(VK_NULL_HANDLE);
+
+
+		vk::PipelineRenderingCreateInfo prci;
+		prci
+			.setColorAttachmentCount(1)
+			.setPColorAttachmentFormats(&SWAPCHAIN_DEFAULT_PIXEL_FORMAT)
+			;
+
+		vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfo> pcic = {
+			gpci, prci
+		};
+
+		auto result = m_vkDevice.createGraphicsPipeline(nullptr, pcic.get<vk::GraphicsPipelineCreateInfo>());
+
+		RENDERER_ASSERT(result.has_value(), "Pipeline Create Failed.");
+
+		m_vkDebugPipeline = result.value;
+
+	}
+
+} // namespace LT

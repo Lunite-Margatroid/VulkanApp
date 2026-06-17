@@ -3,6 +3,11 @@
 #include "SwapChain.h"
 
 namespace LT {
+	vk::SwapchainKHR& SwapChain::NativeVKSwapChain() noexcept
+	{
+		// TODO: 在此处插入 return 语句
+		return m_vkSwapChain;
+	}
 	SwapChain::SwapChain()
 	{
 		InitSwapChain();
@@ -33,7 +38,7 @@ namespace LT {
 		m_sSwapChainInfo.surfaceFormat = formats[0];
 		for (const auto& surfaceFormat : formats) {
 			// 查询SRGB8位格式
-			if (surfaceFormat.format == vk::Format::eR8G8B8A8Srgb && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear) {
+			if (surfaceFormat.format == SWAPCHAIN_DEFAULT_PIXEL_FORMAT && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear) {
 				m_sSwapChainInfo.surfaceFormat = surfaceFormat;
 				break;
 			}

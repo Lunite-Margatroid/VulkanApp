@@ -49,7 +49,9 @@ int main() {
     SDL_SysWMinfo windowInfo;
     SDL_VERSION(&windowInfo.version);
     SDL_GetWindowWMInfo(window, &windowInfo);
+    // 初始化上下文
     LT::vkContext::Init(extensions, windowInfo.info.win.window);
+    // 初始化交换链
     LT::vkContext::InitSwapChain();
     // Poll for user input.
     bool stillRunning = true;
@@ -69,13 +71,14 @@ int main() {
                     break;
             }
         }
-
+        LT::vkContext::DebugFrame();
         SDL_Delay(10);
     }
-
+    // 释放交换链
     LT::vkContext::ReleaseSwapChain();
     SDL_DestroyWindow(window);
     SDL_Quit();
+    // 释放上下问
     LT::vkContext::Release();
 
 	return 0;
