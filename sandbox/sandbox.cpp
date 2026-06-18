@@ -74,6 +74,8 @@ int main() {
         LT::vkContext::DebugFrame();
         SDL_Delay(10);
     }
+    // µÈ´ý¿ÕÏÐ
+    LT::vkContext::WaitIdel();
     // ÊÍ·Å½»»»Á´
     LT::vkContext::ReleaseSwapChain();
     SDL_DestroyWindow(window);

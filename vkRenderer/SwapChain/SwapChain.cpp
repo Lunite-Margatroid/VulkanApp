@@ -72,7 +72,7 @@ namespace LT {
 		vk::Extent2D swapChainExtent{ static_cast<uint32_t>(m_sSwapChainInfo.width), static_cast<uint32_t>(m_sSwapChainInfo.height) };
 
 		// 缓冲数量
-		m_sSwapChainInfo.nImageCount = std::clamp<uint32_t>(2u, surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
+		m_sSwapChainInfo.nImageCount = std::clamp<uint32_t>(SWAPCHAIN_DEFAULT_IMAGE_NUM, surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
 
 		// 创建SwapChain
 		vk::SwapchainCreateInfoKHR swapCreateInfo;

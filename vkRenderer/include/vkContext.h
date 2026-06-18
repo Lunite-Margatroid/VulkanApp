@@ -5,6 +5,8 @@
 
 namespace LT {
 
+	constexpr unsigned int RENDERER_DEFAULT_FLIGHT_FRAME_NUM = 2u;
+
 	class SwapChain;
 
 	class vkContext final{
@@ -43,11 +45,13 @@ namespace LT {
 		vk::PipelineLayout m_vkDebugPipelineLayout;
 		vk::Pipeline m_vkDebugPipeline;
 
-		vk::Semaphore m_vkSemPresentComplete;
-		vk::Semaphore m_vkSemRenderFinish;
-		vk::Semaphore m_vkSemRenderFinish0;
-		vk::Semaphore m_vkSemRenderFinish1;
-		vk::Fence m_vkFenceDraw;
+		std::vector<vk::Semaphore> m_vkSemRenderFinish;	// 数量与swapchain的image一致
+		std::vector<vk::Semaphore> m_vkSemPresentComplete;	// 数量与flight frame一致
+
+		std::vector<vk::Fence> m_vkFenceDraw;	// 数量与flight frame一致
+
+		uint64_t m_nFrameCount;
+
 	private:
 		vkContext(const std::vector<const char* >& extensions, HWND hWnd = NULL);
 		
@@ -68,10 +72,11 @@ namespace LT {
 
 
 
-		void RecordCommandBufferDebug(unsigned int imageIndex);
+		void RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex);
 
 		void TransitionImageLayout(
 			uint32_t nImageIndex,
+			uint32_t nFrameIndex,
 			vk::ImageLayout oldLayout,
 			vk::ImageLayout newLayout,
 			vk::AccessFlags2 srcAccessFlag,
@@ -79,6 +84,7 @@ namespace LT {
 			vk::PipelineStageFlags2 srcStageFlag,
 			vk::PipelineStageFlags2 dstStageFlag
 		);
+
 
 	public:
 		// 找到了一个同时支持Surface和Graphics的Queue且只创建了一个Queue
@@ -106,6 +112,8 @@ namespace LT {
 		static void ReleaseSwapChain();
 
 		static void DebugFrame();
+
+		static void WaitIdel();
 	};
 
 }

@@ -6,7 +6,9 @@
 namespace LT {
 	vkContext* vkContext::s_pVkContext = nullptr;
 
-	vkContext::vkContext(const std::vector<const char* >& extensions, HWND hWnd) {
+	vkContext::vkContext(const std::vector<const char* >& extensions, HWND hWnd)
+		:m_nFrameCount(0)
+	{
 		CreateVkInstance(extensions);
 		PickPhyDevice();
 
@@ -29,11 +31,20 @@ namespace LT {
 
 	vkContext::~vkContext() {
 		// 销毁异步对象
-		m_vkDevice.destroySemaphore(m_vkSemPresentComplete);
-		m_vkDevice.destroySemaphore(m_vkSemRenderFinish);
-		m_vkDevice.destroySemaphore(m_vkSemRenderFinish0);
-		m_vkDevice.destroySemaphore(m_vkSemRenderFinish1);
-		m_vkDevice.destroyFence(m_vkFenceDraw);
+		for (int i = 0; i < m_vkSemRenderFinish.size(); i++)
+		{
+			m_vkDevice.destroySemaphore(m_vkSemRenderFinish[i]);
+		}
+
+		for (int i = 0; i < m_vkSemPresentComplete.size(); i++)
+		{
+			m_vkDevice.destroySemaphore(m_vkSemPresentComplete[i]);
+		}
+
+		for (int i = 0; i < m_vkFenceDraw.size(); i++)
+		{
+			m_vkDevice.destroyFence(m_vkFenceDraw[i]);
+		}
 
 
 		// 销毁Command Pool
@@ -316,7 +327,7 @@ namespace LT {
 		vk::CommandBufferAllocateInfo cbai;
 		cbai.setCommandPool(m_vkCommandPool)
 			.setLevel(vk::CommandBufferLevel::ePrimary)
-			.setCommandBufferCount(1);
+			.setCommandBufferCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM);	// 数量跟flight frame一致
 
 		m_vecCommandBuffers = m_vkDevice.allocateCommandBuffers(cbai);
 
@@ -324,16 +335,29 @@ namespace LT {
 
 	void vkContext::CreateDebugSyncObjects()
 	{
-		m_vkSemPresentComplete = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
-		m_vkSemRenderFinish = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
-		m_vkSemRenderFinish0 = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
-		m_vkSemRenderFinish1 = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
-		m_vkFenceDraw = m_vkDevice.createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
+		m_vkSemRenderFinish.resize(SWAPCHAIN_DEFAULT_IMAGE_NUM);
+		m_vkSemPresentComplete.resize(RENDERER_DEFAULT_FLIGHT_FRAME_NUM);
+		m_vkFenceDraw.resize(RENDERER_DEFAULT_FLIGHT_FRAME_NUM);
+
+		for (int i = 0; i < m_vkSemRenderFinish.size(); i++)
+		{
+			m_vkSemRenderFinish[i] = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
+		}
+
+		for (int i = 0; i < m_vkSemPresentComplete.size(); i++)
+		{
+			m_vkSemPresentComplete[i] = m_vkDevice.createSemaphore(vk::SemaphoreCreateInfo());
+		}
+
+		for (int i = 0; i < m_vkFenceDraw.size(); i++)
+		{
+			m_vkFenceDraw[i] = m_vkDevice.createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
+		}
 	}
 
-	void vkContext::RecordCommandBufferDebug(unsigned int imageIndex)
+	void vkContext::RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex)
 	{
-		auto debugCommandBuffer = m_vecCommandBuffers[0];
+		auto debugCommandBuffer = m_vecCommandBuffers[nFrameIndex];
 
 		// 开始录入
 		vk::CommandBufferBeginInfo cbbi;
@@ -341,6 +365,7 @@ namespace LT {
 		// 录入图像转换
 		TransitionImageLayout(
 			imageIndex,
+			nFrameIndex,
 			vk::ImageLayout::eUndefined,
 			vk::ImageLayout::eColorAttachmentOptimal,
 			{},
@@ -408,6 +433,7 @@ namespace LT {
 
 		TransitionImageLayout(
 			imageIndex,
+			nFrameIndex,
 			vk::ImageLayout::eColorAttachmentOptimal,
 			vk::ImageLayout::ePresentSrcKHR,
 			vk::AccessFlagBits2::eColorAttachmentWrite,
@@ -421,6 +447,7 @@ namespace LT {
 
 	void vkContext::TransitionImageLayout(
 		uint32_t nImageIndex,
+		uint32_t nFrameIndex,
 		vk::ImageLayout oldLayout,
 		vk::ImageLayout newLayout,
 		vk::AccessFlags2 srcAccessFlag,
@@ -456,7 +483,22 @@ namespace LT {
 			.setPImageMemoryBarriers(&imageBarrier)
 			;
 
-		m_vecCommandBuffers[0].pipelineBarrier2(di);
+		m_vecCommandBuffers[nFrameIndex].pipelineBarrier2(di);
+	}
+
+	void vkContext::WaitIdel()
+	{
+		vk::Queue& queueGraphics = GetInstance().GetCmdQueue();
+		vk::Queue& queueSurface = GetInstance().GetCmdQueueForSurface();
+
+		if (queueGraphics)
+		{
+			queueGraphics.waitIdle();
+		}
+		if (queueSurface) 
+		{
+			queueSurface.waitIdle();
+		}
 	}
 
 	inline bool vkContext::IsGraphicsSurfaceSameQueue() const noexcept {
@@ -480,19 +522,23 @@ namespace LT {
 
 	void vkContext::DrawFrameDebug()
 	{
+		m_nFrameCount++;
+
+		uint64_t nFrameIndex = m_nFrameCount % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
+		uint64_t nLastFrameIndex = (m_nFrameCount - 1) % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
 		// 等待上一帧绘制完成
-		vk::Result result = m_vkDevice.waitForFences(m_vkFenceDraw, vk::True, UINT64_MAX);
+		vk::Result result = m_vkDevice.waitForFences(m_vkFenceDraw[nFrameIndex], vk::True, UINT64_MAX);
 
 		RENDERER_ASSERT(result == vk::Result::eSuccess, "Failed to wait fence.");
 
-		m_vkDevice.resetFences(m_vkFenceDraw);
+		m_vkDevice.resetFences(m_vkFenceDraw[nFrameIndex]);
 
 		// 获取渲染缓冲
 		// 等待交换链交换缓冲完成
 		auto imageIndex = m_vkDevice.acquireNextImageKHR(
 			GetSwapChain(),
 			UINT64_MAX,
-			m_vkSemPresentComplete // 完成后发射信号
+			m_vkSemPresentComplete[nFrameIndex] // 完成后发射信号
 		);
 
 		RENDERER_ASSERT(imageIndex.has_value(), "Acquire Image Failed.");
@@ -500,7 +546,7 @@ namespace LT {
 		unsigned int nImgIndex = imageIndex.value;
 
 		// 录入渲染命令
-		RecordCommandBufferDebug(nImgIndex);
+		RecordCommandBufferDebug(nImgIndex, nFrameIndex);
 
 		// 提交渲染命令
 		vk::PipelineStageFlags flagWaitDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
@@ -508,30 +554,30 @@ namespace LT {
 		vk::Semaphore* pSemRenderFinish = nullptr;
 		if (nImgIndex == 0)
 		{
-			pSemRenderFinish = &m_vkSemRenderFinish0;
+			pSemRenderFinish = &m_vkSemRenderFinish[nImgIndex];
 		}
 		else if (nImgIndex == 1)
 		{
-			pSemRenderFinish = &m_vkSemRenderFinish1;
+			pSemRenderFinish = &m_vkSemRenderFinish[nImgIndex];
 		}
 		else
 		{
-			pSemRenderFinish = &m_vkSemRenderFinish;
+			pSemRenderFinish = &m_vkSemRenderFinish[0];
 		}
 
 
 		vk::SubmitInfo si;
 		si.setWaitSemaphoreCount(1)
-			.setPWaitSemaphores(&m_vkSemPresentComplete) // 等待交换链交换完成
+			.setPWaitSemaphores(&m_vkSemPresentComplete[nFrameIndex]) // 等待交换链交换完成
 			.setPWaitDstStageMask(&flagWaitDstStageMask)
 			.setCommandBufferCount(1)
-			.setPCommandBuffers(&m_vecCommandBuffers[0])
+			.setPCommandBuffers(&m_vecCommandBuffers[nFrameIndex])
 			.setSignalSemaphoreCount(1)
 			.setPSignalSemaphores(pSemRenderFinish)	// 完成后发出信号
 			;
 		GetCmdQueue().submit(
 			si,
-			m_vkFenceDraw // 渲染完成之前 禁止获取缓冲
+			m_vkFenceDraw[nFrameIndex] // 渲染完成之前 禁止获取缓冲
 		);
 
 		// 交换链命令

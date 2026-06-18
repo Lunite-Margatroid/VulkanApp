@@ -2,7 +2,7 @@
 namespace LT {
 
 	constexpr vk::Format SWAPCHAIN_DEFAULT_PIXEL_FORMAT = vk::Format::eR8G8B8A8Srgb;
-
+	constexpr unsigned int SWAPCHAIN_DEFAULT_IMAGE_NUM = 2u;
 
 	class SwapChain {
 	private:
