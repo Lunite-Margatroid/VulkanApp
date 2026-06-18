@@ -20,17 +20,19 @@
 #include "vkContext.h"
 
 
+void OnWindowEvent(const SDL_Event& event, SDL_Window* window);
+
 int main() {
 
     // Create an SDL window that supports Vulkan rendering.
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         std::cout << "Could not initialize SDL." << std::endl;
         return 1;
     }
 
 
     SDL_Window* window = SDL_CreateWindow("Vulkan Window", SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_VULKAN);
+        SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     if (window == NULL) {
         std::cout << "Could not create SDL window." << std::endl;
         return 1;
@@ -65,6 +67,9 @@ int main() {
                 case SDL_QUIT:
                     stillRunning = false;
                     break;
+                case SDL_WINDOWEVENT:
+                    OnWindowEvent(event, window);
+                    break;
 
                 default:
                     // Do nothing.
@@ -84,4 +89,22 @@ int main() {
     LT::vkContext::Release();
 
 	return 0;
+}
+
+void OnWindowEvent(const SDL_Event& event, SDL_Window* window) {
+    static int nLastWidth, nLastHeight;
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+
+
+    if (width != nLastWidth || height != nLastHeight) {
+        nLastWidth = width;
+        nLastHeight = height;
+        LT::vkContext::WaitIdel();
+        LT::vkContext::ResizeSwapChain(event.window.data1, event.window.data2);
+    }
+
+
+    //std::cout << event.window.windowID << std::endl;
+    //std::cout << width << "   " << height << std::endl;
 }

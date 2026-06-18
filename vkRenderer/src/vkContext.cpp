@@ -501,6 +501,20 @@ namespace LT {
 		}
 	}
 
+	void vkContext::ResizeSwapChain(unsigned int width, unsigned int height)
+	{
+		vkContext & context = GetInstance();
+
+		if (context.m_pSwapChain->m_sSwapChainInfo.height == height && context.m_pSwapChain->m_sSwapChainInfo.width)
+		{
+			return;
+		}
+
+		vkContext::WaitIdel();
+		vkContext::ReleaseSwapChain();
+		vkContext::InitSwapChain();
+	}
+
 	inline bool vkContext::IsGraphicsSurfaceSameQueue() const noexcept {
 		return m_nQueueFamilyIndex.has_value() && \
 			m_nQueueIndexForSurface.has_value() && \
@@ -522,6 +536,10 @@ namespace LT {
 
 	void vkContext::DrawFrameDebug()
 	{
+		if (m_pSwapChain->m_sSwapChainInfo.width <= 0 || m_pSwapChain->m_sSwapChainInfo.height <= 0)
+			return;
+
+
 		m_nFrameCount++;
 
 		uint64_t nFrameIndex = m_nFrameCount % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
@@ -590,7 +608,17 @@ namespace LT {
 			;
 		// Ìá½»½»»»Á´ÃüÁî
 		vk::Result resultPresent = GetCmdQueueForSurface().presentKHR(pi);
-		RENDERER_ASSERT(resultPresent == vk::Result::eSuccess, "Present Failed.");
+
+		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)
+		{
+			WaitIdel();
+			ReleaseSwapChain();
+			InitSwapChain();
+		}
+		else
+		{
+			RENDERER_ASSERT(resultPresent == vk::Result::eSuccess, "Present Failed.");
+		}
 
 
 

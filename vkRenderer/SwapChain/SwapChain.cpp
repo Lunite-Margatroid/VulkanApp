@@ -31,6 +31,20 @@ namespace LT {
 		assert(surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max());
 		LOG_INFO("Width: %d  Hight: %d\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
 
+		// »º³å³ß´ç
+		m_sSwapChainInfo.width = std::clamp<uint32_t>(
+			surfaceCapabilities.currentExtent.width,
+			surfaceCapabilities.minImageExtent.width,
+			surfaceCapabilities.maxImageExtent.width);
+
+		m_sSwapChainInfo.height = std::clamp<uint32_t>(
+			surfaceCapabilities.currentExtent.height,
+			surfaceCapabilities.minImageExtent.height,
+			surfaceCapabilities.maxImageExtent.height
+		);
+
+		if (surfaceCapabilities.currentExtent.width == 0 || surfaceCapabilities.currentExtent.height == 0)
+			return;
 
 		// ²éÑ¯Ö§³ÖµÄÏñËØ¸ñÊ½
 		std::vector<vk::SurfaceFormatKHR> formats = vkContext::GetInstance().m_phyDevice.getSurfaceFormatsKHR(surface);
@@ -56,18 +70,6 @@ namespace LT {
 				break;
 			}
 		}
-
-		// »º³å³ß´ç
-		m_sSwapChainInfo.width = std::clamp<uint32_t>(
-			surfaceCapabilities.currentExtent.width,
-			surfaceCapabilities.minImageExtent.width,
-			surfaceCapabilities.maxImageExtent.width);
-
-		m_sSwapChainInfo.height = std::clamp<uint32_t>(
-			surfaceCapabilities.currentExtent.height,
-			surfaceCapabilities.minImageExtent.height,
-			surfaceCapabilities.maxImageExtent.height
-		);
 
 		vk::Extent2D swapChainExtent{ static_cast<uint32_t>(m_sSwapChainInfo.width), static_cast<uint32_t>(m_sSwapChainInfo.height) };
 

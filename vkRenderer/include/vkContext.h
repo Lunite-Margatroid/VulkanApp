@@ -1,5 +1,8 @@
 #pragma once
 #define VK_USE_PLATFORM_WIN32_KHR
+
+#define VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
+
 #include "vulkan\vulkan.hpp"
 #include "vulkan\vulkan_raii.hpp"
 
@@ -114,6 +117,8 @@ namespace LT {
 		static void DebugFrame();
 
 		static void WaitIdel();
+
+		static void ResizeSwapChain(unsigned int width, unsigned int height);
 	};
 
 }

@@ -32,6 +32,5 @@ namespace LT {
 		SwapChain();
 		~SwapChain();
 
-
 	};
 }
