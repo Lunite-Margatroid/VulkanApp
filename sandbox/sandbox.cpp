@@ -92,19 +92,56 @@ int main() {
 }
 
 void OnWindowEvent(const SDL_Event& event, SDL_Window* window) {
-    static int nLastWidth, nLastHeight;
-    int width, height;
-    SDL_GetWindowSize(window, &width, &height);
+    //static int nLastWidth, nLastHeight;
+    //int width, height;
+    //SDL_GetWindowSize(window, &width, &height);
 
 
-    if (width != nLastWidth || height != nLastHeight) {
-        nLastWidth = width;
-        nLastHeight = height;
+    //if (width != nLastWidth || height != nLastHeight) {
+    //    nLastWidth = width;
+    //    nLastHeight = height;
+    //    LT::vkContext::WaitIdel();
+    //    LT::vkContext::ResizeSwapChain(event.window.data1, event.window.data2);
+    //    std::cout << "dsajkdljas" << std::endl;
+    //}
+
+    switch (event.window.event) {
+    case SDL_WindowEventID::SDL_WINDOWEVENT_MOVED:
+    case SDL_WindowEventID::SDL_WINDOWEVENT_MAXIMIZED:
+    case SDL_WindowEventID::SDL_WINDOWEVENT_RESIZED:
+    case SDL_WindowEventID::SDL_WINDOWEVENT_SIZE_CHANGED:
         LT::vkContext::WaitIdel();
         LT::vkContext::ResizeSwapChain(event.window.data1, event.window.data2);
+        break;
+
+    case SDL_WindowEventID::SDL_WINDOWEVENT_MINIMIZED:
+        break;
+    default:
+        break;
     }
 
+    //const char* strSDL_WindowEventID[] =
+    //{
+    //    "SDL_WINDOWEVENT_NONE",
+    //    "SDL_WINDOWEVENT_SHOWN",
+    //    "SDL_WINDOWEVENT_HIDDEN",
+    //    "SDL_WINDOWEVENT_EXPOSED",
+    //    "SDL_WINDOWEVENT_MOVED",
+    //    "SDL_WINDOWEVENT_RESIZED",
+    //    "SDL_WINDOWEVENT_SIZE_CHANGED",
+    //    "SDL_WINDOWEVENT_MINIMIZED",
+    //    "SDL_WINDOWEVENT_MAXIMIZED",
+    //    "SDL_WINDOWEVENT_RESTORED",
+    //    "SDL_WINDOWEVENT_ENTER",
+    //    "SDL_WINDOWEVENT_LEAVE",
+    //    "SDL_WINDOWEVENT_FOCUS_GAINED",
+    //    "SDL_WINDOWEVENT_FOCUS_LOST",
+    //    "SDL_WINDOWEVENT_CLOSE",
+    //    "SDL_WINDOWEVENT_TAKE_FOCUS",
+    //    "SDL_WINDOWEVENT_HIT_TEST",
+    //    "SDL_WINDOWEVENT_ICCPROF_CHANGED",
+    //    "SDL_WINDOWEVENT_DISPLAY_CHANGED"
+    //};
+    //std::cout << "window event: " << strSDL_WindowEventID[static_cast<unsigned int>(event.window.event)] << std::endl;
 
-    //std::cout << event.window.windowID << std::endl;
-    //std::cout << width << "   " << height << std::endl;
 }
