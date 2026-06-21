@@ -85,25 +85,13 @@ int main() {
     LT::vkContext::ReleaseSwapChain();
     SDL_DestroyWindow(window);
     SDL_Quit();
-    // 释放上下问
+    // 释放上下文
     LT::vkContext::Release();
 
 	return 0;
 }
 
 void OnWindowEvent(const SDL_Event& event, SDL_Window* window) {
-    //static int nLastWidth, nLastHeight;
-    //int width, height;
-    //SDL_GetWindowSize(window, &width, &height);
-
-
-    //if (width != nLastWidth || height != nLastHeight) {
-    //    nLastWidth = width;
-    //    nLastHeight = height;
-    //    LT::vkContext::WaitIdel();
-    //    LT::vkContext::ResizeSwapChain(event.window.data1, event.window.data2);
-    //    std::cout << "dsajkdljas" << std::endl;
-    //}
 
     switch (event.window.event) {
     case SDL_WindowEventID::SDL_WINDOWEVENT_MOVED:

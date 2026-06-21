@@ -5,6 +5,8 @@ file(GLOB SOURCES
     "src/*.cpp"
 	"SwapChain/*.cpp"
     "exception/*.cpp"
+	"core/*.cpp"
+	"core/buffer/*.cpp"
 )
 
 set(HEADERS
@@ -19,6 +21,8 @@ file(GLOB PRIVATE_HEADERS
     "header/*.h"
 	"SwapChain/*.h"
     "exception/*.h"
+	"core/*.h"
+	"core/buffer/*.h"
 )
 
 # ´´½¨¾²Ì¬¿â
@@ -35,5 +39,8 @@ target_include_directories(vkRenderer
         "${CMAKE_CURRENT_SOURCE_DIR}/header"
 		"${CMAKE_CURRENT_SOURCE_DIR}/SwapChain"
         "${CMAKE_CURRENT_SOURCE_DIR}/exception"
+		"${CMAKE_CURRENT_SOURCE_DIR}/core"
+		"${CMAKE_CURRENT_SOURCE_DIR}/core/buffer"
+		
         "${GLM_INSTALLED_DIR}/Include"
 )

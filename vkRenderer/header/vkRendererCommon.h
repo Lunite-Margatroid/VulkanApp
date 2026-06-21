@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <fstream>
 #include <array>
+#include <unordered_map>
 
 #define NOMINMAX
 #include <windows.h>
