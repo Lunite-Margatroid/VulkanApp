@@ -78,7 +78,7 @@ namespace LT {
 		void Bind(BindTarget nTarget) override;
 		void Unbind() override;
 
-		bool AddVertexChannel();
+		bool AddVertexChannel(const VertexChannelDesc& channelDesc);
 
 	};
 

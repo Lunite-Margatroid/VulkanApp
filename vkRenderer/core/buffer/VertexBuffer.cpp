@@ -59,7 +59,7 @@ namespace LT {
 			);
 		}
 
-		// 
+		vk::PipelineVertexInputStateCrateInfo 
 
 		// TODO
 	}
