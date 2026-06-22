@@ -53,13 +53,11 @@ namespace LT {
 
 	public:
 		// 找到了一个同时支持Surface和Graphics的Queue且只创建了一个Queue
-		inline bool IsGraphicsSurfaceSameQueue() const noexcept;
-
-
-
-
-		void DrawFrameDebug();
-
+		inline bool IsGraphicsSurfaceSameQueue() const noexcept {
+			return m_nQueueFamilyIndex.has_value() && \
+				m_nQueueIndexForSurface.has_value() && \
+				m_nQueueFamilyIndex.value() == m_nQueueIndexForSurface.value();
+		}
 		~vkContext();
 
 		// ------------ 静态 ----------------------
@@ -77,8 +75,6 @@ namespace LT {
 
 		static void InitSwapChain();
 		static void ReleaseSwapChain();
-
-		static void DebugFrame();
 
 		static void WaitIdel();
 

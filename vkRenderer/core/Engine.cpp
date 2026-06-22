@@ -1,11 +1,14 @@
 #include "vkRendererCommon.h"
 #include "Engine.h"
 #include "vkContext.h"
+#include "Renderer.h"
 
 namespace LT {
 
 	Engine::Engine()
+		:m_pDebugRenderer(nullptr)
 	{
+		
 	}
 
 	Engine::~Engine() {
@@ -18,6 +21,9 @@ namespace LT {
 
 	void Engine::InitSwapChain() {
 		vkContext::InitSwapChain();
+		if (m_pDebugRenderer == nullptr) {
+			m_pDebugRenderer = new Renderer();
+		}
 	}
 
 	void Engine::ReleaseRenderer()
@@ -26,6 +32,11 @@ namespace LT {
 	}
 
 	void Engine::ReleaseSwapChain() {
+		if (m_pDebugRenderer)
+		{
+			delete m_pDebugRenderer;
+			m_pDebugRenderer = nullptr;
+		}
 		vkContext::ReleaseSwapChain();
 	}
 
@@ -39,7 +50,10 @@ namespace LT {
 
 	void Engine::DrawFrame()
 	{
-		vkContext::DebugFrame();
+		if (m_pDebugRenderer)
+		{
+			m_pDebugRenderer->DrawFrame();
+		}
 	}
 
 } // namespace LT

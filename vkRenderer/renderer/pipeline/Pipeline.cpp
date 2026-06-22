@@ -6,7 +6,7 @@
 namespace LT {
 	Pipeline::Pipeline() {
 
-		CreateDebugSyncObjects();
+		CreateSyncObjects();
 
 		// 创建着色器
 		std::vector<std::string> vecEntryPoint = { "VertMain", "FragMain" };
@@ -143,6 +143,30 @@ namespace LT {
 		RENDERER_ASSERT(result.has_value(), "Pipeline Create Failed.");
 
 		m_vkPipeline = result.value;
+	}
+
+	Pipeline::~Pipeline() {
+		vk::Device& device = vkContext::GetVkDevice();
+		device.destroyShaderModule(m_vkShaderMod);
+		device.destroyPipelineLayout(m_vkPipelineLayout);
+		device.destroyPipeline(m_vkPipeline);
+
+		for (int i = 0; i < m_vkSemPresentComplete.size(); i++)
+		{
+			device.destroySemaphore(m_vkSemPresentComplete[i]);
+		}
+		m_vkSemPresentComplete.clear();
+
+		for (int i = 0; i < m_vkSemRenderFinish.size(); i++)
+		{
+			device.destroySemaphore(m_vkSemRenderFinish[i]);
+		}
+		m_vkSemRenderFinish.clear();
+		for (int i = 0; i < m_vkFenceDraw.size(); i++)
+		{
+			device.destroyFence(m_vkFenceDraw[i]);
+		}
+		m_vkFenceDraw.clear();
 	}
 
 	void Pipeline::CreateSyncObjects() {
@@ -315,6 +339,93 @@ namespace LT {
 
 
 	void Pipeline::DrawFrame() {
-		
+		SwapChain& swapChain = vkContext::GetSwapChain();
+
+
+		if (swapChain.m_sSwapChainInfo.width <= 0 || swapChain.m_sSwapChainInfo.height <= 0)
+			return;
+
+		vk::Device& device = vkContext::GetVkDevice();
+		vk::SwapchainKHR& nativeSwapChain = swapChain.NativeVKSwapChain();
+
+		m_nFrameCount++;
+
+		uint64_t nFrameIndex = m_nFrameCount % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
+		uint64_t nLastFrameIndex = (m_nFrameCount - 1) % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
+		// 等待上一帧绘制完成
+		vk::Result result = device.waitForFences(m_vkFenceDraw[nFrameIndex], vk::True, UINT64_MAX);
+
+		RENDERER_ASSERT(result == vk::Result::eSuccess, "Failed to wait fence.");
+
+		device.resetFences(m_vkFenceDraw[nFrameIndex]);
+
+		// 获取渲染缓冲
+		// 等待交换链交换缓冲完成
+		auto imageIndex = device.acquireNextImageKHR(
+			nativeSwapChain,
+			UINT64_MAX,
+			m_vkSemPresentComplete[nFrameIndex] // 完成后发射信号
+		);
+
+		RENDERER_ASSERT(imageIndex.has_value(), "Acquire Image Failed.");
+
+		unsigned int nImgIndex = imageIndex.value;
+
+		// 录入渲染命令
+		RecordCommandBufferDebug(nImgIndex, nFrameIndex);
+
+		// 提交渲染命令
+		vk::PipelineStageFlags flagWaitDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+
+		vk::Semaphore* pSemRenderFinish = nullptr;
+		if (nImgIndex == 0)
+		{
+			pSemRenderFinish = &m_vkSemRenderFinish[nImgIndex];
+		}
+		else if (nImgIndex == 1)
+		{
+			pSemRenderFinish = &m_vkSemRenderFinish[nImgIndex];
+		}
+		else
+		{
+			pSemRenderFinish = &m_vkSemRenderFinish[0];
+		}
+
+
+		vk::SubmitInfo si;
+		si.setWaitSemaphoreCount(1)
+			.setPWaitSemaphores(&m_vkSemPresentComplete[nFrameIndex]) // 等待交换链交换完成
+			.setPWaitDstStageMask(&flagWaitDstStageMask)
+			.setCommandBufferCount(1)
+			.setPCommandBuffers(&vkContext::GetCmdBuffer(nFrameIndex))
+			.setSignalSemaphoreCount(1)
+			.setPSignalSemaphores(pSemRenderFinish)	// 完成后发出信号
+			;
+		vkContext::GetCmdQueue().submit(
+			si,
+			m_vkFenceDraw[nFrameIndex] // 渲染完成之前 禁止获取缓冲
+		);
+
+		// 交换链命令
+		vk::PresentInfoKHR pi;
+		pi.setWaitSemaphoreCount(1)
+			.setPWaitSemaphores(pSemRenderFinish)	// 等待渲染完成
+			.setSwapchainCount(1)
+			.setPSwapchains(&nativeSwapChain)
+			.setPImageIndices(&nImgIndex)
+			;
+		// 提交交换链命令
+		vk::Result resultPresent =vkContext::GetCmdQueueForSurface().presentKHR(pi);
+
+		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)
+		{
+			vkContext::WaitIdel();
+			vkContext::ReleaseSwapChain();
+			vkContext::InitSwapChain();
+		}
+		else
+		{
+			RENDERER_ASSERT(resultPresent == vk::Result::eSuccess, "Present Failed.");
+		}
 	}
 } //namespace LT

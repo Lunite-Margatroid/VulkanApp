@@ -20,9 +20,6 @@ namespace LT {
 
 
 		void CreateSyncObjects();
-
-
-
 		void RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex);
 
 		void TransitionImageLayout(
@@ -38,7 +35,7 @@ namespace LT {
 
 	public:
 		Pipeline();
-
+		~Pipeline();
 		void DrawFrame();
 
 
