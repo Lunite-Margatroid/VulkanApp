@@ -14,7 +14,7 @@ target_link_libraries(sandbox PRIVATE vkRenderer "${SDL2_INSTALLED_DIR}/lib/SDL2
 # ÉèÖÃ°üº¬Ä¿Â¼
 target_include_directories(sandbox 
     PRIVATE 
-        "${CMAKE_SOURCE_DIR}/vkRenderer/include"
+        "${CMAKE_SOURCE_DIR}/vkRenderer/core"
         "${SDL2_INSTALLED_DIR}/Include"
 		"${Vulkan_INCLUDE_DIRS}"
 )

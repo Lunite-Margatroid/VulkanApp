@@ -2,26 +2,27 @@
 
 # 源文件
 file(GLOB SOURCES 
-    "src/*.cpp"
-	"SwapChain/*.cpp"
+    "renderer/*.cpp"
+	"renderer/swapchain/*.cpp"
+	"renderer/pipeline/*.cpp"
     "exception/*.cpp"
 	"core/*.cpp"
 	"core/buffer/*.cpp"
 )
 
-set(HEADERS
-    vkRenderer.h
-)
+#set(HEADERS
+#    "Engine.h"
+#)
 # 头文件
 file(GLOB PUBLIC_HEADERS
-    "include/*.h"
+    "core/*.h"
 )
 
 file(GLOB PRIVATE_HEADERS
-    "header/*.h"
-	"SwapChain/*.h"
+    "renderer/*.h"
+	"renderer/swapchain/*.h"
+	"renderer/pipeline/*.h"
     "exception/*.h"
-	"core/*.h"
 	"core/buffer/*.h"
 )
 
@@ -34,13 +35,12 @@ target_link_libraries(vkRenderer PRIVATE "$ENV{VK_SDK_PATH}/Lib/slang.lib")
 
 # 设置包含目录
 target_include_directories(vkRenderer 
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/core"
     PRIVATE 
-        "${CMAKE_CURRENT_SOURCE_DIR}/header"
-		"${CMAKE_CURRENT_SOURCE_DIR}/SwapChain"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/swapchain"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
         "${CMAKE_CURRENT_SOURCE_DIR}/exception"
-		"${CMAKE_CURRENT_SOURCE_DIR}/core"
 		"${CMAKE_CURRENT_SOURCE_DIR}/core/buffer"
-		
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline"
         "${GLM_INSTALLED_DIR}/Include"
 )

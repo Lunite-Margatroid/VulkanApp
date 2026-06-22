@@ -26,6 +26,7 @@ namespace LT {
 		BufferDataType m_eDataType;
 		uint32_t m_nDimension;
 		uint32_t m_nOffset;
+		// 暂时没用到
 		uint32_t m_nStride;
 		VertexChannelDesc(
 			VertexChannel eChannelType,
@@ -64,7 +65,7 @@ namespace LT {
 
 	public:
 		VertexBuffer();
-		VertexBuffer(size_t nSize);
+		VertexBuffer(size_t nSize, void* pData = nullptr);
 
 		VertexBuffer(VertexBuffer&&) noexcept = default;
 		VertexBuffer(const VertexBuffer&) = delete;
@@ -74,11 +75,16 @@ namespace LT {
 
 		~VertexBuffer() = default;
 
-
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="nTarget"> 目前没有任何含义 </param>
 		void Bind(BindTarget nTarget) override;
 		void Unbind() override;
 
 		bool AddVertexChannel(const VertexChannelDesc& channelDesc);
+
+		void GetVertexDesc(std::vector< vk::VertexInputBindingDescription>&bindingDesc ,std::vector<vk::VertexInputAttributeDescription>& vertexDesc);
 
 	};
 

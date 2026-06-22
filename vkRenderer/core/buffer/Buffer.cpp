@@ -9,12 +9,15 @@ namespace LT
 	{
 
 	}
-	Buffer::Buffer(size_t nSize)
+	Buffer::Buffer(size_t nSize, void* pData)
 		:m_nSize(nSize)
 	{
 		if (nSize)
 		{
 			m_pBuffer = new uint8_t[nSize];
+			if (pData) {
+				memcpy(m_pBuffer, pData, nSize);
+			}
 		}
 		else
 		{

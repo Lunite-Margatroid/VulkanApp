@@ -65,7 +65,7 @@ namespace LT {
 		size_t m_nSize;
 	public:
 		Buffer();
-		Buffer(size_t nSize);
+		Buffer(size_t nSize, void * pData = nullptr);
 		virtual ~Buffer();
 
 		Buffer(const Buffer& other) = delete;

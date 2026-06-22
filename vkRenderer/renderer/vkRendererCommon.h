@@ -17,7 +17,12 @@
 
 #include "ExceptionAssert.h"
 
+#define VK_USE_PLATFORM_WIN32_KHR
 
+#define VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
+
+#include "vulkan\vulkan.hpp"
+#include "vulkan\vulkan_raii.hpp"
 
 #define LOG(strLog) do{ \
 		std::time_t curTime = std::time(nullptr);\
