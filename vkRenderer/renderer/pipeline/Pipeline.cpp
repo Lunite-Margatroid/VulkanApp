@@ -3,6 +3,8 @@
 #include "SwapChain.h"
 #include "Pipeline.h"
 #include "SlangComplier.h"
+#include "IBindable.h"
+
 namespace LT {
 	Pipeline::Pipeline() {
 
@@ -241,6 +243,10 @@ namespace LT {
 		// 绑定图形管线
 		debugCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
 
+		// 绑定顶点缓冲
+		std::array<vk::Buffer, 1> vertexBuffers{m_vkVertexBuffer};
+		std::array<vk::DeviceSize, 1> offsets{0};
+		debugCommandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
 		// Viewport 和 Scissor 被指定为动态状态
 		// 创建并绑定
@@ -266,6 +272,7 @@ namespace LT {
 		debugCommandBuffer.draw(3, 1, 0, 0);
 
 		debugCommandBuffer.endRendering();
+
 
 		TransitionImageLayout(
 			imageIndex,
@@ -427,5 +434,14 @@ namespace LT {
 		{
 			RENDERER_ASSERT(resultPresent == vk::Result::eSuccess, "Present Failed.");
 		}
+	}
+	vk::Pipeline& Pipeline::GetNativePipeline()
+	{
+		return m_vkPipeline;
+	}
+
+	void Pipeline::SetVertexBuffer(vk::Buffer vkVertexBuffer)
+	{
+		m_vkVertexBuffer = vkVertexBuffer;
 	}
 } //namespace LT

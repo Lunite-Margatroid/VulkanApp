@@ -32,60 +32,23 @@ namespace LT {
 	// ---------------------------------------------------
 
 	VertexBuffer::VertexBuffer()
-		:Buffer()
+		:Buffer(),
+		m_nVertexCount(0)
 	{
 
 	}
 
-	VertexBuffer::VertexBuffer(size_t nSize, void* pData)
-		:Buffer(nSize, pData)
+	VertexBuffer::VertexBuffer(size_t nSize, void* pData, uint64_t vertexCount)
+		:Buffer(nSize, pData),
+		m_nVertexCount(vertexCount)
 	{
-	
+		if (nSize && pData) {
+			UpdateDataToGPU();
+		}
 	}
 
 	void VertexBuffer::Bind(BindTarget nTarget)
 	{
-		vk::BufferCreateInfo bci;
-		bci.setSize(m_nSize)
-			.setUsage(vk::BufferUsageFlagBits::eVertexBuffer)
-			.setSharingMode(vk::SharingMode::eExclusive)
-			;
-
-
-		vk::Device& device = vkContext::GetVkDevice();
-		vk::Buffer vkBuffer = device.createBuffer(bci);
-		vk::MemoryRequirements vkMemRequire = device.getBufferMemoryRequirements(vkBuffer);
-		
-		vk::PhysicalDevice& phyDevice = vkContext::GetPhysicalDevice();
-		vk::PhysicalDeviceMemoryProperties vkMemProp = phyDevice.getMemoryProperties();
-		vk::DeviceMemory vkMem;
-
-		for (uint32_t i = 0; i < vkMemProp.memoryTypeCount; i++) {
-			if (vkMemRequire.memoryTypeBits & (1 << i)) {
-				if ((vkMemProp.memoryTypes[i].propertyFlags & (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent))
-					== (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)) {
-					
-					vk::MemoryAllocateInfo mai;
-					mai.setAllocationSize(m_nSize)
-						.setMemoryTypeIndex(i)
-						;
-					vkMem = device.allocateMemory(mai);
-					break;
-				}
-			}
-			
-		}
-		RENDERER_ASSERT(vkMem, "Memory Allocation Failed.");
-
-		device.bindBufferMemory(vkBuffer, vkMem, 0);
-
-		void* pData = device.mapMemory(vkMem,0, m_nSize);
-		memcpy(pData, m_pBuffer, m_nSize);
-		device.unmapMemory(vkMem);
-
-		vkContext::GetInstance().GetCmdBuffer(static_cast<unsigned int>(nTarget));
-
-
 		// TODO
 	}
 
@@ -128,6 +91,59 @@ namespace LT {
 			nStride,	// stride
 			vk::VertexInputRate::eVertex
 		));
+	}
+
+	void VertexBuffer::UpdateDataToGPU()
+	{
+		vk::Device& device = vkContext::GetVkDevice();
+		device.destroyBuffer(m_vkBuffer);
+		ReleaseDeviceMemory();
+
+
+		// 创建Buffer对象
+		vk::BufferCreateInfo bci;
+		bci.setSize(m_nSize)
+			.setUsage(vk::BufferUsageFlagBits::eVertexBuffer)
+			.setSharingMode(vk::SharingMode::eExclusive)
+			;
+		m_vkBuffer = device.createBuffer(bci);
+
+		// 分配空间
+		vk::MemoryRequirements vkMemRequire = device.getBufferMemoryRequirements(m_vkBuffer);
+
+		vk::PhysicalDevice& phyDevice = vkContext::GetPhysicalDevice();
+		vk::PhysicalDeviceMemoryProperties vkMemProp = phyDevice.getMemoryProperties();
+
+		for (uint32_t i = 0; i < vkMemProp.memoryTypeCount; i++) {
+			if (vkMemRequire.memoryTypeBits & (1 << i)) {
+				if ((vkMemProp.memoryTypes[i].propertyFlags & (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent))
+					== (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)) {
+
+					vk::MemoryAllocateInfo mai;
+					mai.setAllocationSize(vkMemRequire.size)
+						.setMemoryTypeIndex(i)
+						;
+					m_vkMemory = device.allocateMemory(mai);
+					break;
+				}
+			}
+
+		}
+		RENDERER_ASSERT(m_vkMemory, "Memory Allocation Failed.");
+
+		device.bindBufferMemory(m_vkBuffer, m_vkMemory, 0);
+
+		// 填充
+		void* pData = device.mapMemory(m_vkMemory, 0, m_nSize);
+		memcpy(pData, m_pBuffer, m_nSize);
+		device.unmapMemory(m_vkMemory);
+
+
+	}
+
+	void VertexBuffer::ReleaseDeviceMemory() {
+		vk::Device& device = vkContext::GetVkDevice();
+		device.freeMemory(m_vkMemory);
 	}
 
 } //namespace LT

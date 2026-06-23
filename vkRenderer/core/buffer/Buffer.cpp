@@ -22,6 +22,7 @@ namespace LT
 		else
 		{
 			m_pBuffer = nullptr;
+			return;
 		}
 	}
 
@@ -54,6 +55,16 @@ namespace LT
 			m_pBuffer = nullptr;
 		}
 		m_nSize = 0;
+
+		vk::Device& device = vkContext::GetVkDevice();
+		device.destroyBuffer(m_vkBuffer);
+
+		ReleaseDeviceMemory();
+	}
+
+	vk::Buffer Buffer::GetNativeBuffer()
+	{
+		return m_vkBuffer;
 	}
 
 	size_t Buffer::Size() const{
@@ -61,7 +72,7 @@ namespace LT
 	}
 	
 	const uint8_t* Buffer::Data() const {
-		return const_cast<const uint8_t*>(m_pBuffer);
+		return m_pBuffer;
 	}
 
 	uint8_t* Buffer::Data() {

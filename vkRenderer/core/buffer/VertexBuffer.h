@@ -62,10 +62,11 @@ namespace LT {
 	class VertexBuffer : public Buffer, public IBindable{
 	protected:
 		std::vector<VertexChannelDesc> m_vecVertexChannelDesc;
-
+		uint64_t m_nVertexCount;
+		vk::DeviceMemory m_vkMemory;
 	public:
 		VertexBuffer();
-		VertexBuffer(size_t nSize, void* pData = nullptr);
+		VertexBuffer(size_t nSize, void* pData = nullptr, uint64_t vertexCount = 0u);
 
 		VertexBuffer(VertexBuffer&&) noexcept = default;
 		VertexBuffer(const VertexBuffer&) = delete;
@@ -86,6 +87,8 @@ namespace LT {
 
 		void GetVertexDesc(std::vector< vk::VertexInputBindingDescription>&bindingDesc ,std::vector<vk::VertexInputAttributeDescription>& vertexDesc);
 
+		void UpdateDataToGPU() override;
+		void ReleaseDeviceMemory() override;
 	};
 
 }// namespace LT

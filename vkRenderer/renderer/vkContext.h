@@ -1,8 +1,5 @@
 #pragma once
 
-#include "VertexBuffer.h"
-#include "Pipeline.h"
-
 namespace LT {
 
 	constexpr unsigned int RENDERER_DEFAULT_FLIGHT_FRAME_NUM = 2u;

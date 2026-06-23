@@ -17,7 +17,8 @@ namespace LT {
 
 		uint64_t m_nFrameCount;
 	
-
+		// 该实例不由Pipeline管理
+		vk::Buffer m_vkVertexBuffer;
 
 		void CreateSyncObjects();
 		void RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex);
@@ -38,6 +39,8 @@ namespace LT {
 		~Pipeline();
 		void DrawFrame();
 
+		vk::Pipeline& GetNativePipeline();
 
+		void SetVertexBuffer(vk::Buffer vkVertexBuffer);
 	};
 }// namespace LT

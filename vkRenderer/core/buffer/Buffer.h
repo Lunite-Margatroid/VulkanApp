@@ -1,4 +1,5 @@
 #pragma once
+#include "vkContext.h"
 
 namespace LT {
 
@@ -63,6 +64,8 @@ namespace LT {
 	protected:
 		uint8_t* m_pBuffer;
 		size_t m_nSize;
+
+		vk::Buffer m_vkBuffer;
 	public:
 		Buffer();
 		Buffer(size_t nSize, void * pData = nullptr);
@@ -78,6 +81,11 @@ namespace LT {
 		uint8_t* Data();
 		const uint8_t* Data() const;
 
-		void Release();
+		virtual void Release();
+
+		vk::Buffer GetNativeBuffer();
+
+		virtual void UpdateDataToGPU() = 0;
+		virtual void ReleaseDeviceMemory() = 0;
 	};
 }
