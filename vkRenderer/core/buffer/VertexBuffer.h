@@ -74,7 +74,7 @@ namespace LT {
 		VertexBuffer& operator = (const VertexBuffer&) = delete;
 		VertexBuffer& operator = (VertexBuffer&&) noexcept = default;
 
-		~VertexBuffer() = default;
+		~VertexBuffer();
 
 		/// <summary>
 		/// 

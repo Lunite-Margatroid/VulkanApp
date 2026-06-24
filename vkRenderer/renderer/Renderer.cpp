@@ -5,6 +5,8 @@
 namespace LT {
 	Renderer::Renderer()
 	{
+		m_pPipeline = std::make_unique<Pipeline>();
+
 		float vertBuffer[] = {
 			-0.5f, 0.5f,	1.0f, 0.0f, 0.f,
 			0.5f, 0.5f,		0.f, 1.f,0.f,
@@ -20,13 +22,15 @@ namespace LT {
 			VertexChannel::Color, BufferDataType::TypeFloat32, 3, 8
 		));
 
-		m_pipeline.SetVertexBuffer(m_pDebugVertexBuffer->GetNativeBuffer());
+		m_pPipeline->SetVertexBuffer(m_pDebugVertexBuffer->GetNativeBuffer());
 	}
 	Renderer::~Renderer()
 	{
+		m_pDebugVertexBuffer.reset();
+		m_pPipeline.reset();
 	}
 
 	void Renderer::DrawFrame() {
-		m_pipeline.DrawFrame();
+		m_pPipeline->DrawFrame();
 	}
 } // namespace

@@ -5,7 +5,7 @@
 namespace LT {
 	class Renderer {
 	private:
-		Pipeline m_pipeline;
+		std::unique_ptr<Pipeline> m_pPipeline;
 		std::unique_ptr<VertexBuffer> m_pDebugVertexBuffer;
 	public:
 		Renderer();

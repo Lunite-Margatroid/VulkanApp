@@ -58,8 +58,6 @@ namespace LT
 
 		vk::Device& device = vkContext::GetVkDevice();
 		device.destroyBuffer(m_vkBuffer);
-
-		ReleaseDeviceMemory();
 	}
 
 	vk::Buffer Buffer::GetNativeBuffer()

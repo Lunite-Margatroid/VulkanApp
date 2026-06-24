@@ -47,6 +47,11 @@ namespace LT {
 		}
 	}
 
+	VertexBuffer::~VertexBuffer()
+	{
+		ReleaseDeviceMemory();
+	}
+
 	void VertexBuffer::Bind(BindTarget nTarget)
 	{
 		// TODO
