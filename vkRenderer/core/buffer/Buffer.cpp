@@ -5,7 +5,7 @@ namespace LT
 {
 	Buffer::Buffer()
 		:m_pBuffer(nullptr)
-		,m_nSize(0)
+		, m_nSize(0)
 	{
 
 	}
@@ -31,20 +31,25 @@ namespace LT
 	}
 
 
-	Buffer::Buffer(Buffer&& other) noexcept {
+	Buffer::Buffer(Buffer&& other) noexcept
+	{
 		m_nSize = other.m_nSize;
 		m_pBuffer = other.m_pBuffer;
 
 		other.m_nSize = 0;
 		other.m_pBuffer = nullptr;
+
+		m_vkBuffer = other.m_vkBuffer;
+		other.m_vkBuffer = vk::Buffer();
 	}
 
 	Buffer&  Buffer::operator =(Buffer&& other)noexcept {
-		m_nSize = other.m_nSize;
-		m_pBuffer = other.m_pBuffer;
-
-		other.m_nSize = 0;
-		other.m_pBuffer = nullptr;
+		if (this != &other)
+		{
+			std::swap(m_pBuffer, other.m_pBuffer);
+			std::swap(m_nSize, other.m_nSize);
+			std::swap(m_vkBuffer, other.m_vkBuffer);
+		}
 		return *this;
 	}
 
