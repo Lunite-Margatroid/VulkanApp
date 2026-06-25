@@ -2,6 +2,9 @@
 
 
 namespace LT {
+
+	class VertexBuffer;
+
 	class Pipeline {
 	protected:
 		// debug shader
@@ -18,7 +21,7 @@ namespace LT {
 		uint64_t m_nFrameCount;
 	
 		// 该实例不由Pipeline管理
-		vk::Buffer m_vkVertexBuffer;
+		VertexBuffer* m_pVertexBuffer;
 
 		void CreateSyncObjects();
 		void RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex);
@@ -41,6 +44,6 @@ namespace LT {
 
 		vk::Pipeline& GetNativePipeline();
 
-		void SetVertexBuffer(vk::Buffer vkVertexBuffer);
+		void SetVertexBuffer(VertexBuffer* vkVertexBuffer);
 	};
 }// namespace LT

@@ -329,6 +329,11 @@ namespace LT {
 		}
 	}
 
+	vk::CommandPool& vkContext::GetCmdPool()
+	{
+		return GetInstance().m_vkCommandPool;
+	}
+
 	vk::CommandBuffer& vkContext::GetCmdBuffer(unsigned int nIndex)
 	{
 		return GetInstance().m_vecCommandBuffers[nIndex];

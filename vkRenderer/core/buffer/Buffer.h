@@ -4,6 +4,8 @@
 namespace LT {
 
 	enum class BufferDataType {
+		TypeUnknown,
+		TypeBinary,
 		TypeInt8,
 		TypeUint8,
 		TypeInt16,
@@ -68,7 +70,7 @@ namespace LT {
 		vk::Buffer m_vkBuffer;
 	public:
 		Buffer();
-		Buffer(size_t nSize, void * pData = nullptr);
+		Buffer(size_t nSize, void * pData);
 		virtual ~Buffer();
 
 		Buffer(const Buffer& other) = delete;

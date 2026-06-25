@@ -58,6 +58,7 @@ namespace LT {
 		}
 	};
 
+	class StagingBuffer;
 
 	class VertexBuffer : public Buffer, public IBindable{
 	protected:
@@ -66,7 +67,7 @@ namespace LT {
 		vk::DeviceMemory m_vkMemory;
 	public:
 		VertexBuffer();
-		VertexBuffer(size_t nSize, void* pData = nullptr, uint64_t vertexCount = 0u);
+		VertexBuffer(size_t nSize, void* pData, uint64_t vertexCount);
 
 		VertexBuffer(VertexBuffer&&) noexcept = default;
 		VertexBuffer(const VertexBuffer&) = delete;
@@ -89,6 +90,17 @@ namespace LT {
 
 		void UpdateDataToGPU() override;
 		void ReleaseDeviceMemory() override;
+
+		uint64_t GetVertexCount() const;
+
+		/// <summary>
+		/// 把pStagingBuffer的Device数据拷贝到当前对象
+		/// </summary>
+		/// <param name="pStagingBuffer"> 源数据 </param>
+		/// <param name="nSize"> 拷贝数据的尺寸 </param>
+		/// <param name="nSrcOffset"> 源数据的offset </param>
+		/// <param name="nDstOffset"> 目标数据的offset </param>
+		void DeviceCopy(StagingBuffer* pStagingBuffer, const uint64_t nSize, const uint64_t nSrcOffset = 0u,const uint64_t nDstOffset = 0u);
 	};
 
 }// namespace LT

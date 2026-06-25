@@ -13,7 +13,7 @@ namespace LT {
 			0.f, -0.5f,		0.f, 0.f, 1.f
 		};
 
-		m_pDebugVertexBuffer = std::make_unique<VertexBuffer>(sizeof(vertBuffer), vertBuffer);
+		m_pDebugVertexBuffer = std::make_unique<VertexBuffer>(sizeof(vertBuffer), vertBuffer, 3);
 
 		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
 			VertexChannel::Position, BufferDataType::TypeFloat32, 2, 0
@@ -22,7 +22,7 @@ namespace LT {
 			VertexChannel::Color, BufferDataType::TypeFloat32, 3, 8
 		));
 
-		m_pPipeline->SetVertexBuffer(m_pDebugVertexBuffer->GetNativeBuffer());
+		m_pPipeline->SetVertexBuffer(m_pDebugVertexBuffer.get());
 	}
 	Renderer::~Renderer()
 	{

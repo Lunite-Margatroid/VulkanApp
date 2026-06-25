@@ -1,7 +1,7 @@
 #include "vkRendererCommon.h"
 #include "vkContext.h"
 #include "VertexBuffer.h"
-
+#include "StagingBuffer.h"
 
 
 namespace LT {
@@ -108,7 +108,7 @@ namespace LT {
 		// 创建Buffer对象
 		vk::BufferCreateInfo bci;
 		bci.setSize(m_nSize)
-			.setUsage(vk::BufferUsageFlagBits::eVertexBuffer)
+			.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst)
 			.setSharingMode(vk::SharingMode::eExclusive)
 			;
 		m_vkBuffer = device.createBuffer(bci);
@@ -121,8 +121,8 @@ namespace LT {
 
 		for (uint32_t i = 0; i < vkMemProp.memoryTypeCount; i++) {
 			if (vkMemRequire.memoryTypeBits & (1 << i)) {
-				if ((vkMemProp.memoryTypes[i].propertyFlags & (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent))
-					== (vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)) {
+				if ((vkMemProp.memoryTypes[i].propertyFlags & (vk::MemoryPropertyFlagBits::eDeviceLocal))
+					== (vk::MemoryPropertyFlagBits::eDeviceLocal)) {
 
 					vk::MemoryAllocateInfo mai;
 					mai.setAllocationSize(vkMemRequire.size)
@@ -139,16 +139,61 @@ namespace LT {
 		device.bindBufferMemory(m_vkBuffer, m_vkMemory, 0);
 
 		// 填充
-		void* pData = device.mapMemory(m_vkMemory, 0, m_nSize);
-		memcpy(pData, m_pBuffer, m_nSize);
-		device.unmapMemory(m_vkMemory);
-
-
+		//void* pData = device.mapMemory(m_vkMemory, 0, m_nSize);
+		//memcpy(pData, m_pBuffer, m_nSize);
+		//device.unmapMemory(m_vkMemory);
+		StagingBuffer stagingBuffer(m_nSize, m_pBuffer);
+		DeviceCopy(&stagingBuffer, m_nSize);
 	}
 
 	void VertexBuffer::ReleaseDeviceMemory() {
 		vk::Device& device = vkContext::GetVkDevice();
 		device.freeMemory(m_vkMemory);
+	}
+
+	uint64_t VertexBuffer::GetVertexCount() const
+	{
+		return m_nVertexCount;
+	}
+
+	void VertexBuffer::DeviceCopy(StagingBuffer* pStagingBuffer, const uint64_t nSize, const uint64_t nSrcOffset,const uint64_t nDstOffset)
+	{
+		size_t nSrcValidSize = pStagingBuffer->Size() > nSrcOffset ? (pStagingBuffer->Size() - nSrcOffset) : 0;
+		size_t nDstValidSize = m_nSize > nDstOffset ? (m_nSize - nDstOffset) : 0;
+		if (nSrcValidSize != nSize || nDstValidSize != nSize || nSrcValidSize == 0 || nDstValidSize == 0)
+		{
+			LOG_WARNING("Device Buffer Copy Faild.");
+			return;
+		}
+
+		vk::Device& device = vkContext::GetVkDevice();
+		vk::Queue& queue = vkContext::GetCmdQueue();
+
+		// 创建指令缓冲
+		vk::CommandBufferAllocateInfo cbai;
+		cbai.setCommandBufferCount(1)
+			.setCommandPool(vkContext::GetCmdPool())
+			.setLevel(vk::CommandBufferLevel::ePrimary)
+			;
+
+		std::vector<vk::CommandBuffer> vkTempTransferBuffer = device.allocateCommandBuffers(cbai);
+		
+		// 录入指令
+		vk::CommandBufferBeginInfo cbbi;
+		cbbi.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+		vkTempTransferBuffer[0].begin(cbbi);
+		vkTempTransferBuffer[0].copyBuffer(pStagingBuffer->GetNativeBuffer(), m_vkBuffer, vk::BufferCopy(nSrcOffset, nDstOffset, m_nSize));
+		vkTempTransferBuffer[0].end();
+
+
+		// 提交指令
+		vk::SubmitInfo si;
+		si.setCommandBuffers(vkTempTransferBuffer);
+		vkContext::GetCmdQueue().submit(si);
+
+		// 等待完成
+		queue.waitIdle();
 	}
 
 } //namespace LT

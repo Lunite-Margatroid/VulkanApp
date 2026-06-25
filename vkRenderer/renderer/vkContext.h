@@ -79,6 +79,8 @@ namespace LT {
 
 		static vk::Queue& GetCmdQueue();
 		static vk::Queue& GetCmdQueueForSurface();
+		static vk::CommandPool& GetCmdPool();
+
 		static vk::CommandBuffer& GetCmdBuffer(unsigned int nIndex);
 	};
 

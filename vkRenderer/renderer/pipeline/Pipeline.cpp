@@ -4,6 +4,7 @@
 #include "Pipeline.h"
 #include "SlangComplier.h"
 #include "IBindable.h"
+#include "VertexBuffer.h"
 
 namespace LT {
 	Pipeline::Pipeline() {
@@ -244,7 +245,7 @@ namespace LT {
 		debugCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
 
 		// °ó¶¨¶¥µã»º³å
-		std::array<vk::Buffer, 1> vertexBuffers{m_vkVertexBuffer};
+		std::array<vk::Buffer, 1> vertexBuffers{m_pVertexBuffer->GetNativeBuffer()};
 		std::array<vk::DeviceSize, 1> offsets{0};
 		debugCommandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
@@ -269,7 +270,7 @@ namespace LT {
 		debugCommandBuffer.setViewport(0, viewport);
 		debugCommandBuffer.setScissor(0, scissor);
 
-		debugCommandBuffer.draw(3, 1, 0, 0);
+		debugCommandBuffer.draw(m_pVertexBuffer->GetVertexCount(), 1, 0, 0);
 
 		debugCommandBuffer.endRendering();
 
@@ -440,8 +441,8 @@ namespace LT {
 		return m_vkPipeline;
 	}
 
-	void Pipeline::SetVertexBuffer(vk::Buffer vkVertexBuffer)
+	void Pipeline::SetVertexBuffer(VertexBuffer* pVertexBuffer)
 	{
-		m_vkVertexBuffer = vkVertexBuffer;
+		m_pVertexBuffer = pVertexBuffer;
 	}
 } //namespace LT
