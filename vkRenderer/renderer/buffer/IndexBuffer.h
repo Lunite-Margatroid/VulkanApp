@@ -9,10 +9,15 @@ namespace LT {
 	protected:
 		uint64_t m_nIndexCount;
 
-
 	protected:
 		IndexBuffer(BufferID id);
 		IndexBuffer(BufferID id, size_t nSize, void* pData, uint64_t nIndexCount);
+
+		IndexBuffer(const IndexBuffer&) = delete;
+		IndexBuffer(IndexBuffer&&) = delete;
+
+		IndexBuffer& operator = (const IndexBuffer&) = delete;
+		IndexBuffer& operator = (IndexBuffer&&) = delete;
 	public:
 		void Bind(BindTarget nTarget) override;
 		void Unbind() override;
