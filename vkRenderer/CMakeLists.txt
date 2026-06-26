@@ -7,7 +7,7 @@ file(GLOB SOURCES
 	"renderer/pipeline/*.cpp"
     "exception/*.cpp"
 	"core/*.cpp"
-	"core/buffer/*.cpp"
+	"renderer/buffer/*.cpp"
 )
 
 #set(HEADERS
@@ -23,7 +23,7 @@ file(GLOB PRIVATE_HEADERS
 	"renderer/swapchain/*.h"
 	"renderer/pipeline/*.h"
     "exception/*.h"
-	"core/buffer/*.h"
+	"renderer/buffer/*.h"
 )
 
 # ´´½¨¾²Ì¬¿â
@@ -40,7 +40,7 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/swapchain"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
         "${CMAKE_CURRENT_SOURCE_DIR}/exception"
-		"${CMAKE_CURRENT_SOURCE_DIR}/core/buffer"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/buffer"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline"
         "${GLM_INSTALLED_DIR}/Include"
 )

@@ -7,6 +7,7 @@ namespace LT {
 	private:
 		std::unique_ptr<Pipeline> m_pPipeline;
 		VertexBuffer* m_pDebugVertexBuffer;
+		IndexBuffer* m_pDebugIndexBuffer;
 	public:
 		Renderer();
 		~Renderer();

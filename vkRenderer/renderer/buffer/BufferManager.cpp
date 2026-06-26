@@ -67,6 +67,14 @@ namespace LT {
 
 		return pStagingBuffer;
 	}
+	IndexBuffer* BufferManager::CreateIndexBuffer(size_t nSize, void* pData, uint64_t indexCount)
+	{
+		BufferManager& bufferManager = GetInstance();
+		IndexBuffer* pIndexBuffer = new IndexBuffer(bufferManager.GenBufferID(), nSize, pData, indexCount);
+		RENDERER_ASSERT(pIndexBuffer, "Index Buffer create failed.");
+		bufferManager.m_mapBuffers[pIndexBuffer->GetBufferID()] = pIndexBuffer;
+		return pIndexBuffer;
+	}
 	void BufferManager::DeleteBuffer(BufferID nID)
 	{
 		BufferManager& bufferManager = GetInstance();

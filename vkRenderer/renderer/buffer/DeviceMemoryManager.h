@@ -2,6 +2,7 @@
 #include "Buffer.h"
 #include "VertexBuffer.h"
 #include "StagingBuffer.h"
+#include "IndexBuffer.h"
 
 namespace LT {
 	class DeviceMemoryManager {
@@ -24,6 +25,7 @@ namespace LT {
 
 		static void AllocateMemory(VertexBuffer* vertexBuffer);
 		static void AllocateMemory(StagingBuffer* stagingBuffer);
+		static void AllocateMemory(IndexBuffer* pIndexBuffer);
 		static void AsignMemory(StagingBuffer* stagingBuffer, size_t nSize, void* pData);
 		static void FreeMemory(Buffer& buffer);
 		

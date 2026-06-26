@@ -5,6 +5,7 @@
 #include "SlangComplier.h"
 #include "IBindable.h"
 #include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 namespace LT {
 	Pipeline::Pipeline() {
@@ -249,6 +250,9 @@ namespace LT {
 		std::array<vk::DeviceSize, 1> offsets{0};
 		debugCommandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
+		// 绑定顶点缓冲
+		debugCommandBuffer.bindIndexBuffer(m_pIndexBuffer->GetNativeBuffer(), 0, vk::IndexType::eUint32);
+
 		// Viewport 和 Scissor 被指定为动态状态
 		// 创建并绑定
 
@@ -270,7 +274,8 @@ namespace LT {
 		debugCommandBuffer.setViewport(0, viewport);
 		debugCommandBuffer.setScissor(0, scissor);
 
-		debugCommandBuffer.draw(m_pVertexBuffer->GetVertexCount(), 1, 0, 0);
+		// debugCommandBuffer.draw(m_pVertexBuffer->GetVertexCount(), 1, 0, 0);
+		debugCommandBuffer.drawIndexed(m_pIndexBuffer->GetIndexCount(), 1, 0, 0, 0);
 
 		debugCommandBuffer.endRendering();
 
@@ -444,5 +449,9 @@ namespace LT {
 	void Pipeline::SetVertexBuffer(VertexBuffer* pVertexBuffer)
 	{
 		m_pVertexBuffer = pVertexBuffer;
+	}
+	void Pipeline::SetIndexBuffer(IndexBuffer* pIndexBuffer)
+	{
+		m_pIndexBuffer = pIndexBuffer;
 	}
 } //namespace LT

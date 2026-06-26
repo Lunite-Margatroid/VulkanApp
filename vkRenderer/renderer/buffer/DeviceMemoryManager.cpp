@@ -91,6 +91,10 @@ namespace LT {
 	{
 		GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pStagingBuffer), vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible);
 	}
+	void DeviceMemoryManager::AllocateMemory(IndexBuffer* pIndexBuffer)
+	{
+		GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pIndexBuffer), vk::MemoryPropertyFlagBits::eDeviceLocal);
+	}
 	void DeviceMemoryManager::AsignMemory(StagingBuffer* stagingBuffer, size_t nSize, void* pData)
 	{
 		auto iter = GetInstance().m_mapVkMemory.find(stagingBuffer->GetBufferID());

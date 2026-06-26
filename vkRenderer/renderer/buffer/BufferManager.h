@@ -2,7 +2,7 @@
 #include "Buffer.h"
 #include "StagingBuffer.h"
 #include "VertexBuffer.h"
-
+#include "IndexBuffer.h"
 namespace LT {
 	class BufferManager {
 	private:
@@ -27,6 +27,7 @@ namespace LT {
 
 		static VertexBuffer* CreateVertexBuffer(size_t nSize, void *pData, uint64_t vertexCount);
 		static StagingBuffer* CreateStagingBuffer(size_t nSize, void* pData);
+		static IndexBuffer* CreateIndexBuffer(size_t nSize, void* pData, uint64_t indexCount);
 
 		static void DeleteBuffer(BufferID nID );
 		static void DeleteBuffer(Buffer* pBuffer);

@@ -12,13 +12,16 @@ namespace LT {
 
 		m_pPipeline = std::make_unique<Pipeline>();
 
+
+		// vertex buffer
 		float vertBuffer[] = {
 			-0.5f, 0.5f,	1.0f, 0.0f, 0.f,
 			0.5f, 0.5f,		0.f, 1.f,0.f,
-			0.f, -0.5f,		0.f, 0.f, 1.f
+			0.5f, -0.5f,		0.f, 0.f, 1.f,
+			-0.5f, -0.5f,		1.f,1.f,1.f
 		};
 
-		m_pDebugVertexBuffer = BufferManager::CreateVertexBuffer(sizeof(vertBuffer), vertBuffer, 3);
+		m_pDebugVertexBuffer = BufferManager::CreateVertexBuffer(sizeof(vertBuffer), vertBuffer, 4);
 
 		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
 			VertexChannel::Position, BufferDataType::TypeFloat32, 2, 0
@@ -29,12 +32,21 @@ namespace LT {
 
 		m_pPipeline->SetVertexBuffer(m_pDebugVertexBuffer);
 
+		// index buffer
+		uint32_t indices[] = {
+			0,1,2,2,3,0
+		};
+
+		m_pDebugIndexBuffer = BufferManager::CreateIndexBuffer(sizeof(indices), indices, 6);
+
+		m_pPipeline->SetIndexBuffer(m_pDebugIndexBuffer);
 
 	}
 	Renderer::~Renderer()
 	{
 		
 		BufferManager::DeleteBuffer(m_pDebugVertexBuffer);
+		BufferManager::DeleteBuffer(m_pDebugIndexBuffer);
 
 		m_pPipeline.reset();
 

@@ -4,6 +4,7 @@
 namespace LT {
 
 	class VertexBuffer;
+	class IndexBuffer;
 
 	class Pipeline {
 	protected:
@@ -22,6 +23,7 @@ namespace LT {
 	
 		// 该实例不由Pipeline管理
 		VertexBuffer* m_pVertexBuffer;
+		IndexBuffer* m_pIndexBuffer;
 
 		void CreateSyncObjects();
 		void RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex);
@@ -45,5 +47,6 @@ namespace LT {
 		vk::Pipeline& GetNativePipeline();
 
 		void SetVertexBuffer(VertexBuffer* vkVertexBuffer);
+		void SetIndexBuffer(IndexBuffer* pIndexBuffer);
 	};
 }// namespace LT

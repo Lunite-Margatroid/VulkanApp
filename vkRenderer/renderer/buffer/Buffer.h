@@ -64,6 +64,9 @@ namespace LT {
 
 	using BufferID = int64_t;
 
+	/// <summary>
+	/// 缓冲对象的基类
+	/// </summary>
 	class Buffer {
 		friend class BufferManager;
 
