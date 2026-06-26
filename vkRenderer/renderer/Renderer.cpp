@@ -1,10 +1,15 @@
 #include "vkRendererCommon.h"
 #include "vkContext.h"
 #include "Renderer.h"
+#include "BufferManager.h"
+#include "DeviceMemoryManager.h"
 
 namespace LT {
 	Renderer::Renderer()
 	{
+		DeviceMemoryManager::Init();
+		BufferManager::Init();
+
 		m_pPipeline = std::make_unique<Pipeline>();
 
 		float vertBuffer[] = {
@@ -13,7 +18,7 @@ namespace LT {
 			0.f, -0.5f,		0.f, 0.f, 1.f
 		};
 
-		m_pDebugVertexBuffer = std::make_unique<VertexBuffer>(sizeof(vertBuffer), vertBuffer, 3);
+		m_pDebugVertexBuffer = BufferManager::CreateVertexBuffer(sizeof(vertBuffer), vertBuffer, 3);
 
 		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
 			VertexChannel::Position, BufferDataType::TypeFloat32, 2, 0
@@ -22,12 +27,19 @@ namespace LT {
 			VertexChannel::Color, BufferDataType::TypeFloat32, 3, 8
 		));
 
-		m_pPipeline->SetVertexBuffer(m_pDebugVertexBuffer.get());
+		m_pPipeline->SetVertexBuffer(m_pDebugVertexBuffer);
+
+
 	}
 	Renderer::~Renderer()
 	{
-		m_pDebugVertexBuffer.reset();
+		
+		BufferManager::DeleteBuffer(m_pDebugVertexBuffer);
+
 		m_pPipeline.reset();
+
+		BufferManager::Release();
+		DeviceMemoryManager::Release();
 	}
 
 	void Renderer::DrawFrame() {

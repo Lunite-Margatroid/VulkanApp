@@ -3,6 +3,8 @@
 #include "VertexBuffer.h"
 #include "StagingBuffer.h"
 
+#include "BufferManager.h"
+#include "DeviceMemoryManager.h"
 
 namespace LT {
 
@@ -31,15 +33,15 @@ namespace LT {
 	};
 	// ---------------------------------------------------
 
-	VertexBuffer::VertexBuffer()
-		:Buffer(),
+	VertexBuffer::VertexBuffer(BufferID id)
+		:Buffer(id),
 		m_nVertexCount(0)
 	{
 
 	}
 
-	VertexBuffer::VertexBuffer(size_t nSize, void* pData, uint64_t vertexCount)
-		:Buffer(nSize, pData),
+	VertexBuffer::VertexBuffer(BufferID id, size_t nSize, void* pData, uint64_t vertexCount)
+		:Buffer(id, nSize, pData),
 		m_nVertexCount(vertexCount)
 	{
 		if (nSize && pData) {
@@ -49,7 +51,6 @@ namespace LT {
 
 	VertexBuffer::~VertexBuffer()
 	{
-		ReleaseDeviceMemory();
 	}
 
 	void VertexBuffer::Bind(BindTarget nTarget)
@@ -101,54 +102,27 @@ namespace LT {
 	void VertexBuffer::UpdateDataToGPU()
 	{
 		vk::Device& device = vkContext::GetVkDevice();
-		device.destroyBuffer(m_vkBuffer);
-		ReleaseDeviceMemory();
 
+		if (!m_vkBuffer)
+		{
+			// 创建Buffer对象
+			vk::BufferCreateInfo bci;
+			bci.setSize(m_nSize)
+				.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst)
+				.setSharingMode(vk::SharingMode::eExclusive)
+				;
+			m_vkBuffer = device.createBuffer(bci);
 
-		// 创建Buffer对象
-		vk::BufferCreateInfo bci;
-		bci.setSize(m_nSize)
-			.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst)
-			.setSharingMode(vk::SharingMode::eExclusive)
-			;
-		m_vkBuffer = device.createBuffer(bci);
-
-		// 分配空间
-		vk::MemoryRequirements vkMemRequire = device.getBufferMemoryRequirements(m_vkBuffer);
-
-		vk::PhysicalDevice& phyDevice = vkContext::GetPhysicalDevice();
-		vk::PhysicalDeviceMemoryProperties vkMemProp = phyDevice.getMemoryProperties();
-
-		for (uint32_t i = 0; i < vkMemProp.memoryTypeCount; i++) {
-			if (vkMemRequire.memoryTypeBits & (1 << i)) {
-				if ((vkMemProp.memoryTypes[i].propertyFlags & (vk::MemoryPropertyFlagBits::eDeviceLocal))
-					== (vk::MemoryPropertyFlagBits::eDeviceLocal)) {
-
-					vk::MemoryAllocateInfo mai;
-					mai.setAllocationSize(vkMemRequire.size)
-						.setMemoryTypeIndex(i)
-						;
-					m_vkMemory = device.allocateMemory(mai);
-					break;
-				}
-			}
-
+			// 分配空间
+			DeviceMemoryManager::AllocateMemory(this);
 		}
-		RENDERER_ASSERT(m_vkMemory, "Memory Allocation Failed.");
-
-		device.bindBufferMemory(m_vkBuffer, m_vkMemory, 0);
-
 		// 填充
 		//void* pData = device.mapMemory(m_vkMemory, 0, m_nSize);
 		//memcpy(pData, m_pBuffer, m_nSize);
 		//device.unmapMemory(m_vkMemory);
-		StagingBuffer stagingBuffer(m_nSize, m_pBuffer);
-		DeviceCopy(&stagingBuffer, m_nSize);
-	}
-
-	void VertexBuffer::ReleaseDeviceMemory() {
-		vk::Device& device = vkContext::GetVkDevice();
-		device.freeMemory(m_vkMemory);
+		StagingBuffer* stagingBuffer = BufferManager::CreateStagingBuffer(m_nSize, m_pBuffer);
+		DeviceCopy(stagingBuffer, m_nSize);
+		BufferManager::DeleteBuffer(stagingBuffer);
 	}
 
 	uint64_t VertexBuffer::GetVertexCount() const

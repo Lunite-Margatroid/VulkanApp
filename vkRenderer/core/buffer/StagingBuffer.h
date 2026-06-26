@@ -3,17 +3,17 @@
 
 namespace LT {
 	class StagingBuffer : public Buffer {
+		friend class BufferManager;
+	protected:
 
 	protected:
-		vk::DeviceMemory m_vkMemory;
-
-	public:
-		StagingBuffer();
-		StagingBuffer(size_t nSize, void* pData);
+		StagingBuffer(BufferID id);
+		StagingBuffer(BufferID id, size_t nSize, void* pData);
 		~StagingBuffer();
+	public:
+
 
 		virtual void UpdateDataToGPU() override;
-		virtual void ReleaseDeviceMemory() override;
 	};
 	
 } // namespace LT

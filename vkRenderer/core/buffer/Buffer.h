@@ -62,22 +62,27 @@ namespace LT {
 		return 0u;
 	}
 
+	using BufferID = int64_t;
+
 	class Buffer {
+		friend class BufferManager;
+
 	protected:
+		const BufferID m_nID;
 		uint8_t* m_pBuffer;
 		size_t m_nSize;
-
 		vk::Buffer m_vkBuffer;
-	public:
-		Buffer();
-		Buffer(size_t nSize, void * pData);
+
+	protected:
+		Buffer(BufferID id);
+		Buffer(BufferID id, size_t nSize, void* pData);
 		virtual ~Buffer();
 
 		Buffer(const Buffer& other) = delete;
-		Buffer(Buffer&& other) noexcept;
-
+		Buffer(Buffer&& other) = delete;
 		Buffer& operator = (const Buffer& other) = delete;
-		Buffer& operator = (Buffer&& other)noexcept;
+		Buffer& operator = (Buffer&& other) = delete;
+	public:
 
 		size_t Size() const;
 		uint8_t* Data();
@@ -86,8 +91,9 @@ namespace LT {
 		virtual void Release();
 
 		vk::Buffer GetNativeBuffer();
+		BufferID GetBufferID() const;
 
 		virtual void UpdateDataToGPU() = 0;
-		virtual void ReleaseDeviceMemory() = 0;
+		virtual void ReleaseDeviceMemory();
 	};
 }

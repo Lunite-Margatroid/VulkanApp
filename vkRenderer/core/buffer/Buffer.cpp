@@ -1,16 +1,19 @@
 #include "vkRendererCommon.h"
 #include "Buffer.h"
+#include "DeviceMemoryManager.h"
 
 namespace LT
 {
-	Buffer::Buffer()
-		:m_pBuffer(nullptr)
-		, m_nSize(0)
+	Buffer::Buffer(BufferID id)
+		:m_nID(id)
+		,m_pBuffer(nullptr)
+		,m_nSize(0)
 	{
 
 	}
-	Buffer::Buffer(size_t nSize, void* pData)
-		:m_nSize(nSize)
+	Buffer::Buffer(BufferID id, size_t nSize, void* pData)
+		:m_nID(id)
+		,m_nSize(nSize)
 	{
 		if (nSize)
 		{
@@ -31,28 +34,6 @@ namespace LT
 	}
 
 
-	Buffer::Buffer(Buffer&& other) noexcept
-	{
-		m_nSize = other.m_nSize;
-		m_pBuffer = other.m_pBuffer;
-
-		other.m_nSize = 0;
-		other.m_pBuffer = nullptr;
-
-		m_vkBuffer = other.m_vkBuffer;
-		other.m_vkBuffer = vk::Buffer();
-	}
-
-	Buffer&  Buffer::operator =(Buffer&& other)noexcept {
-		if (this != &other)
-		{
-			std::swap(m_pBuffer, other.m_pBuffer);
-			std::swap(m_nSize, other.m_nSize);
-			std::swap(m_vkBuffer, other.m_vkBuffer);
-		}
-		return *this;
-	}
-
 	void Buffer::Release() {
 		if (m_pBuffer)
 		{
@@ -63,11 +44,22 @@ namespace LT
 
 		vk::Device& device = vkContext::GetVkDevice();
 		device.destroyBuffer(m_vkBuffer);
+		ReleaseDeviceMemory();
 	}
 
 	vk::Buffer Buffer::GetNativeBuffer()
 	{
 		return m_vkBuffer;
+	}
+
+	BufferID Buffer::GetBufferID() const
+	{
+		return m_nID;
+	}
+
+	void Buffer::ReleaseDeviceMemory()
+	{
+		DeviceMemoryManager::FreeMemory(*this);
 	}
 
 	size_t Buffer::Size() const{

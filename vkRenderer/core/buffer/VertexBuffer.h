@@ -61,21 +61,25 @@ namespace LT {
 	class StagingBuffer;
 
 	class VertexBuffer : public Buffer, public IBindable{
+		friend class BufferManager;
 	protected:
 		std::vector<VertexChannelDesc> m_vecVertexChannelDesc;
 		uint64_t m_nVertexCount;
-		vk::DeviceMemory m_vkMemory;
-	public:
-		VertexBuffer();
-		VertexBuffer(size_t nSize, void* pData, uint64_t vertexCount);
 
-		VertexBuffer(VertexBuffer&&) noexcept = default;
+		VertexBuffer(BufferID id);
+		VertexBuffer(BufferID id, size_t nSize, void* pData, uint64_t vertexCount);
+
+		VertexBuffer(VertexBuffer&&) = delete;
 		VertexBuffer(const VertexBuffer&) = delete;
 
 		VertexBuffer& operator = (const VertexBuffer&) = delete;
-		VertexBuffer& operator = (VertexBuffer&&) noexcept = default;
+		VertexBuffer& operator = (VertexBuffer&&) = delete;
 
 		~VertexBuffer();
+	public:
+
+
+
 
 		/// <summary>
 		/// 
@@ -89,7 +93,6 @@ namespace LT {
 		void GetVertexDesc(std::vector< vk::VertexInputBindingDescription>&bindingDesc ,std::vector<vk::VertexInputAttributeDescription>& vertexDesc);
 
 		void UpdateDataToGPU() override;
-		void ReleaseDeviceMemory() override;
 
 		uint64_t GetVertexCount() const;
 

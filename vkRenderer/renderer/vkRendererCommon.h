@@ -11,6 +11,7 @@
 #include <fstream>
 #include <array>
 #include <unordered_map>
+#include <map>
 
 #define NOMINMAX
 #include <windows.h>
