@@ -75,6 +75,14 @@ namespace LT {
 		bufferManager.m_mapBuffers[pIndexBuffer->GetBufferID()] = pIndexBuffer;
 		return pIndexBuffer;
 	}
+	ConstBuffer* BufferManager::CreateConstBuffer(size_t nSize, void* pData)
+	{
+		BufferManager& bufferManager = GetInstance();
+		ConstBuffer* pConstBuffer = new ConstBuffer(bufferManager.GenBufferID(), nSize, pData);
+		RENDERER_ASSERT(pConstBuffer, "Const Buffer create failed.");
+		bufferManager.m_mapBuffers[pConstBuffer->GetBufferID()] = pConstBuffer;
+		return pConstBuffer;
+	}
 	void BufferManager::DeleteBuffer(BufferID nID)
 	{
 		BufferManager& bufferManager = GetInstance();

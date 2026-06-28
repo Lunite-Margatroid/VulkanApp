@@ -6,11 +6,15 @@
 #include "IBindable.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "ConstBuffer.h"
+
 
 namespace LT {
 	Pipeline::Pipeline() {
 
 		CreateSyncObjects();
+
+		vk::Device& device = vkContext::GetVkDevice();
 
 		// 创建着色器
 		std::vector<std::string> vecEntryPoint = { "VertMain", "FragMain" };
@@ -64,7 +68,7 @@ namespace LT {
 			.setDepthClampEnable(vk::False)
 			.setRasterizerDiscardEnable(vk::False)
 			.setPolygonMode(vk::PolygonMode::eFill)
-			.setCullMode(vk::CullModeFlagBits::eBack)
+			.setCullMode(vk::CullModeFlagBits::eNone)
 			.setFrontFace(vk::FrontFace::eCounterClockwise)
 			.setDepthBiasEnable(vk::False)
 			.setLineWidth(1.f)
@@ -98,14 +102,41 @@ namespace LT {
 			;
 
 		// Pipeline Layout
+
+		std::vector<vk::DescriptorSetLayoutBinding> layouts{
+			{0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex}
+		};
+
+		vk::DescriptorSetLayoutCreateInfo dslci;
+		dslci
+			.setBindingCount(1)
+			.setBindings(layouts)
+			;
+		m_vkDescSetLayout = device.createDescriptorSetLayout(dslci);
+
+
 		vk::PipelineLayoutCreateInfo plci;
 		plci
-			.setSetLayoutCount(0)
+			.setSetLayoutCount(1)
+			.setPSetLayouts(&m_vkDescSetLayout)
 			.setPushConstantRangeCount(0)
 			;
 		m_vkPipelineLayout = vkContext::GetVkDevice().createPipelineLayout(plci);
 
 
+		// Allocate Descriptor Set Layout
+		std::vector<vk::DescriptorSetLayout> setlayouts(RENDERER_DEFAULT_FLIGHT_FRAME_NUM, m_vkDescSetLayout);
+
+		vk::DescriptorSetAllocateInfo dsai;
+		dsai
+			.setDescriptorPool(vkContext::GetDescriptorPool())
+			.setDescriptorSetCount(setlayouts.size())
+			.setPSetLayouts(setlayouts.data())
+			;
+
+		m_vecDescriptorSets = device.allocateDescriptorSets(dsai);
+
+		// Shaders
 		vk::PipelineShaderStageCreateInfo pssciVert;
 		pssciVert.setModule(m_vkShaderMod);
 		pssciVert.setStage(vk::ShaderStageFlagBits::eVertex);
@@ -151,6 +182,9 @@ namespace LT {
 
 	Pipeline::~Pipeline() {
 		vk::Device& device = vkContext::GetVkDevice();
+
+		device.destroyDescriptorSetLayout( m_vkDescSetLayout );
+
 		device.destroyShaderModule(m_vkShaderMod);
 		device.destroyPipelineLayout(m_vkPipelineLayout);
 		device.destroyPipeline(m_vkPipeline);
@@ -252,6 +286,16 @@ namespace LT {
 
 		// 绑定顶点缓冲
 		debugCommandBuffer.bindIndexBuffer(m_pIndexBuffer->GetNativeBuffer(), 0, vk::IndexType::eUint32);
+
+		// 绑定Const buffer
+		debugCommandBuffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics,
+			m_vkPipelineLayout,
+			0,
+			m_vecDescriptorSets[nFrameIndex],
+			nullptr
+		);
+
 
 		// Viewport 和 Scissor 被指定为动态状态
 		// 创建并绑定
@@ -454,4 +498,40 @@ namespace LT {
 	{
 		m_pIndexBuffer = pIndexBuffer;
 	}
+
+	void Pipeline::SetConstBufferMVPMat(const std::vector<ConstBuffer*>& vecConstBuffers)
+	{
+		m_vecConstBufferMVPMat = vecConstBuffers;
+
+		vk::Device& device = vkContext::GetVkDevice();
+
+		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)
+		{
+			vk::DescriptorBufferInfo dbi;
+			dbi
+				.setBuffer(m_vecConstBufferMVPMat[i]->GetNativeBuffer())
+				.setOffset(0)
+				.setRange(m_vecConstBufferMVPMat[i]->Size())
+				;
+			vk::WriteDescriptorSet wds;
+			wds
+				.setDstSet(m_vecDescriptorSets[i])
+				.setDstBinding(0)
+				.setDstArrayElement(0)
+				.setDescriptorCount(1)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setPBufferInfo(&dbi)
+				;
+
+			device.updateDescriptorSets(wds, {});
+
+		}
+
+
+	}
+
+	void Pipeline::UpdateConstBuffer() {
+		
+	}
+	
 } //namespace LT

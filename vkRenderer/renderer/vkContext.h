@@ -28,6 +28,8 @@ namespace LT {
 		vk::CommandPool m_vkCommandPool;
 		std::vector<vk::CommandBuffer> m_vecCommandBuffers;
 
+		// Descriptor Pool
+		vk::DescriptorPool m_vkDescriptorPool;
 
 		std::unique_ptr<SwapChain> m_pSwapChain;
 
@@ -45,8 +47,7 @@ namespace LT {
 
 		void CreateCommandPool();
 		void CreateCommandBuffer();
-
-
+		void CreateDescriptorPool();
 
 	public:
 		// 找到了一个同时支持Surface和Graphics的Queue且只创建了一个Queue
@@ -82,6 +83,8 @@ namespace LT {
 		static vk::CommandPool& GetCmdPool();
 
 		static vk::CommandBuffer& GetCmdBuffer(unsigned int nIndex);
+
+		static vk::DescriptorPool& GetDescriptorPool();
 	};
 
 }

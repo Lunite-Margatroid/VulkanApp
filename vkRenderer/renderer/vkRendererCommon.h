@@ -25,6 +25,8 @@
 #include "vulkan\vulkan.hpp"
 #include "vulkan\vulkan_raii.hpp"
 
+#include "glm\glm.hpp"
+
 #define LOG(strLog) do{ \
 		std::time_t curTime = std::time(nullptr);\
 		char buffer[64];\

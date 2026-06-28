@@ -4,6 +4,8 @@
 #include "BufferManager.h"
 #include "DeviceMemoryManager.h"
 
+
+
 namespace LT {
 	Renderer::Renderer()
 	{
@@ -41,17 +43,55 @@ namespace LT {
 
 		m_pPipeline->SetIndexBuffer(m_pDebugIndexBuffer);
 
+
+		
+		// MVP mat
+		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)
+		{
+			m_vecConstBufferMVPMat.push_back(BufferManager::CreateConstBuffer(sizeof(m_MVPMatBuf), &m_MVPMatBuf));
+		}
+
+		m_pPipeline->SetConstBufferMVPMat(m_vecConstBufferMVPMat);
+
 	}
 	Renderer::~Renderer()
 	{
-		
-		BufferManager::DeleteBuffer(m_pDebugVertexBuffer);
-		BufferManager::DeleteBuffer(m_pDebugIndexBuffer);
+		for (ConstBuffer* pConstBufer : m_vecConstBufferMVPMat)
+		{
+			BufferManager::DeleteBuffer(reinterpret_cast<Buffer*>(pConstBufer));
+		}
+		m_vecConstBufferMVPMat.clear();
+
+		BufferManager::DeleteBuffer(reinterpret_cast<Buffer*>(m_pDebugVertexBuffer));
+		BufferManager::DeleteBuffer(reinterpret_cast<Buffer*>(m_pDebugIndexBuffer));
 
 		m_pPipeline.reset();
 
 		BufferManager::Release();
 		DeviceMemoryManager::Release();
+	}
+
+	void Renderer::UpdateConstBufer()
+	{
+		for (ConstBuffer* pConstBuffer : m_vecConstBufferMVPMat)
+		{
+			pConstBuffer->UpdateConstBuffer(&m_MVPMatBuf);
+		}
+	}
+
+	void Renderer::SetModelMat(const float* pModelMat)
+	{
+		memcpy(&m_MVPMatBuf.modelMat, pModelMat, sizeof(glm::mat4));
+	}
+
+	void Renderer::SetViewMat(const float* pViewMat)
+	{
+		memcpy(&m_MVPMatBuf.viewMat, pViewMat, sizeof(glm::mat4));
+	}
+
+	void Renderer::SetProjectionMat(const float* pProjectionMat)
+	{
+		memcpy(&m_MVPMatBuf.projectionMat, pProjectionMat, sizeof(glm::mat4));
 	}
 
 	void Renderer::DrawFrame() {

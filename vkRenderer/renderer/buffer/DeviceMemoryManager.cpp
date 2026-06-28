@@ -12,6 +12,27 @@ namespace LT {
 	}
 
 
+	void* DeviceMemoryManager::MapMemory(Buffer& buffer)
+	{
+		auto iter = m_mapVkMemory.find(buffer.GetBufferID());
+		if (iter == m_mapVkMemory.end())
+		{
+			LOG_WARNING("%s, Cant find the memory.", __FUNCTION__);
+			return nullptr;
+		}
+		return vkContext::GetVkDevice().mapMemory(iter->second, 0, buffer.Size());
+	}
+
+	void DeviceMemoryManager::UnmapMemory(Buffer& buffer)
+	{
+		auto iter = m_mapVkMemory.find(buffer.GetBufferID());
+		if (iter == m_mapVkMemory.end())
+		{
+			LOG_WARNING("%s, Cant find the memory.", __FUNCTION__);
+		}
+		vkContext::GetVkDevice().unmapMemory(iter->second);
+	}
+
 	void DeviceMemoryManager::Init() {
 		if (!s_pDeviceMemoryManagerInstance)
 		{
@@ -95,6 +116,10 @@ namespace LT {
 	{
 		GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pIndexBuffer), vk::MemoryPropertyFlagBits::eDeviceLocal);
 	}
+	void DeviceMemoryManager::AllocateMemory(ConstBuffer* pConstBuffer)
+	{
+		GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pConstBuffer), vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible);
+	}
 	void DeviceMemoryManager::AsignMemory(StagingBuffer* stagingBuffer, size_t nSize, void* pData)
 	{
 		auto iter = GetInstance().m_mapVkMemory.find(stagingBuffer->GetBufferID());
@@ -107,6 +132,22 @@ namespace LT {
 
 		// 野割
 		vk::Device& device =  vkContext::GetVkDevice();
+		void* pDstData = device.mapMemory(iter->second, 0, nSize);
+		memcpy(pDstData, pData, nSize);
+		device.unmapMemory(iter->second);
+	}
+	void DeviceMemoryManager::AsignMemory(ConstBuffer* pConstBuffer, size_t nSize, void* pData)
+	{
+		auto iter = GetInstance().m_mapVkMemory.find(pConstBuffer->GetBufferID());
+		if (iter == GetInstance().m_mapVkMemory.end())
+		{
+			LOG_WARNING("%s, the Buffer did not exist", __FUNCTION__);
+		}
+
+		RENDERER_ASSERT(pConstBuffer->Size() >= nSize, "out of bounds");
+
+		// 野割
+		vk::Device& device = vkContext::GetVkDevice();
 		void* pDstData = device.mapMemory(iter->second, 0, nSize);
 		memcpy(pDstData, pData, nSize);
 		device.unmapMemory(iter->second);

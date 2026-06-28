@@ -1,16 +1,3 @@
-static float2 position[3] = float2[](
-	float2(0.0, -0.5),
-	float2(-0.5, 0.5),
-	float2(0.5, 0.5)
-);
-
-static float4 colors[3] = float4[](
-	float4(1, 0, 0, 1),
-	float4(0, 1, 0, 1),
-	float4(0, 0, 1, 1)
-);
-
-
 struct VertexInput{
 	float2 vertPosition;
 	float3 vertColor;
@@ -21,10 +8,27 @@ struct VertexOutput{
 	float4 sv_position : SV_Position;	// system value Position
 };
 
+struct MVPMatrix{
+	float4x4 modelMat;
+	float4x4 viewMat;
+	float4x4 projectiondMat;
+};
+
+ConstantBuffer<MVPMatrix> u_MVPMatix;
+
+
+
 [shader("vertex")]
 VertexOutput VertMain(VertexInput vertIn){
 	VertexOutput output;
-	output.sv_position = float4(vertIn.vertPosition, 0.0, 1.0);
+	output.sv_position = 
+		mul(u_MVPMatix.projectiondMat, 
+			mul(u_MVPMatix.viewMat, 
+				mul(u_MVPMatix.modelMat, float4(vertIn.vertPosition, 0.0, 1.0))
+				)
+			);
+	//output.sv_position = float4(vertIn.vertPosition, 0.0, 1.0);
+	//output.cv_vertexColor =float4(u_MVPMatix.modelMat[0].xy,1.0, 1.0);
 	output.cv_vertexColor = float4(vertIn.vertColor, 1.0);
 	return output;
 }

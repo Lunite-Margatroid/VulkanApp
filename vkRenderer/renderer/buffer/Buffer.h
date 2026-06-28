@@ -72,7 +72,7 @@ namespace LT {
 
 	protected:
 		const BufferID m_nID;
-		uint8_t* m_pBuffer;
+		uint8_t* m_pBuffer; 
 		size_t m_nSize;
 		vk::Buffer m_vkBuffer;
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "CameraPerspective.h"
 
 namespace LT {
 	class Renderer;
@@ -6,6 +7,13 @@ namespace LT {
 	class Engine {
 	private:
 		Renderer* m_pDebugRenderer;
+		CameraPerspective m_camera;
+
+		uint64_t m_nFrameIndex;
+
+		unsigned int m_nWidth;
+		unsigned int m_nHeight;
+
 	public:
 		Engine();
 		~Engine();

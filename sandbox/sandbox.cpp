@@ -94,7 +94,6 @@ int main() {
 void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngine) {
 
 	switch (event.window.event) {
-		case SDL_WindowEventID::SDL_WINDOWEVENT_MOVED:
 		case SDL_WindowEventID::SDL_WINDOWEVENT_MAXIMIZED:
 		case SDL_WindowEventID::SDL_WINDOWEVENT_RESIZED:
 		case SDL_WindowEventID::SDL_WINDOWEVENT_SIZE_CHANGED:
@@ -106,6 +105,8 @@ void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngi
 			pEngine->WaitIdel();
 			pEngine->ResizeSwapChain(0, 0);
 			break;
+
+		case SDL_WindowEventID::SDL_WINDOWEVENT_MOVED:
 			break;
 		default:
 			break;

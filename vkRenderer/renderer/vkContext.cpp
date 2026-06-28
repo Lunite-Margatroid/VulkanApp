@@ -21,10 +21,15 @@ namespace LT {
 		CreateCommandPool();
 		CreateCommandBuffer();
 
+		CreateDescriptorPool();
 
 	}
 
 	vkContext::~vkContext() {
+
+
+		m_vkDevice.destroyDescriptorPool(m_vkDescriptorPool);
+
 		// 销毁Command Pool
 		m_vkDevice.destroyCommandPool(m_vkCommandPool);
 		// command buffer会跟随command pool 自动释放
@@ -299,6 +304,25 @@ namespace LT {
 
 	}
 
+	void vkContext::CreateDescriptorPool()
+	{
+		vk::DescriptorPoolSize dps;
+		dps
+			.setType(vk::DescriptorType::eUniformBuffer)
+			.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
+			;
+
+		vk::DescriptorPoolCreateInfo dpci;
+		dpci
+			.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
+			.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
+			.setPoolSizeCount(1)
+			.setPPoolSizes(&dps)
+			;
+
+		m_vkDescriptorPool = m_vkDevice.createDescriptorPool(dpci);
+	}
+
 
 	void vkContext::ResizeSwapChain(unsigned int width, unsigned int height)
 	{
@@ -337,6 +361,11 @@ namespace LT {
 	vk::CommandBuffer& vkContext::GetCmdBuffer(unsigned int nIndex)
 	{
 		return GetInstance().m_vecCommandBuffers[nIndex];
+	}
+
+	vk::DescriptorPool& vkContext::GetDescriptorPool()
+	{
+		return GetInstance().m_vkDescriptorPool;
 	}
 
 

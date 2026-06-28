@@ -17,6 +17,15 @@ namespace LT {
 		Camera(Camera&&) = delete;
 
 		glm::mat4 GetViewMat() const;
+		virtual glm::mat4 GetProjectionMat() const = 0;
+
+		void SetEye(const glm::vec3& eye);
+		void SetLookAt(const glm::vec3& lookat);
+		void SetUpDir(const glm::vec3& upDir);
+
+		glm::vec3 GetEye() const;
+		glm::vec3 GetLookAt()const;
+		glm::vec3 GetUpDir()const;
 
 		void OnEvent() override;
 	};

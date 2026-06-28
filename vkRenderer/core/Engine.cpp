@@ -2,11 +2,15 @@
 #include "Engine.h"
 #include "vkContext.h"
 #include "Renderer.h"
+#include "EngineCommon.h"
 
 namespace LT {
 
 	Engine::Engine()
 		:m_pDebugRenderer(nullptr)
+		, m_nFrameIndex(0)
+		, m_nWidth(1280)
+		, m_nHeight(720)
 	{
 		
 	}
@@ -24,6 +28,18 @@ namespace LT {
 		if (m_pDebugRenderer == nullptr) {
 			m_pDebugRenderer = new Renderer();
 		}
+
+		m_camera.SetAspect(static_cast<float>(m_nWidth) / static_cast<float>(m_nHeight));
+		
+
+		glm::mat4 viewMat = m_camera.GetViewMat();
+		glm::mat4 projectionMat = m_camera.GetProjectionMat();
+		glm::mat4 modelMat = glm::mat4(1.0f);
+		m_pDebugRenderer->SetViewMat(reinterpret_cast<float*>(& viewMat));
+		m_pDebugRenderer->SetProjectionMat(reinterpret_cast<float*>(&projectionMat));
+		m_pDebugRenderer->SetModelMat(reinterpret_cast<float*>(&modelMat));
+
+		m_pDebugRenderer->UpdateConstBufer();
 	}
 
 	void Engine::ReleaseRenderer()
@@ -45,11 +61,38 @@ namespace LT {
 	}
 
 	void Engine::ResizeSwapChain(unsigned int width, unsigned int height) {
+		m_nWidth = width;
+		m_nHeight = height;
 		vkContext::ResizeSwapChain(width, height);
 	}
 
 	void Engine::DrawFrame()
 	{
+		m_nFrameIndex++;
+
+		float tValue = static_cast<float>(m_nFrameIndex % 200) / 200.0f * glm::pi<float>() * 2.f;
+
+		float fRadius = 4.f;
+		float fX = fRadius * glm::cos(tValue);
+		float fZ = fRadius * glm::sin(tValue);
+		float fY = 0.f;
+
+		m_camera.SetEye(glm::vec3(fX, fY, fZ));
+		glm::mat4 viewMat = m_camera.GetViewMat();
+		
+		float fAspect = 1.f;
+		if (m_nHeight != 0 && m_nWidth != 0)
+		{
+			fAspect = static_cast<float>(m_nWidth) / static_cast<float>(m_nHeight);
+		}
+		m_camera.SetAspect(fAspect);
+
+		glm::mat4 projectionMat = m_camera.GetProjectionMat();
+
+		m_pDebugRenderer->SetViewMat(reinterpret_cast<float*>(&viewMat));
+		m_pDebugRenderer->SetProjectionMat(reinterpret_cast<float*>(&projectionMat));
+		m_pDebugRenderer->UpdateConstBufer();
+
 		if (m_pDebugRenderer)
 		{
 			m_pDebugRenderer->DrawFrame();
