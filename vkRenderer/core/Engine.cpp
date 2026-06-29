@@ -1,8 +1,8 @@
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "Engine.h"
 #include "vkContext.h"
 #include "Renderer.h"
-#include "EngineCommon.h"
 
 namespace LT {
 
@@ -105,8 +105,8 @@ namespace LT {
 		glm::mat4 projectionMat = m_persCamera.GetProjectionMat();
 		glm::mat4 viewMat = m_persCamera.GetViewMat();
 
-		m_pDebugRenderer->SetViewMat(reinterpret_cast<float*>(&viewMat));
-		m_pDebugRenderer->SetProjectionMat(reinterpret_cast<float*>(&projectionMat));
+		m_pDebugRenderer->SetViewMat(reinterpret_cast<float*>(glm::value_ptr(viewMat)));
+		m_pDebugRenderer->SetProjectionMat(reinterpret_cast<float*>(glm::value_ptr(projectionMat)));
 		m_pDebugRenderer->UpdateConstBufer();
 
 		if (m_pDebugRenderer)

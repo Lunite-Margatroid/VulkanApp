@@ -14,6 +14,7 @@
 #include <optional>
 #include <memory>
 
+#include "EngineCommon.h"
 #include "Engine.h"
 
 

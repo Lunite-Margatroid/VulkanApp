@@ -1,5 +1,6 @@
 #pragma once
 #include "IEventNode.h"
+#include "EngineCommon.h"
 namespace LT {
 	class Camera : public IEventNode{
 	protected:

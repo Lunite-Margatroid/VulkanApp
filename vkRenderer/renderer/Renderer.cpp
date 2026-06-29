@@ -1,5 +1,6 @@
 #include "vkRendererCommon.h"
 #include "vkContext.h"
+#include "EngineCommon.h"
 #include "Renderer.h"
 #include "BufferManager.h"
 #include "DeviceMemoryManager.h"

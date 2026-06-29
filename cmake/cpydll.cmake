@@ -43,3 +43,30 @@ if(EXISTS "${ENV_VULKAN_PATH}/Bin/slang.dll")
 else()
 	message(FATAL_ERROR, "File does NOT exist: ${ENV_VULKAN_PATH}/Bin/slang.dll  glslang.dll")
 endif()
+
+
+# 拷贝OpenImageIO动态库
+file(GLOB OIIO_DLLS "${OIIO_INSTALLED_DIR}/bin/*.dll")
+if(NOT EXISTS "${OIIO_INSTALLED_DIR}/bin/OpenImageIO.dll")
+	message(FATAL_ERROR, "OpenImageIO Did not exist")
+endif()
+
+foreach(DLL ${OIIO_DLLS})
+	message(STATUS "Found OpenImageIO DLL: ${dll}")
+	# 构建目标文件路径
+	get_filename_component(DLL_NAME ${DLL} NAME)
+	set(DEST_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/${DLL_NAME}")
+
+
+	message(STATUS "Copy dll: ${DLL}")
+	
+	add_custom_command(
+		TARGET CopyDLLs
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			"${DLL}"
+			"${DEST_FILE}"
+		COMMENT "Copying ${DLL} to output directory"
+	)
+
+endforeach()

@@ -30,12 +30,21 @@ endif()
 
 # ÒÀÀµ¿âÄ¿Â¼
 # SDL2
-set(SDL2_INSTALLED_DIR "${ENV_VULKAN_PATH}" CACHE PATH "SDL2 Installed dir")
+if(NOT DEFINED SDL2_INSTALLED_DIR)
+    set(SDL2_INSTALLED_DIR "${ENV_VULKAN_PATH}" CACHE PATH "SDL2 Installed dir")
+endif()
 # glm
-set(GLM_INSTALLED_DIR "${ENV_VULKAN_PATH}" CACHE PATH "glm installed dir")
+if(NOT DEFINED GLM_INSTALLED_DIR)
+    set(GLM_INSTALLED_DIR "${ENV_VULKAN_PATH}" CACHE PATH "glm installed dir")
+endif()
+# OpenImageIO
+if(NOT DEFINED OIIO_INSTALLED_DIR)
+    set(OIIO_INSTALLED_DIR "C:/Program Files/OpenImageIO" CACHE PATH "OpenImageIO installed dir")
+endif()
 
 message(STATUS "SDL2_INSTALLED_DIR = ${SDL2_INSTALLED_DIR}")
 message(STATUS "GLM_INSTALLED_DIR = ${GLM_INSTALLED_DIR}")
+message(STATUS "OIIO_INSTALLED_DIR = ${OIIO_INSTALLED_DIR}")
 
 # ¼ì²évulkan Slang
 include(cmake/checkvulkan.cmake)
