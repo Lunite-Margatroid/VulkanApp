@@ -24,10 +24,15 @@ namespace LT {
 		void SetRight(float fRight);
 		void SetTop(float fTop);
 		void SetBottom(float fBottom);
+		void SetNear(float fNear);
+		void SetFar(float fFar);
+
 
 		float GetLeft() const;
 		float GetRight() const;
 		float GetTop() const;
 		float GetBottom() const;
+		float GetNear() const;
+		float GetFar() const;
 	};
 } // namespace LT

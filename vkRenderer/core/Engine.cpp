@@ -102,8 +102,8 @@ namespace LT {
 		m_camera.SetLeft(-fWidth / 2.f);
 		m_camera.SetRight(fWidth / 2.f);
 
-		glm::mat4 projectionMat = m_camera.GetProjectionMat();
-		glm::mat4 viewMat = m_camera.GetViewMat();
+		glm::mat4 projectionMat = m_persCamera.GetProjectionMat();
+		glm::mat4 viewMat = m_persCamera.GetViewMat();
 
 		m_pDebugRenderer->SetViewMat(reinterpret_cast<float*>(&viewMat));
 		m_pDebugRenderer->SetProjectionMat(reinterpret_cast<float*>(&projectionMat));

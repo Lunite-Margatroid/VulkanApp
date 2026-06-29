@@ -1,4 +1,7 @@
+// 深度映射到[0,1]
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+// 使用左手坐标系
+#define GLM_FORCE_LEFT_HANDED
 #include "glm/glm.hpp"
 #include "glm/matrix.hpp"
 #include "glm/gtc/quaternion.hpp"

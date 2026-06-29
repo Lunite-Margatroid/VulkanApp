@@ -8,8 +8,8 @@ namespace LT {
 		, m_fRight(1.f)
 		, m_fTop(1.f)
 		, m_fBottom(-1.f)
-		, m_fNear(100.f)
-		, m_fFar(-100.f)
+		, m_fNear(0.01f)
+		, m_fFar(100.f)
 	{
 	}
 	glm::mat4 CameraOrtho::GetProjectionMat() const
@@ -32,6 +32,14 @@ namespace LT {
 	{
 		m_fBottom = fBottom;
 	}
+	void CameraOrtho::SetNear(float fNear)
+	{
+		m_fNear = fNear;
+	}
+	void CameraOrtho::SetFar(float fFar)
+	{
+		m_fFar = fFar;
+	}
 	float CameraOrtho::GetLeft() const
 	{
 		return m_fLeft;
@@ -47,5 +55,13 @@ namespace LT {
 	float CameraOrtho::GetBottom() const
 	{
 		return m_fBottom;
+	}
+	float CameraOrtho::GetNear() const
+	{
+		return m_fNear;
+	}
+	float CameraOrtho::GetFar() const
+	{
+		return m_fFar;
 	}
 }
