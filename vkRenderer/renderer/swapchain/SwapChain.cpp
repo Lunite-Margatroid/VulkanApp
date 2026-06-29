@@ -87,7 +87,7 @@ namespace LT {
 			.setImageArrayLayers(1)											// 每个Image包含的层数 if 不使用立体渲染 then 1
 			// vr 裸眼3D之类可能需要复数个layers
 			.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)		// eColorAttachment 直接作为渲染对象
-			.setPreTransform(vk::SurfaceTransformFlagBitsKHR::eIdentity)	// 不做任何变化
+			.setPreTransform(vk::SurfaceTransformFlagBitsKHR::eIdentity)	// 不变
 			.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)		// 忽略Alpha直接覆盖
 			.setPresentMode(m_sSwapChainInfo.presentMode)					// 交换模式
 			.setClipped(true)												// if 尺寸不合 then 裁剪

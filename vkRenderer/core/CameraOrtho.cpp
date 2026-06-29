@@ -12,7 +12,7 @@ namespace LT {
 	}
 	glm::mat4 CameraOrtho::GetProjectionMat() const
 	{
-		return glm::ortho(m_fLeft, m_fRight, m_fBottom, m_fTop);
+		return MAT4_SCREEN_TRANS_MAT * glm::ortho(m_fLeft, m_fRight, m_fBottom, m_fTop);
 	}
 	void CameraOrtho::SetLeft(float fLeft)
 	{

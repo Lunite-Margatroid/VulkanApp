@@ -75,7 +75,7 @@ namespace LT {
 		float fRadius = 4.f;
 		float fX = fRadius * glm::cos(tValue);
 		float fZ = fRadius * glm::sin(tValue);
-		float fY = 0.f;
+		float fY = 2.f;
 
 		m_camera.SetEye(glm::vec3(fX, fY, fZ));
 		glm::mat4 viewMat = m_camera.GetViewMat();

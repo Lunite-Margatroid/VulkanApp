@@ -14,7 +14,7 @@ namespace LT {
 	}
 	glm::mat4 CameraPerspective::GetProjectionMat() const
 	{
-		return glm::perspective(m_fFov, m_fAspect, m_fNear, m_fFar);
+		return MAT4_SCREEN_TRANS_MAT * glm::perspective(m_fFov, m_fAspect, m_fNear, m_fFar);
 	}
 	float CameraPerspective::GetFov() const
 	{
