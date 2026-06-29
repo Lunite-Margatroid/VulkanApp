@@ -9,11 +9,15 @@ namespace LT {
 		float m_fRight;
 		float m_fTop;
 		float m_fBottom;
+		float m_fNear;
+		float m_fFar;
 
 	protected:
-		CameraOrtho();
 
 	public:
+
+		CameraOrtho();
+
 		glm::mat4 GetProjectionMat() const override;
 
 		void SetLeft(float fLeft);

@@ -8,11 +8,13 @@ namespace LT {
 		, m_fRight(1.f)
 		, m_fTop(1.f)
 		, m_fBottom(-1.f)
+		, m_fNear(100.f)
+		, m_fFar(-100.f)
 	{
 	}
 	glm::mat4 CameraOrtho::GetProjectionMat() const
 	{
-		return MAT4_SCREEN_TRANS_MAT * glm::ortho(m_fLeft, m_fRight, m_fBottom, m_fTop);
+		return MAT4_SCREEN_TRANS_MAT * glm::ortho(m_fLeft, m_fRight, m_fBottom, m_fTop, m_fNear, m_fFar);
 	}
 	void CameraOrtho::SetLeft(float fLeft)
 	{
