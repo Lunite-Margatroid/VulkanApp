@@ -10,6 +10,7 @@ file(GLOB SOURCES
 	"core/image/*.cpp"
 	"renderer/buffer/*.cpp"
 	"logger/*.cpp"
+	"renderer/deviceImage/*.cpp"
 )
 
 #set(HEADERS
@@ -28,6 +29,7 @@ file(GLOB PRIVATE_HEADERS
     "exception/*.h"
 	"renderer/buffer/*.h"
 	"core/image/*.h"
+	"renderer/deviceImage/*.h"
 )
 
 # ´´½¨¾²Ì¬¿â
