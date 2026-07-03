@@ -368,6 +368,48 @@ namespace LT {
 		return GetInstance().m_vkDescriptorPool;
 	}
 
+	vk::CommandBuffer vkContext::BeginSingleTimeCmdBuffer()
+	{
+		vk::Device& device = vkContext::GetVkDevice();
+		vk::Queue& queue = vkContext::GetCmdQueue();
+
+		// 创建临时的command buffer
+		vk::CommandBufferAllocateInfo cbai;
+		cbai
+			.setCommandBufferCount(1)
+			.setCommandPool(vkContext::GetCmdPool())
+			.setLevel(vk::CommandBufferLevel::ePrimary)
+			;
+
+		std::vector<vk::CommandBuffer> vkTempCmdBuffers = device.allocateCommandBuffers(cbai);
+
+		// 开始记录命令
+		vk::CommandBufferBeginInfo cbbi;
+		cbbi.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+		vkTempCmdBuffers[0].begin(cbbi);
+
+		return vkTempCmdBuffers[0];
+	}
+
+	void vkContext::EndSingleTimeCmdBuffer(vk::CommandBuffer& cmdBuffer)
+	{
+		vk::Queue& queue = vkContext::GetCmdQueue();
+		vk::Device& device = vkContext::GetVkDevice();
+
+		// 结束记录命令
+		cmdBuffer.end();
+
+		// 提交命令
+		vk::SubmitInfo si;
+		si.setCommandBuffers(cmdBuffer);
+		queue.submit(si);
+
+		// 等待命令执行完成
+		queue.waitIdle();
+
+		device.freeCommandBuffers(vkContext::GetCmdPool(), cmdBuffer);
+	}
+
 
 	vk::Device& vkContext::GetVkDevice() {
 		return GetInstance().m_vkDevice;

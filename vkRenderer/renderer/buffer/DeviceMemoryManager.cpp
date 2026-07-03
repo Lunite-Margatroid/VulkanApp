@@ -1,13 +1,15 @@
 #include "vkRendererCommon.h"
 #include "vkContext.h"
 #include "DeviceMemoryManager.h"
+#include "BufferManager.h"
+#include "StagingBuffer.h"
 
 namespace LT {
 
 	DeviceMemoryManager* DeviceMemoryManager::s_pDeviceMemoryManagerInstance = nullptr;
 
 	DeviceMemoryManager& DeviceMemoryManager::GetInstance() {
-		RENDERER_ASSERT(s_pDeviceMemoryManagerInstance,"DeviceMemoryManager did not init.");
+		RENDERER_ASSERT(s_pDeviceMemoryManagerInstance, "DeviceMemoryManager did not init.");
 		return *s_pDeviceMemoryManagerInstance;
 	}
 
@@ -56,7 +58,7 @@ namespace LT {
 	}
 
 	DeviceMemoryManager::DeviceMemoryManager() {
-		
+
 	}
 
 	DeviceMemoryManager::~DeviceMemoryManager() {
@@ -65,22 +67,13 @@ namespace LT {
 		}
 	}
 
-	void DeviceMemoryManager::AllocateMemory(Buffer& buffer, vk::MemoryPropertyFlags memoryPorp)
+	vk::DeviceMemory DeviceMemoryManager::AllocateDeviceMemory(vk::MemoryRequirements vkMemRequire, vk::MemoryPropertyFlags memoryPorp)
 	{
-		BufferID bufferID = buffer.GetBufferID();
-		vk::Buffer nativeBuffer = buffer.GetNativeBuffer();
 
-		if (m_mapVkMemory.contains(bufferID)) {
-			return;
-		}
-
-
-		vk::Device& device = vkContext::GetVkDevice();
 		vk::DeviceMemory memory;
+		vk::Device& device = vkContext::GetVkDevice();
 
 
-		// 分配空间
-		vk::MemoryRequirements vkMemRequire = device.getBufferMemoryRequirements(nativeBuffer);
 
 		vk::PhysicalDevice& phyDevice = vkContext::GetPhysicalDevice();
 		vk::PhysicalDeviceMemoryProperties vkMemProp = phyDevice.getMemoryProperties();
@@ -101,8 +94,42 @@ namespace LT {
 
 		}
 		RENDERER_ASSERT(memory, "Memory Allocation Failed.");
+		return memory;
+	}
+
+	void DeviceMemoryManager::AllocateMemory(Buffer& buffer, vk::MemoryPropertyFlags memoryPorp)
+	{
+		BufferID bufferID = buffer.GetBufferID();
+		vk::Buffer nativeBuffer = buffer.GetNativeBuffer();
+		vk::Device& device = vkContext::GetVkDevice();
+
+		if (m_mapVkMemory.contains(bufferID)) {
+			LOG_WARNING("%s, the buffer memory has been allocated", __FUNCTION__);
+			return;
+		}
+		// 分配空间
+		vk::MemoryRequirements vkMemRequire = device.getBufferMemoryRequirements(nativeBuffer);
+
+		vk::DeviceMemory memory = AllocateDeviceMemory(vkMemRequire, memoryPorp);
 		m_mapVkMemory[bufferID] = memory;
 		device.bindBufferMemory(nativeBuffer, memory, 0);
+	}
+	void DeviceMemoryManager::AllocateImageMemory(DeviceImage& image, vk::MemoryPropertyFlags memoryPorp)
+	{
+		ImageID imageID = image.GetImageID();
+		vk::Image nativeImage = image.GetNativeDeviceImage();
+		vk::Device& device = vkContext::GetVkDevice();
+
+		if (m_mapVkImageMemory.contains(imageID)) {
+			LOG_WARNING("%s, the image memory has been allocated", __FUNCTION__);
+			return;
+		}
+
+		vk::MemoryRequirements vkMemRequire = device.getImageMemoryRequirements(nativeImage);
+		vk::DeviceMemory memory = AllocateDeviceMemory(vkMemRequire, memoryPorp);
+		m_mapVkImageMemory[imageID] = memory;
+		device.bindImageMemory(nativeImage, memory, 0);
+
 	}
 	void DeviceMemoryManager::AllocateMemory(VertexBuffer* pVertexBuffer)
 	{
@@ -131,7 +158,7 @@ namespace LT {
 		RENDERER_ASSERT(stagingBuffer->Size() >= nSize, "out of bounds");
 
 		// 填充
-		vk::Device& device =  vkContext::GetVkDevice();
+		vk::Device& device = vkContext::GetVkDevice();
 		void* pDstData = device.mapMemory(iter->second, 0, nSize);
 		memcpy(pDstData, pData, nSize);
 		device.unmapMemory(iter->second);
@@ -163,6 +190,49 @@ namespace LT {
 		else
 		{
 			LOG_WARNING("%s, the buffer did not allocate", __FUNCTION__);
+		}
+	}
+	void DeviceMemoryManager::AllocateMemory(Image2DShaderRes* pImage)
+	{
+		DeviceMemoryManager& instance = GetInstance();
+		instance.AllocateImageMemory(*reinterpret_cast<DeviceImage*>(pImage), vk::MemoryPropertyFlagBits::eDeviceLocal);
+	}
+	void DeviceMemoryManager::AsignMemory(Image2DShaderRes* pImage, size_t nSize, void* pData)
+	{
+		StagingBuffer* pStagingBuffer = BufferManager::CreateStagingBuffer(nSize, pData);
+
+		vk::BufferImageCopy bic;
+		bic
+			.setBufferOffset(0)
+			.setImageOffset(vk::Offset3D(0, 0, 0))
+			.setImageExtent(vk::Extent3D(pImage->GetWidth(), pImage->GetHeight(), 1))
+			;
+
+		vk::CommandBuffer vkCmdBuffer = vkContext::BeginSingleTimeCmdBuffer();
+		vkCmdBuffer.copyBufferToImage(
+			pStagingBuffer->GetNativeBuffer(), 
+			pImage->GetNativeDeviceImage(), 
+			vk::ImageLayout::eTransferDstOptimal,
+			bic
+		);
+		vkContext::EndSingleTimeCmdBuffer(vkCmdBuffer);
+
+
+		BufferManager::DeleteBuffer(pStagingBuffer->GetBufferID());
+	}
+	void DeviceMemoryManager::FreeImageMemory(DeviceImage& image)
+	{
+		DeviceMemoryManager& instance = DeviceMemoryManager::GetInstance();
+		auto iter = instance.m_mapVkImageMemory.find(image.GetImageID());
+		if (iter == instance.m_mapVkImageMemory.end())
+		{
+			LOG_WARNING("%s, the image did not allocate", __FUNCTION__);
+		}
+		else
+		{
+			vk::Device& device = vkContext::GetVkDevice();
+			device.freeMemory(iter->second);
+			instance.m_mapVkImageMemory.erase(iter);
 		}
 	}
 } // namespace LT

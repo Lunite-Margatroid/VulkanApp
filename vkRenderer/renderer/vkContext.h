@@ -85,6 +85,10 @@ namespace LT {
 		static vk::CommandBuffer& GetCmdBuffer(unsigned int nIndex);
 
 		static vk::DescriptorPool& GetDescriptorPool();
+
+		static vk::CommandBuffer BeginSingleTimeCmdBuffer();
+
+		static void EndSingleTimeCmdBuffer(vk::CommandBuffer& cmdBuffer);
 	};
 
 }

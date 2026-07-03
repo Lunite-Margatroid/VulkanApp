@@ -1,6 +1,8 @@
 // Renderer的图像
 // 包装vk的Image对象
 
+#pragma once
+
 namespace LT {
 
 
@@ -25,11 +27,20 @@ namespace LT {
 
 		DeviceImage& operator = (const DeviceImage&) = delete;
 		DeviceImage& operator = (DeviceImage&&) = delete;
-
+		
 		virtual void InitVKImage() = 0;
 
 	public:
 
+		vk::Image GetNativeDeviceImage();
+
+		ImageID GetImageID() const;
+
+		uint32_t GetWidth() const { return m_nWidth; }
+		uint32_t GetHeight() const { return m_nHeight; }
+		vk::Format GetFormat() const { return m_eFormat; }
+
+		virtual void AssignMemory(void* pData, size_t nSize) = 0;
 
 	};
 }

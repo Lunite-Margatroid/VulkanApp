@@ -4,17 +4,24 @@
 #include "StagingBuffer.h"
 #include "IndexBuffer.h"
 #include "ConstBuffer.h"
+#include "DeviceImage.h"
+#include "Image2DShaderRes.h"
 
 namespace LT {
 	class DeviceMemoryManager {
 	private:
 		std::map<BufferID, vk::DeviceMemory> m_mapVkMemory;
+		std::map<ImageID, vk::DeviceMemory> m_mapVkImageMemory;
 
 		DeviceMemoryManager();
 		~DeviceMemoryManager();
 
 
+		vk::DeviceMemory AllocateDeviceMemory(vk::MemoryRequirements, vk::MemoryPropertyFlags);
+
 		void AllocateMemory(Buffer& buffer, vk::MemoryPropertyFlags memoryPorp);
+
+		void AllocateImageMemory(DeviceImage& image, vk::MemoryPropertyFlags memoryPorp);
 	public:
 		/// <summary>
 		/// 把目标Buffer的Memory映射出来。只有Staging和ConstBuffer有效
@@ -44,6 +51,12 @@ namespace LT {
 		static void AsignMemory(StagingBuffer* stagingBuffer, size_t nSize, void* pData);
 		static void AsignMemory(ConstBuffer* pConstBuffer, size_t nSize, void* pData);
 		static void FreeMemory(Buffer& buffer);
+
+
+		static void AllocateMemory(Image2DShaderRes* pImage);
+		static void AsignMemory(Image2DShaderRes* pImage, size_t nSize, void* pData);
+		static void FreeImageMemory(DeviceImage& image);
+		
 		
 
 	};

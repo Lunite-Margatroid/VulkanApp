@@ -1,7 +1,11 @@
+#pragma once
+
 #include "DeviceImage.h"
 
 namespace LT {
-	class Image2DShaderRes : public DeviceImage{
+	class Image2DShaderRes : public DeviceImage {
+		friend class ImageManager;
+
 	protected:
 		Image2DShaderRes(ImageID id, vk::Format eFormat, uint32_t width, uint32_t height);
 		~Image2DShaderRes();
@@ -14,6 +18,13 @@ namespace LT {
 
 		void InitVKImage() override;
 
+
 	public:
+
+		/// <summary>
+		/// 分配空间并赋值 请保证pData有效，且格式与Image相符
+		/// </summary>
+		/// <param name="pData"></param>
+		void AssignMemory(void* pData, size_t nSize) override;
 	};
 } // namespace LT

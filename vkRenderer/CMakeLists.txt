@@ -52,6 +52,7 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
         "${CMAKE_CURRENT_SOURCE_DIR}/exception"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/buffer"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/deviceImage"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline"
 		"${CMAKE_CURRENT_SOURCE_DIR}/logger"
         "${GLM_INSTALLED_DIR}/Include"

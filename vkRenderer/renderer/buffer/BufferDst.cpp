@@ -25,35 +25,9 @@ namespace LT {
 			return;
 		}
 
-		vk::Device& device = vkContext::GetVkDevice();
-		vk::Queue& queue = vkContext::GetCmdQueue();
-
-		// 创建指令缓冲
-		vk::CommandBufferAllocateInfo cbai;
-		cbai.setCommandBufferCount(1)
-			.setCommandPool(vkContext::GetCmdPool())
-			.setLevel(vk::CommandBufferLevel::ePrimary)
-			;
-
-		std::vector<vk::CommandBuffer> vkTempTransferBuffer = device.allocateCommandBuffers(cbai);
-
-		// 录入指令
-		vk::CommandBufferBeginInfo cbbi;
-		cbbi.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-
-		vkTempTransferBuffer[0].begin(cbbi);
-		vkTempTransferBuffer[0].copyBuffer(pStagingBuffer->GetNativeBuffer(), m_vkBuffer, vk::BufferCopy(nSrcOffset, nDstOffset, m_nSize));
-		vkTempTransferBuffer[0].end();
-
-
-		// 提交指令
-		vk::SubmitInfo si;
-		si.setCommandBuffers(vkTempTransferBuffer);
-		vkContext::GetCmdQueue().submit(si);
-
-		// 等待完成
-		queue.waitIdle();
-
+		vk::CommandBuffer vkCmdBuffer = vkContext::BeginSingleTimeCmdBuffer();
+		vkCmdBuffer.copyBuffer(pStagingBuffer->GetNativeBuffer(), m_vkBuffer, vk::BufferCopy(nSrcOffset, nDstOffset, m_nSize));
+		vkContext::EndSingleTimeCmdBuffer(vkCmdBuffer);
 	}
 
 } // namespace LT

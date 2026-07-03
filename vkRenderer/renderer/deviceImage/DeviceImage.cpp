@@ -15,4 +15,12 @@ namespace LT {
     {
         vkContext::GetVkDevice().destroyImage(m_vkImage);
     }
+    vk::Image DeviceImage::GetNativeDeviceImage()
+    {
+        return m_vkImage;
+    }
+    ImageID DeviceImage::GetImageID() const
+    {
+        return m_nID;
+    }
 } // namespace LT
