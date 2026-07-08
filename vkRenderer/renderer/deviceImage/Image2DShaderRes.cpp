@@ -33,7 +33,7 @@ namespace LT {
 
 		RENDERER_ASSERT(m_vkImage, "Failed to create vk::Image for Image2DShaderRes");
 	}
-	void Image2DShaderRes::AssignMemory(void* pData, size_t nSize)
+	void Image2DShaderRes::AssignMemory(const void* pData, size_t nSize)
 	{
 		RENDERER_ASSERT(pData, "pData is nullptr in AssignMemory for Image2DShaderRes");
 

@@ -27,7 +27,7 @@ namespace LT {
 		static BufferManager& GetInstance();
 
 		static VertexBuffer* CreateVertexBuffer(size_t nSize, void *pData, uint64_t vertexCount);
-		static StagingBuffer* CreateStagingBuffer(size_t nSize, void* pData);
+		static StagingBuffer* CreateStagingBuffer(size_t nSize, const void* pData);
 		static IndexBuffer* CreateIndexBuffer(size_t nSize, void* pData, uint64_t indexCount);
 		static ConstBuffer* CreateConstBuffer(size_t nSize, void* pData);
 

@@ -25,6 +25,6 @@ namespace LT {
 		/// 分配空间并赋值 请保证pData有效，且格式与Image相符
 		/// </summary>
 		/// <param name="pData"></param>
-		void AssignMemory(void* pData, size_t nSize) override;
+		void AssignMemory( const void* pData, size_t nSize) override;
 	};
 } // namespace LT

@@ -11,7 +11,7 @@ namespace LT
 	{
 
 	}
-	Buffer::Buffer(BufferID id, size_t nSize, void* pData)
+	Buffer::Buffer(BufferID id, size_t nSize, const void* pData)
 		:m_nID(id)
 		,m_nSize(nSize)
 	{

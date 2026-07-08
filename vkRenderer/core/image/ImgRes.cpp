@@ -1,9 +1,10 @@
 #include "EngineCommon.h"
 
-#include "OpenImageIO/imageio.h"
 #include "ImgRes.h"
-
 #include "logger.h"
+
+
+
 
 using namespace OIIO_CURRENT_NAMESPACE;
 
@@ -33,7 +34,11 @@ namespace LT {
             return;
         }
 
-        std::unique_ptr<ImageInput> inputImage = ImageInput::open(path);
+        std::unique_ptr<ImageInput> inputImage;
+        
+
+        inputImage = ImageInput::open(path);
+
         if (!inputImage)
         {
             std::string err = geterror();

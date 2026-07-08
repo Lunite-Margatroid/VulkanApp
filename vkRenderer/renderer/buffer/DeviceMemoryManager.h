@@ -54,7 +54,7 @@ namespace LT {
 
 
 		static void AllocateMemory(Image2DShaderRes* pImage);
-		static void AsignMemory(Image2DShaderRes* pImage, size_t nSize, void* pData);
+		static void AsignMemory(Image2DShaderRes* pImage, size_t nSize, const void* pData);
 		static void FreeImageMemory(DeviceImage& image);
 		
 		

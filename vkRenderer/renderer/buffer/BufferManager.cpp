@@ -54,7 +54,7 @@ namespace LT {
 
 		return pVertexBuffer;
 	}
-	StagingBuffer* BufferManager::CreateStagingBuffer(size_t nSize, void* pData)
+	StagingBuffer* BufferManager::CreateStagingBuffer(size_t nSize, const void* pData)
 	{
 
 		BufferManager& bufferManager = GetInstance();

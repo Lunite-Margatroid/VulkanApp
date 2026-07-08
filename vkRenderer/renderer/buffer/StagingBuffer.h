@@ -8,7 +8,7 @@ namespace LT {
 
 	protected:
 		StagingBuffer(BufferID id);
-		StagingBuffer(BufferID id, size_t nSize, void* pData);
+		StagingBuffer(BufferID id, size_t nSize, const void* pData);
 		~StagingBuffer();
 	public:
 

@@ -9,7 +9,7 @@ namespace LT {
 	StagingBuffer::StagingBuffer(BufferID id)
 		:Buffer(id)
 	{}
-	StagingBuffer::StagingBuffer(BufferID id, size_t nSize, void* pData)
+	StagingBuffer::StagingBuffer(BufferID id, size_t nSize, const void* pData)
 	:Buffer(id, nSize, pData)
 	{
 		if (m_nSize && m_pBuffer)

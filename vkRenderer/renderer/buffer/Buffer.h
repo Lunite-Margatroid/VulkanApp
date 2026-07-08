@@ -78,7 +78,7 @@ namespace LT {
 
 	protected:
 		Buffer(BufferID id);
-		Buffer(BufferID id, size_t nSize, void* pData);
+		Buffer(BufferID id, size_t nSize, const void* pData);
 		virtual ~Buffer();
 
 		Buffer(const Buffer& other) = delete;

@@ -4,14 +4,16 @@
 #include "Renderer.h"
 #include "BufferManager.h"
 #include "DeviceMemoryManager.h"
-
-
+#include "ImageManager.h"
+#include "image/ImgRes.h"
 
 namespace LT {
 	Renderer::Renderer()
 	{
 		DeviceMemoryManager::Init();
 		BufferManager::Init();
+		ImageManager::Init();
+
 
 		m_pPipeline = std::make_unique<Pipeline>();
 
@@ -54,6 +56,12 @@ namespace LT {
 
 		m_pPipeline->SetConstBufferMVPMat(m_vecConstBufferMVPMat);
 
+		
+		ImgRes img("./TestAsset/UVTest.png", 8);
+		Image2DShaderRes* pImage = ImageManager::CreateImage2DShaderResource(vk::Format::eR8G8B8A8Srgb, img.GetWidth(), img.GetHeight());
+		pImage->AssignMemory(img.GetDataPtr(), img.GetDepth() / 8 * img.GetHeight() * img.GetWidth() * img.GetChannal());
+		ImageManager::DeleteImage(pImage);
+		
 	}
 	Renderer::~Renderer()
 	{
@@ -68,6 +76,7 @@ namespace LT {
 
 		m_pPipeline.reset();
 
+		ImageManager::Release();
 		BufferManager::Release();
 		DeviceMemoryManager::Release();
 	}

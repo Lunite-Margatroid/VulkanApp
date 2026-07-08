@@ -40,7 +40,7 @@ namespace LT {
 		uint32_t GetHeight() const { return m_nHeight; }
 		vk::Format GetFormat() const { return m_eFormat; }
 
-		virtual void AssignMemory(void* pData, size_t nSize) = 0;
+		virtual void AssignMemory(const void* pData, size_t nSize) = 0;
 
 	};
 }
