@@ -201,20 +201,49 @@ namespace LT {
 	{
 		StagingBuffer* pStagingBuffer = BufferManager::CreateStagingBuffer(nSize, pData);
 
-		vk::BufferImageCopy bic;
-		bic
+		vk::ImageSubresourceLayers isl;
+		isl
+			.setAspectMask(vk::ImageAspectFlagBits::eColor)
+			.setLayerCount(1)
+			.setMipLevel(0)
+			.setBaseArrayLayer(0)
+			;
+
+		std::array<vk::BufferImageCopy ,1> bic;
+		bic[0]
 			.setBufferOffset(0)
 			.setImageOffset(vk::Offset3D(0, 0, 0))
 			.setImageExtent(vk::Extent3D(pImage->GetWidth(), pImage->GetHeight(), 1))
+			.setImageSubresource(isl)
+			.setBufferRowLength(0)
+			.setBufferImageHeight(0)
 			;
 
 		vk::CommandBuffer vkCmdBuffer = vkContext::BeginSingleTimeCmdBuffer();
+
+		vkContext::TransitionImageLayout(
+			vkCmdBuffer, 
+			pImage->GetNativeDeviceImage(), 
+			vk::PipelineStageFlagBits::eNone,
+			vk::PipelineStageFlagBits::eTransfer,
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eTransferDstOptimal);
+
 		vkCmdBuffer.copyBufferToImage(
 			pStagingBuffer->GetNativeBuffer(), 
 			pImage->GetNativeDeviceImage(), 
 			vk::ImageLayout::eTransferDstOptimal,
 			bic
 		);
+
+		vkContext::TransitionImageLayout(
+			vkCmdBuffer,
+			pImage->GetNativeDeviceImage(),
+			vk::PipelineStageFlagBits::eTransfer,
+			vk::PipelineStageFlagBits::eFragmentShader,
+			vk::ImageLayout::eTransferDstOptimal,
+			vk::ImageLayout::eShaderReadOnlyOptimal);
+
 		vkContext::EndSingleTimeCmdBuffer(vkCmdBuffer);
 
 

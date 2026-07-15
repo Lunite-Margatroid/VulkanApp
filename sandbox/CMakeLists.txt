@@ -9,7 +9,13 @@ set(SOURCES
 add_executable(sandbox ${SOURCES})
 
 # 链接静态库
-target_link_libraries(sandbox PRIVATE vkRenderer "${SDL2_INSTALLED_DIR}/lib/SDL2.lib")
+target_link_libraries(sandbox 
+    PRIVATE 
+        vkRenderer 
+        debug "${SDL2_INSTALLED_DIR}/lib/SDL2d.lib"
+        optimized "${SDL2_INSTALLED_DIR}/lib/SDL2.lib"
+)
+
 
 # 设置包含目录
 target_include_directories(sandbox 

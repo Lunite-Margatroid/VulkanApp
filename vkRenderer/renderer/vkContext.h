@@ -89,6 +89,11 @@ namespace LT {
 		static vk::CommandBuffer BeginSingleTimeCmdBuffer();
 
 		static void EndSingleTimeCmdBuffer(vk::CommandBuffer& cmdBuffer);
+
+		static void TransitionImageLayout(
+			vk::CommandBuffer& cmdBuffer, const vk::Image& image, 
+			vk::PipelineStageFlags srcStage, vk::PipelineStageFlags dstStage,
+			vk::ImageLayout srcLayout, vk::ImageLayout dstLayout);
 	};
 
 }

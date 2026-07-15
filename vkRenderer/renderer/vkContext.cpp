@@ -410,6 +410,40 @@ namespace LT {
 		device.freeCommandBuffers(vkContext::GetCmdPool(), cmdBuffer);
 	}
 
+	void vkContext::TransitionImageLayout(
+		vk::CommandBuffer& cmdBuffer,
+		const vk::Image& image,
+		vk::PipelineStageFlags srcStage, 
+		vk::PipelineStageFlags dstStage,
+		vk::ImageLayout srcLayout,
+		vk::ImageLayout dstLayout
+	)
+	{
+
+
+		vk::ImageSubresourceRange isr;
+		isr
+			.setAspectMask(vk::ImageAspectFlagBits::eColor)
+			.setLayerCount(1)
+			.setLevelCount(1)
+			;
+
+		std::array<vk::ImageMemoryBarrier, 1> imb;
+		imb[0]
+			.setOldLayout(srcLayout)
+			.setNewLayout(dstLayout)
+			.setImage(image)
+			.setSrcQueueFamilyIndex(vk::QueueFamilyIgnored)
+			.setDstQueueFamilyIndex(vk::QueueFamilyIgnored)
+			.setSubresourceRange(isr)
+			;
+
+		std::vector<vk::MemoryBarrier> mb;
+		std::vector<vk::BufferMemoryBarrier> bmb;
+
+		cmdBuffer.pipelineBarrier(srcStage, dstStage, vk::DependencyFlagBits::eByRegion, mb, bmb, imb);
+	}
+
 
 	vk::Device& vkContext::GetVkDevice() {
 		return GetInstance().m_vkDevice;

@@ -37,10 +37,23 @@ add_library(vkRenderer STATIC ${SOURCES} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
 # Á´½Óvulkan
 target_link_libraries(vkRenderer PRIVATE Vulkan::Vulkan)
 # Á´½Óslang
-target_link_libraries(vkRenderer PRIVATE "$ENV{VK_SDK_PATH}/Lib/slang.lib")
+target_link_libraries(vkRenderer 
+	PRIVATE 
+		debug "$ENV{VK_SDK_PATH}/Lib/slangd.lib"
+		optimized "$ENV{VK_SDK_PATH}/Lib/slang.lib"
+)
+
 # Á´½ÓOpenImageIO
-target_link_libraries(vkRenderer PRIVATE "${OIIO_INSTALLED_DIR}/lib/OpenImageIO.lib")
-target_link_libraries(vkRenderer PRIVATE "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_Util.lib")
+target_link_libraries(vkRenderer 
+	PRIVATE
+		debug "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_d.lib"
+		optimized "${OIIO_INSTALLED_DIR}/lib/OpenImageIO.lib"
+)
+target_link_libraries(vkRenderer 
+	PRIVATE 
+		debug "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_Util_d.lib"
+		optimized "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_Util.lib"
+)
 
 
 
