@@ -5,7 +5,8 @@
 namespace LT {
 	class Image2DShaderRes : public DeviceImage {
 		friend class ImageManager;
-
+	protected:
+		vk::ImageView m_vkImageView;
 	protected:
 		Image2DShaderRes(ImageID id, vk::Format eFormat, uint32_t width, uint32_t height);
 		~Image2DShaderRes();
