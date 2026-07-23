@@ -8,25 +8,6 @@ namespace LT {
 		:DeviceImage(id, eFormat, width, height)
 	{
 		InitVKImage();
-
-		vk::ImageSubresourceRange isr;
-		isr
-			.setAspectMask(vk::ImageAspectFlagBits::eColor)
-			.setLayerCount(1)
-			.setLevelCount(1)
-			.setBaseArrayLayer(0)
-			.setBaseMipLevel(0)
-			;
-
-		vk::ImageViewCreateInfo ivci;
-		ivci
-			.setImage(m_vkImage)
-			.setViewType(vk::ImageViewType::e2D)
-			.setFormat(m_eFormat)
-			.setSubresourceRange(isr)
-			;
-
-		m_vkImageView = vkContext::GetVkDevice().createImageView(ivci);
 	}
 	Image2DShaderRes::~Image2DShaderRes()
 	{
@@ -60,5 +41,29 @@ namespace LT {
 		DeviceMemoryManager::AllocateMemory(this);
 
 		DeviceMemoryManager::AsignMemory(this, nSize, pData);
+
+		// ≥ı ºªØImageView
+		vk::ImageSubresourceRange isr;
+		isr
+			.setAspectMask(vk::ImageAspectFlagBits::eColor)
+			.setLayerCount(1)
+			.setLevelCount(1)
+			.setBaseArrayLayer(0)
+			.setBaseMipLevel(0)
+			;
+
+		vk::ImageViewCreateInfo ivci;
+		ivci
+			.setImage(m_vkImage)
+			.setViewType(vk::ImageViewType::e2D)
+			.setFormat(m_eFormat)
+			.setSubresourceRange(isr)
+			;
+
+		m_vkImageView = vkContext::GetVkDevice().createImageView(ivci);
+	}
+	vk::ImageView Image2DShaderRes::GetNativeImageView()
+	{
+		return m_vkImageView;
 	}
 } // namespace LT

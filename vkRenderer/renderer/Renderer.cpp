@@ -6,6 +6,7 @@
 #include "DeviceMemoryManager.h"
 #include "ImageManager.h"
 #include "image/ImgRes.h"
+#include "sampler/SamplerManager.h"
 
 namespace LT {
 	Renderer::Renderer()
@@ -13,17 +14,19 @@ namespace LT {
 		DeviceMemoryManager::Init();
 		BufferManager::Init();
 		ImageManager::Init();
+		SamplerManager::Init();
 
+		SamplerManager::GetDefaultImageSampler();
 
 		m_pPipeline = std::make_unique<Pipeline>();
 
 
 		// vertex buffer
 		float vertBuffer[] = {
-			-0.5f, 0.5f,	1.0f, 0.0f, 0.f,
-			0.5f, 0.5f,		0.f, 1.f,0.f,
-			0.5f, -0.5f,		0.f, 0.f, 1.f,
-			-0.5f, -0.5f,		1.f,1.f,1.f
+			-0.5f, 0.5f,	1.0f, 0.0f, 0.f,		0.f, 0.f,
+			0.5f, 0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
+			0.5f, -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
+			-0.5f, -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
 		};
 
 		m_pDebugVertexBuffer = BufferManager::CreateVertexBuffer(sizeof(vertBuffer), vertBuffer, 4);
@@ -33,6 +36,9 @@ namespace LT {
 		));
 		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
 			VertexChannel::Color, BufferDataType::TypeFloat32, 3, 8
+		));
+		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
+			VertexChannel::UV, BufferDataType::TypeFloat32, 2, 20
 		));
 
 		m_pPipeline->SetVertexBuffer(m_pDebugVertexBuffer);
@@ -58,13 +64,18 @@ namespace LT {
 
 		
 		ImgRes img("./TestAsset/UVTest.png", 8);
-		Image2DShaderRes* pImage = ImageManager::CreateImage2DShaderResource(vk::Format::eR8G8B8A8Srgb, img.GetWidth(), img.GetHeight());
-		pImage->AssignMemory(img.GetDataPtr(), img.GetDepth() / 8 * img.GetHeight() * img.GetWidth() * img.GetChannal());
-		ImageManager::DeleteImage(pImage);
-		
+		m_pDebugImage = ImageManager::CreateImage2DShaderResource(vk::Format::eR8G8B8A8Srgb, img.GetWidth(), img.GetHeight());
+		m_pDebugImage->AssignMemory(img.GetDataPtr(), img.GetDepth() / 8 * img.GetHeight() * img.GetWidth() * img.GetChannal());
+
+		m_pPipeline->SetImage(m_pDebugImage);
+		m_pPipeline->SetImageSampler(SamplerManager::GetDefaultImageSampler());
+		m_pPipeline->UpdateDescriptorSets();
 	}
 	Renderer::~Renderer()
 	{
+
+		ImageManager::DeleteImage(m_pDebugImage);
+
 		for (ConstBuffer* pConstBufer : m_vecConstBufferMVPMat)
 		{
 			BufferManager::DeleteBuffer(reinterpret_cast<Buffer*>(pConstBufer));
@@ -76,6 +87,8 @@ namespace LT {
 
 		m_pPipeline.reset();
 
+
+		SamplerManager::Release();
 		ImageManager::Release();
 		BufferManager::Release();
 		DeviceMemoryManager::Release();

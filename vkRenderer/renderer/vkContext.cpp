@@ -9,6 +9,8 @@ namespace LT {
 
 	vkContext::vkContext(const std::vector<const char* >& extensions, HWND hWnd)
 	{
+		m_bIsAnisotropySampleSupported = false;
+
 		CreateVkInstance(extensions);
 		PickPhyDevice();
 
@@ -150,6 +152,9 @@ namespace LT {
 		// 第一个图形设备
 		// m_phyDevice.getFeatures(); // 支持的特性
 		LOG_INFO("Pick Physical Device: %s\n", static_cast<const char*>(m_phyDevice.getProperties().deviceName.data()));
+
+		// 检查特性
+		vkContext::CheckPhysicalDeivceFeatures();
 	}
 
 	void vkContext::CreateVkDevice() {
@@ -239,6 +244,7 @@ namespace LT {
 
 		// 设备特性
 		vk::PhysicalDeviceFeatures2 pdf2 = {};
+		pdf2.features.setSamplerAnisotropy(vk::True);
 		vk::PhysicalDeviceVulkan11Features pdv11f;
 		pdv11f.setShaderDrawParameters(vk::True);
 		vk::PhysicalDeviceVulkan13Features pdv13f;
@@ -306,9 +312,14 @@ namespace LT {
 
 	void vkContext::CreateDescriptorPool()
 	{
-		vk::DescriptorPoolSize dps;
-		dps
+		std::array<vk::DescriptorPoolSize,2> dps;
+		dps[0]
 			.setType(vk::DescriptorType::eUniformBuffer)
+			.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
+			;
+
+		dps[1]
+			.setType(vk::DescriptorType::eCombinedImageSampler)
 			.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
 			;
 
@@ -316,11 +327,26 @@ namespace LT {
 		dpci
 			.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
 			.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
-			.setPoolSizeCount(1)
-			.setPPoolSizes(&dps)
+			.setPoolSizeCount(dps.size())
+			.setPPoolSizes(&dps[0])
 			;
 
 		m_vkDescriptorPool = m_vkDevice.createDescriptorPool(dpci);
+	}
+
+	void vkContext::CheckPhysicalDeivceFeatures()
+	{
+		auto features = m_phyDevice.getFeatures2<
+			vk::PhysicalDeviceFeatures2, 
+			vk::PhysicalDeviceVulkan13Features, 
+			vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+
+		// 各向异性采样
+		m_bIsAnisotropySampleSupported = features.get<vk::PhysicalDeviceFeatures2>().features.samplerAnisotropy;
+
+		RENDERER_ASSERT(features.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering, "The device did not support dynamic rendering.");
+		RENDERER_ASSERT(features.get<vk::PhysicalDeviceVulkan13Features>().synchronization2, "");
+		RENDERER_ASSERT(features.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState, "");
 	}
 
 
@@ -462,6 +488,11 @@ namespace LT {
 
 	SwapChain& vkContext::GetSwapChain() {
 		return *(GetInstance().m_pSwapChain);
+	}
+
+	bool vkContext::GetIsAnisotropySampleSupported()
+	{
+		return GetInstance().m_bIsAnisotropySampleSupported;
 	}
 
 } // namespace LT

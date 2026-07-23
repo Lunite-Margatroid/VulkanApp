@@ -56,6 +56,7 @@ int main() {
 	pEngine->InitRenderer(extensions, windowInfo.info.win.window);
 	// ³õÊ¼»¯½»»»Á´
 	pEngine->InitSwapChain();
+
 	// Poll for user input.
 	bool stillRunning = true;
 	while (stillRunning) {

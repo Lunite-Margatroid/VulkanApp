@@ -7,7 +7,8 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "ConstBuffer.h"
-
+#include "Image2DShaderRes.h"
+#include "ImageSampler.h"
 
 namespace LT {
 	Pipeline::Pipeline() {
@@ -36,8 +37,9 @@ namespace LT {
 		std::vector<vk::VertexInputAttributeDescription> vertDesc;
 		vertDesc.emplace_back(0, 0, vk::Format::eR32G32Sfloat, 0);
 		vertDesc.emplace_back(1, 0, vk::Format::eR32G32B32Sfloat, 8);
+		vertDesc.emplace_back(2, 0, vk::Format::eR32G32Sfloat, 20);
 
-		bindingDesc.emplace_back(0, 20, vk::VertexInputRate::eVertex);
+		bindingDesc.emplace_back(0, 28, vk::VertexInputRate::eVertex);
 		pvisci.setVertexAttributeDescriptions(vertDesc)
 			.setVertexBindingDescriptions(bindingDesc);
 
@@ -104,12 +106,13 @@ namespace LT {
 		// Pipeline Layout
 
 		std::vector<vk::DescriptorSetLayoutBinding> layouts{
-			{0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex}
+			{0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex},
+			{1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment}
 		};
 
 		vk::DescriptorSetLayoutCreateInfo dslci;
 		dslci
-			.setBindingCount(1)
+			.setBindingCount(layouts.size())
 			.setBindings(layouts)
 			;
 		m_vkDescSetLayout = device.createDescriptorSetLayout(dslci);
@@ -502,7 +505,24 @@ namespace LT {
 	void Pipeline::SetConstBufferMVPMat(const std::vector<ConstBuffer*>& vecConstBuffers)
 	{
 		m_vecConstBufferMVPMat = vecConstBuffers;
+	}
 
+	void Pipeline::SetImage(Image2DShaderRes* pImage)
+	{
+		m_pImage = pImage;
+	}
+
+	void Pipeline::SetImageSampler(ImageSampler* pSampler)
+	{
+		m_pSampler = pSampler;
+	}
+
+	void Pipeline::UpdateConstBuffer() {
+		
+	}
+
+	void Pipeline::UpdateDescriptorSets()
+	{
 		vk::Device& device = vkContext::GetVkDevice();
 
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)
@@ -513,8 +533,16 @@ namespace LT {
 				.setOffset(0)
 				.setRange(m_vecConstBufferMVPMat[i]->Size())
 				;
-			vk::WriteDescriptorSet wds;
-			wds
+
+			vk::DescriptorImageInfo dii;
+			dii
+				.setImageView(m_pImage->GetNativeImageView())
+				.setSampler(m_pSampler->GetNativeSampler())
+				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+				;
+
+			std::array<vk::WriteDescriptorSet,2> wds;
+			wds[0]
 				.setDstSet(m_vecDescriptorSets[i])
 				.setDstBinding(0)
 				.setDstArrayElement(0)
@@ -523,15 +551,18 @@ namespace LT {
 				.setPBufferInfo(&dbi)
 				;
 
+			wds[1]
+				.setDstSet(m_vecDescriptorSets[i])
+				.setDstBinding(1)
+				.setDstArrayElement(0)
+				.setDescriptorCount(1)
+				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+				.setPImageInfo(&dii)
+				;
+
 			device.updateDescriptorSets(wds, {});
 
 		}
-
-
-	}
-
-	void Pipeline::UpdateConstBuffer() {
-		
 	}
 	
 } //namespace LT

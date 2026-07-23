@@ -6,6 +6,8 @@ namespace LT {
 	class VertexBuffer;
 	class IndexBuffer;
 	class ConstBuffer;
+	class ImageSampler;
+	class Image2DShaderRes;
 
 	class Pipeline {
 	protected:
@@ -28,10 +30,13 @@ namespace LT {
 
 		// Buffer的memory不由该pipeline实例管理
 		std::vector<ConstBuffer*> m_vecConstBufferMVPMat;
+		ImageSampler* m_pSampler;
+		Image2DShaderRes* m_pImage;
 
 		// 该实例不由Pipeline管理
 		VertexBuffer* m_pVertexBuffer;
 		IndexBuffer* m_pIndexBuffer;
+
 
 		void CreateSyncObjects();
 		void RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex);
@@ -57,7 +62,11 @@ namespace LT {
 		void SetVertexBuffer(VertexBuffer* vkVertexBuffer);
 		void SetIndexBuffer(IndexBuffer* pIndexBuffer);
 		void SetConstBufferMVPMat(const std::vector<ConstBuffer*>& vecConstBuffers);
+		void SetImage(Image2DShaderRes* pImage);
+		void SetImageSampler(ImageSampler* pSampler);
 
 		void UpdateConstBuffer();
+
+		void UpdateDescriptorSets();
 	};
 }// namespace LT

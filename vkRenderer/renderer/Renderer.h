@@ -9,6 +9,7 @@ namespace LT {
 		std::unique_ptr<Pipeline> m_pPipeline;
 		VertexBuffer* m_pDebugVertexBuffer;
 		IndexBuffer* m_pDebugIndexBuffer;
+		Image2DShaderRes* m_pDebugImage;
 
 		struct MVPMatrixBuffer {
 			glm::mat4 modelMat;
@@ -19,6 +20,7 @@ namespace LT {
 
 		// 由当前实例管理
 		std::vector<ConstBuffer*> m_vecConstBufferMVPMat; // 数量与flight frame一致
+		
 
 	public:
 		Renderer();

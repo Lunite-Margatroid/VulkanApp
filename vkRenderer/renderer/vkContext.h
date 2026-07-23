@@ -37,6 +37,8 @@ namespace LT {
 		std::optional<uint32_t> m_nQueueFamilyIndex; // 支持图形的命令队列
 		std::optional<uint32_t> m_nQueueIndexForSurface; // 支持sruface的命令队列
 
+		bool m_bIsAnisotropySampleSupported;
+
 	private:
 		vkContext(const std::vector<const char* >& extensions, HWND hWnd = NULL);
 
@@ -48,6 +50,9 @@ namespace LT {
 		void CreateCommandPool();
 		void CreateCommandBuffer();
 		void CreateDescriptorPool();
+
+		void CheckPhysicalDeivceFeatures();
+
 
 	public:
 		// 找到了一个同时支持Surface和Graphics的Queue且只创建了一个Queue
@@ -70,6 +75,7 @@ namespace LT {
 		static vk::SwapchainKHR& GetNativeSwapChain();
 		static SwapChain& GetSwapChain();
 
+		static bool GetIsAnisotropySampleSupported();
 
 		static void InitSwapChain();
 		static void ReleaseSwapChain();
