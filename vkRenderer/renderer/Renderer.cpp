@@ -23,32 +23,63 @@ namespace LT {
 
 		// vertex buffer
 		float vertBuffer[] = {
-			-0.5f, 0.5f,	1.0f, 0.0f, 0.f,		0.f, 0.f,
-			0.5f, 0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
-			0.5f, -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
-			-0.5f, -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+			-0.5f, 0.5f,0.5f,	1.0f, 0.0f, 0.f,		0.f, 0.f,
+			0.5f, 0.5f,0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
+			0.5f, -0.5f,0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
+			-0.5f, -0.5f,0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+
+			-0.5f, 0.5f,-0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
+			0.5f, 0.5f,-0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
+			0.5f, -0.5f,-0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
+			-0.5f, -0.5f,-0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+
+			0.5f, -0.5f, 0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
+			0.5f, 0.5f, 0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
+			0.5f, 0.5f, -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
+			0.5f, -0.5f, -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+
+			-0.5f, -0.5f, 0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
+			-0.5f, 0.5f, 0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
+			-0.5f, 0.5f, -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
+			-0.5f, -0.5f, -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+
+			-0.5f,-0.5f,  0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
+			0.5f,-0.5f,  0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
+			0.5f,-0.5f,  -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
+			-0.5f,-0.5f,  -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+
+
+			-0.5f,0.5f,  0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
+			0.5f,0.5f,  0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
+			0.5f,0.5f,  -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
+			-0.5f,0.5f,  -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
 		};
 
-		m_pDebugVertexBuffer = BufferManager::CreateVertexBuffer(sizeof(vertBuffer), vertBuffer, 4);
+		m_pDebugVertexBuffer = BufferManager::CreateVertexBuffer(sizeof(vertBuffer), vertBuffer, 24);
 
 		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
-			VertexChannel::Position, BufferDataType::TypeFloat32, 2, 0
+			VertexChannel::Position, BufferDataType::TypeFloat32, 3, 0
 		));
 		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
-			VertexChannel::Color, BufferDataType::TypeFloat32, 3, 8
+			VertexChannel::Color, BufferDataType::TypeFloat32, 3, 12
 		));
 		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
-			VertexChannel::UV, BufferDataType::TypeFloat32, 2, 20
+			VertexChannel::UV, BufferDataType::TypeFloat32, 2, 24
 		));
 
 		m_pPipeline->SetVertexBuffer(m_pDebugVertexBuffer);
 
 		// index buffer
-		uint32_t indices[] = {
+		uint32_t indices[36] = {
 			0,1,2,2,3,0
 		};
 
-		m_pDebugIndexBuffer = BufferManager::CreateIndexBuffer(sizeof(indices), indices, 6);
+		for (int i = 6; i < 36; i++)
+		{
+			indices[i] = indices[i - 6] + 4;
+		}
+
+		m_pDebugIndexBuffer = BufferManager::CreateIndexBuffer(sizeof(indices), indices, 36);
 
 		m_pPipeline->SetIndexBuffer(m_pDebugIndexBuffer);
 

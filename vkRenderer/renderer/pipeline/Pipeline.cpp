@@ -35,11 +35,11 @@ namespace LT {
 		vk::PipelineVertexInputStateCreateInfo pvisci;
 		std::vector<vk::VertexInputBindingDescription> bindingDesc;
 		std::vector<vk::VertexInputAttributeDescription> vertDesc;
-		vertDesc.emplace_back(0, 0, vk::Format::eR32G32Sfloat, 0);
-		vertDesc.emplace_back(1, 0, vk::Format::eR32G32B32Sfloat, 8);
-		vertDesc.emplace_back(2, 0, vk::Format::eR32G32Sfloat, 20);
+		vertDesc.emplace_back(0, 0, vk::Format::eR32G32B32Sfloat, 0);
+		vertDesc.emplace_back(1, 0, vk::Format::eR32G32B32Sfloat, 12);
+		vertDesc.emplace_back(2, 0, vk::Format::eR32G32Sfloat, 24);
 
-		bindingDesc.emplace_back(0, 28, vk::VertexInputRate::eVertex);
+		bindingDesc.emplace_back(0, 32, vk::VertexInputRate::eVertex);
 		pvisci.setVertexAttributeDescriptions(vertDesc)
 			.setVertexBindingDescriptions(bindingDesc);
 

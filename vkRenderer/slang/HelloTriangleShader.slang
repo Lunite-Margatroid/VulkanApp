@@ -1,5 +1,5 @@
 struct VertexInput{
-	float2 vertPosition;
+	float3 vertPosition;
 	float3 vertColor;
 	float2 vectUV;
 }; 
@@ -28,7 +28,7 @@ VertexOutput VertMain(VertexInput vertIn){
 	output.sv_position = 
 		mul(u_MVPMatix.projectiondMat, 
 			mul(u_MVPMatix.viewMat, 
-				mul(u_MVPMatix.modelMat, float4(vertIn.vertPosition, 0.0, 1.0))
+				mul(u_MVPMatix.modelMat, float4(vertIn.vertPosition, 1.0))
 				)
 			);
 	//output.sv_position = float4(vertIn.vertPosition, 0.0, 1.0);
