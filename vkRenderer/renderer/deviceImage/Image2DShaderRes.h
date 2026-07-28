@@ -1,12 +1,10 @@
 #pragma once
 
-#include "DeviceImage.h"
+#include "ImageViewable.h"
 
 namespace LT {
-	class Image2DShaderRes : public DeviceImage {
+	class Image2DShaderRes : public ImageViewable {
 		friend class ImageManager;
-	protected:
-		vk::ImageView m_vkImageView;
 	protected:
 		Image2DShaderRes(ImageID id, vk::Format eFormat, uint32_t width, uint32_t height);
 		~Image2DShaderRes();
@@ -28,7 +26,5 @@ namespace LT {
 		/// </summary>
 		/// <param name="pData"></param>
 		void AssignMemory( const void* pData, size_t nSize) override;
-
-		vk::ImageView GetNativeImageView();
 	};
 } // namespace LT

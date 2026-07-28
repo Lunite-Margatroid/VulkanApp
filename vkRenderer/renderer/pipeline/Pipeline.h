@@ -8,6 +8,7 @@ namespace LT {
 	class ConstBuffer;
 	class ImageSampler;
 	class Image2DShaderRes;
+	class Image2DDepthBuffer;
 
 	class Pipeline {
 	protected:
@@ -25,6 +26,8 @@ namespace LT {
 		std::vector<vk::Semaphore> m_vkSemPresentComplete;	// 数量与flight frame一致
 
 		std::vector<vk::Fence> m_vkFenceDraw;	// 数量与flight frame一致
+
+		std::vector<Image2DDepthBuffer*> m_vecDepthBuffer; // 深度缓冲
 
 		uint64_t m_nFrameCount;
 
@@ -49,7 +52,8 @@ namespace LT {
 			vk::AccessFlags2 srcAccessFlag,
 			vk::AccessFlags2 dstAccessFlag,
 			vk::PipelineStageFlags2 srcStageFlag,
-			vk::PipelineStageFlags2 dstStageFlag
+			vk::PipelineStageFlags2 dstStageFlag,
+			vk::ImageAspectFlags eImageAspect
 		);
 
 	public:

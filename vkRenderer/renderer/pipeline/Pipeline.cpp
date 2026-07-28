@@ -9,6 +9,9 @@
 #include "ConstBuffer.h"
 #include "Image2DShaderRes.h"
 #include "ImageSampler.h"
+#include "Image2DDepthBuffer.h"
+
+#include "ImageManager.h"
 
 namespace LT {
 	Pipeline::Pipeline() {
@@ -152,6 +155,17 @@ namespace LT {
 
 		std::array<vk::PipelineShaderStageCreateInfo, 2> stages = { pssciVert, pssciFrag };
 
+		// 深度模板检测状态
+		vk::PipelineDepthStencilStateCreateInfo pdssci;
+		pdssci
+			.setDepthTestEnable(vk::True)
+			.setDepthWriteEnable(vk::True)
+			.setDepthCompareOp(vk::CompareOp::eLess)
+			.setDepthBoundsTestEnable(vk::False)
+			.setStencilTestEnable(vk::False)
+			;
+
+
 		vk::GraphicsPipelineCreateInfo gpci;
 		gpci.setStageCount(stages.size());
 		gpci.setPStages(stages.data());
@@ -164,12 +178,13 @@ namespace LT {
 		gpci.setPDynamicState(&pdsci);
 		gpci.setLayout(m_vkPipelineLayout);
 		gpci.setRenderPass(VK_NULL_HANDLE);
-
+		gpci.setPDepthStencilState(&pdssci);
 
 		vk::PipelineRenderingCreateInfo prci;
 		prci
 			.setColorAttachmentCount(1)
 			.setPColorAttachmentFormats(&SWAPCHAIN_DEFAULT_PIXEL_FORMAT)
+			.setDepthAttachmentFormat(vk::Format::eD32Sfloat)
 			;
 
 		vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfo> pcic = {
@@ -181,10 +196,22 @@ namespace LT {
 		RENDERER_ASSERT(result.has_value(), "Pipeline Create Failed.");
 
 		m_vkPipeline = result.value;
+
+
+
+		// 创建深度缓冲
+		int nWidth = vkContext::GetSwapChain().m_sSwapChainInfo.width;
+		int nHeight = vkContext::GetSwapChain().m_sSwapChainInfo.height;
+		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
+			m_vecDepthBuffer.push_back(ImageManager::CreateImage2DDepthBuffer(nWidth, nHeight));
+		}
 	}
 
 	Pipeline::~Pipeline() {
 		vk::Device& device = vkContext::GetVkDevice();
+		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
+			ImageManager::DeleteImage(m_vecDepthBuffer[i]);
+		}
 
 		device.destroyDescriptorSetLayout( m_vkDescSetLayout );
 
@@ -240,6 +267,7 @@ namespace LT {
 		vk::CommandBufferBeginInfo cbbi;
 		debugCommandBuffer.begin(cbbi);
 		// 录入图像转换
+		// 转换颜色缓冲
 		TransitionImageLayout(
 			imageIndex,
 			nFrameIndex,
@@ -248,7 +276,20 @@ namespace LT {
 			{},
 			vk::AccessFlagBits2::eColorAttachmentWrite,
 			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+			vk::ImageAspectFlagBits::eColor
+		);
+		// 转换深度缓冲
+		TransitionImageLayout(
+			imageIndex,
+			nFrameIndex,
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eDepthAttachmentOptimal,
+			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+			vk::ImageAspectFlagBits::eDepth
 		);
 
 		vk::ClearValue clearValue = vk::ClearColorValue(0.f, 0.f, 0.f, 1.f);
@@ -263,6 +304,18 @@ namespace LT {
 			.setClearValue(clearValue)
 			;
 
+		// clear Depth Buffer
+		vk::ClearValue clearValueDepth = vk::ClearDepthStencilValue(1.f, 0);
+		vk::RenderingAttachmentInfo raiDepth;
+		raiDepth
+			.setImageView(m_vecDepthBuffer[imageIndex]->GetNativeImageView())
+			.setImageLayout(vk::ImageLayout::eDepthAttachmentOptimal)
+			.setLoadOp(vk::AttachmentLoadOp::eClear)
+			.setStoreOp(vk::AttachmentStoreOp::eDontCare)
+			.setClearValue(clearValueDepth);
+			;
+
+
 		// 录入渲染操作
 		vk::RenderingInfo ri;
 		ri
@@ -274,6 +327,7 @@ namespace LT {
 			.setLayerCount(1)
 			.setColorAttachmentCount(1)
 			.setPColorAttachments(&rai)
+			.setPDepthAttachment(&raiDepth)
 			;
 
 		debugCommandBuffer.beginRendering(ri);
@@ -335,7 +389,8 @@ namespace LT {
 			vk::AccessFlagBits2::eColorAttachmentWrite,
 			{},
 			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-			vk::PipelineStageFlagBits2::eBottomOfPipe
+			vk::PipelineStageFlagBits2::eBottomOfPipe,
+			vk::ImageAspectFlagBits::eColor
 		);
 
 		debugCommandBuffer.end();
@@ -349,7 +404,9 @@ namespace LT {
 		vk::AccessFlags2 srcAccessFlag,
 		vk::AccessFlags2 dstAccessFlag,
 		vk::PipelineStageFlags2 srcStageFlag,
-		vk::PipelineStageFlags2 dstStageFlag)
+		vk::PipelineStageFlags2 dstStageFlag,
+		vk::ImageAspectFlags eImageAspect
+	)
 	{
 		vk::ImageMemoryBarrier2 imageBarrier;
 		imageBarrier
@@ -361,10 +418,9 @@ namespace LT {
 			.setNewLayout(newLayout)
 			.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
 			.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-			.setImage(vkContext::GetSwapChain().m_sSwapChainInfo.images[nImageIndex])
 			.setSubresourceRange(
 				vk::ImageSubresourceRange(
-					vk::ImageAspectFlagBits::eColor,
+					eImageAspect,
 					0,	// base mipmap level
 					1,	// level count
 					0,	// base array layer
@@ -372,6 +428,14 @@ namespace LT {
 				)
 			)
 			;
+
+		if ((eImageAspect & vk::ImageAspectFlagBits::eColor) == vk::ImageAspectFlagBits::eColor)
+		{
+			imageBarrier.setImage(vkContext::GetSwapChain().m_sSwapChainInfo.images[nImageIndex]);
+		}
+		else if ((eImageAspect & vk::ImageAspectFlagBits::eDepth) == vk::ImageAspectFlagBits::eDepth) {
+			imageBarrier.setImage(m_vecDepthBuffer[nImageIndex]->GetNativeDeviceImage());
+		}
 
 		vk::DependencyInfo di;
 		di.setDependencyFlags({})

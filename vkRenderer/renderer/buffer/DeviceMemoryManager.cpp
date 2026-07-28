@@ -197,6 +197,11 @@ namespace LT {
 		DeviceMemoryManager& instance = GetInstance();
 		instance.AllocateImageMemory(*reinterpret_cast<DeviceImage*>(pImage), vk::MemoryPropertyFlagBits::eDeviceLocal);
 	}
+	void DeviceMemoryManager::AllocateMemory(Image2DDepthBuffer* pDepth)
+	{
+		DeviceMemoryManager& instance = GetInstance();
+		instance.AllocateImageMemory(*reinterpret_cast<DeviceImage*>(pDepth), vk::MemoryPropertyFlagBits::eDeviceLocal);
+	}
 	void DeviceMemoryManager::AsignMemory(Image2DShaderRes* pImage, size_t nSize, const void* pData)
 	{
 		StagingBuffer* pStagingBuffer = BufferManager::CreateStagingBuffer(nSize, pData);

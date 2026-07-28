@@ -5,14 +5,12 @@
 
 namespace LT {
 	Image2DShaderRes::Image2DShaderRes(ImageID id, vk::Format eFormat, uint32_t width, uint32_t height)
-		:DeviceImage(id, eFormat, width, height)
+		:ImageViewable(id, eFormat, width, height)
 	{
 		InitVKImage();
 	}
 	Image2DShaderRes::~Image2DShaderRes()
 	{
-		vkContext::GetVkDevice().destroyImageView(m_vkImageView);
-		DeviceMemoryManager::FreeImageMemory(*this);
 	}
 	void Image2DShaderRes::InitVKImage()
 	{
@@ -61,9 +59,5 @@ namespace LT {
 			;
 
 		m_vkImageView = vkContext::GetVkDevice().createImageView(ivci);
-	}
-	vk::ImageView Image2DShaderRes::GetNativeImageView()
-	{
-		return m_vkImageView;
 	}
 } // namespace LT

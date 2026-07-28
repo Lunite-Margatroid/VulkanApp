@@ -2,6 +2,7 @@
 #include "vkContext.h"
 #include "ImageManager.h"
 #include "Image2DShaderRes.h"
+#include "Image2DDepthBuffer.h"
 
 namespace LT {
 
@@ -11,6 +12,16 @@ namespace LT {
 	{
 		ImageManager& instance = GetInstance();
 		Image2DShaderRes* pImage = new Image2DShaderRes(instance.GenImageID(), eFormat, width, height);
+
+		instance.m_mapImage[pImage->GetImageID()] = reinterpret_cast<DeviceImage*>(pImage);
+
+		return pImage;
+	}
+
+	Image2DDepthBuffer* ImageManager::CreateImage2DDepthBuffer(uint32_t width, uint32_t height)
+	{
+		ImageManager& instance = GetInstance();
+		Image2DDepthBuffer* pImage = new Image2DDepthBuffer(instance.GenImageID(), width, height);
 
 		instance.m_mapImage[pImage->GetImageID()] = reinterpret_cast<DeviceImage*>(pImage);
 
@@ -71,7 +82,16 @@ namespace LT {
 	ImageManager::ImageManager()
 		: m_nImageIDCounter(0)
 	{
-		
+		// 检查深度缓冲格式
+		// 检查D32Float
+		{
+			vk::FormatProperties props = vkContext::GetPhysicalDevice().getFormatProperties(vk::Format::eD32Sfloat);
+			RENDERER_ASSERT(
+				(props.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment) == vk::FormatFeatureFlagBits::eDepthStencilAttachment,
+				"D32SFloat Does not support."
+			);
+		}
+
 	}
 
 	ImageManager::~ImageManager() {

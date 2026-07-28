@@ -6,7 +6,7 @@ namespace LT {
 		: Camera()
 		, m_fFov(glm::pi<float>() / 4)
 		, m_fAspect(1.f)
-		, m_fNear(0.f)
+		, m_fNear(0.01f)
 		, m_fFar(100.f)
 
 	{

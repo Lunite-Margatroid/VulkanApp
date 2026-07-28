@@ -8,6 +8,7 @@
 
 namespace LT {
 	class Image2DShaderRes;
+	class Image2DDepthBuffer;
 
 	class ImageManager {
 	private:
@@ -27,6 +28,8 @@ namespace LT {
 
 
 		static Image2DShaderRes* CreateImage2DShaderResource(vk::Format eFormat, uint32_t width, uint32_t height);
+		static Image2DDepthBuffer* CreateImage2DDepthBuffer(uint32_t width, uint32_t height);
+
 		static void DeleteImage(DeviceImage* pImage);
 
 		static void Init();

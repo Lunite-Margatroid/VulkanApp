@@ -6,6 +6,7 @@
 #include "ConstBuffer.h"
 #include "DeviceImage.h"
 #include "Image2DShaderRes.h"
+#include "Image2DDepthBuffer.h"
 
 namespace LT {
 	class DeviceMemoryManager {
@@ -54,6 +55,8 @@ namespace LT {
 
 
 		static void AllocateMemory(Image2DShaderRes* pImage);
+		static void AllocateMemory(Image2DDepthBuffer* pDepth);
+
 		static void AsignMemory(Image2DShaderRes* pImage, size_t nSize, const void* pData);
 		static void FreeImageMemory(DeviceImage& image);
 		
