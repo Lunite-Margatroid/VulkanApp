@@ -111,10 +111,15 @@ namespace LT {
 				.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst)
 				.setSharingMode(vk::SharingMode::eExclusive)
 				;
-			m_vkBuffer = device.createBuffer(bci);
+			VmaAllocationCreateInfo vaci = {};
+			vaci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+
+			m_vkBuffer = DeviceMemoryManager::CreateBuffer(m_nID, bci, vaci);
+
+			// m_vkBuffer = device.createBuffer(bci);
 
 			// ∑÷≈‰ø’º‰
-			DeviceMemoryManager::AllocateMemory(this);
+			// DeviceMemoryManager::AllocateMemory(this);
 		}
 		// ÃÓ≥‰
 		StagingBuffer* stagingBuffer = BufferManager::CreateStagingBuffer(m_nSize, m_pBuffer);

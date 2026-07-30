@@ -34,10 +34,16 @@ namespace LT {
 				.setUsage(vk::BufferUsageFlagBits::eTransferSrc)
 				.setSharingMode(vk::SharingMode::eExclusive)
 				;
-			m_vkBuffer = device.createBuffer(bci);
+			//m_vkBuffer = device.createBuffer(bci);
 
 			// ∑÷≈‰ø’º‰
-			DeviceMemoryManager::AllocateMemory(this);
+			//DeviceMemoryManager::AllocateMemory(this);
+
+			VmaAllocationCreateInfo vaci = {};
+			vaci.usage = VMA_MEMORY_USAGE_AUTO;
+			vaci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+
+			m_vkBuffer = DeviceMemoryManager::CreateBuffer(m_nID, bci, vaci);
 		}
 
 		// ÃÓ≥‰

@@ -41,10 +41,15 @@ endif()
 if(NOT DEFINED OIIO_INSTALLED_DIR)
     set(OIIO_INSTALLED_DIR "C:/Program Files/OpenImageIO" CACHE PATH "OpenImageIO installed dir")
 endif()
+# VulkanMemoryAllocator
+if(NOT DEFINED VMA_INSTALLED_DIR)
+    set(VMA_INSTALLED_DIR "" CACHE PATH "VulkanMemoryAllcator installed dir")
+endif()
 
 message(STATUS "SDL2_INSTALLED_DIR = ${SDL2_INSTALLED_DIR}")
 message(STATUS "GLM_INSTALLED_DIR = ${GLM_INSTALLED_DIR}")
 message(STATUS "OIIO_INSTALLED_DIR = ${OIIO_INSTALLED_DIR}")
+message(STATUS "VMA_INSTALLED_DIR = ${VMA_INSTALLED_DIR}")
 
 # ¼ì²évulkan Slang
 include(cmake/checkvulkan.cmake)

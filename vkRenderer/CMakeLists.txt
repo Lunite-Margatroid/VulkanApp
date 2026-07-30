@@ -75,5 +75,6 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/logger"
         "${GLM_INSTALLED_DIR}/Include"
 		"${OIIO_INSTALLED_DIR}/include"
+		"${VMA_INSTALLED_DIR}/include"
 
 )

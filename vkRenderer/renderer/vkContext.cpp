@@ -4,6 +4,9 @@
 
 #include "SlangComplier.h"
 #include "Engine.h"
+
+#include "DeviceMemoryManager.h"
+
 namespace LT {
 	vkContext* vkContext::s_pVkContext = nullptr;
 
@@ -234,6 +237,26 @@ namespace LT {
 		std::vector<const char*> extensions{ vk::KHRSwapchainExtensionName };
 		extensions.push_back(vk::KHRShaderDrawParametersExtensionName);
 		extensions.push_back(vk::KHRDynamicRenderingExtensionName);
+		// VMA支持扩展
+		if (DeviceMemoryManager::VK_KHR_get_memory_requirements2_enabled)
+			extensions.push_back(VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME);
+		if (DeviceMemoryManager::VK_KHR_dedicated_allocation_enabled)
+			extensions.push_back(VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME);
+		if (DeviceMemoryManager::VK_KHR_bind_memory2_enabled)
+			extensions.push_back(VK_KHR_BIND_MEMORY_2_EXTENSION_NAME);
+		if (DeviceMemoryManager::VK_EXT_memory_budget_enabled)
+			extensions.push_back(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
+		if (DeviceMemoryManager::VK_AMD_device_coherent_memory_enabled)
+			extensions.push_back(VK_AMD_DEVICE_COHERENT_MEMORY_EXTENSION_NAME);
+		if (DeviceMemoryManager::VK_KHR_buffer_device_address_enabled && DeviceMemoryManager::GetVkVersion() < VK_API_VERSION_1_2)
+			extensions.push_back(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
+		if (DeviceMemoryManager::VK_EXT_memory_priority_enabled)
+			extensions.push_back(VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME);
+		if (DeviceMemoryManager::VK_KHR_maintenance5_enabled && DeviceMemoryManager::GetVkVersion() < VK_API_VERSION_1_4)
+			extensions.push_back(VK_KHR_MAINTENANCE_5_EXTENSION_NAME);
+		if (DeviceMemoryManager::VK_KHR_external_memory_win32_enabled)
+			extensions.push_back(VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME);
+
 		deviceCreateInfo
 			.setEnabledExtensionCount(extensions.size())
 			.setPEnabledExtensionNames(extensions);
@@ -242,30 +265,62 @@ namespace LT {
 			LOG_INFO("Device extension: %s", extension);
 		}
 
+
+#define PnextChainPushFront(mainStruct, newStruct) \
+do{\
+(newStruct).pNext = (mainStruct).pNext;\
+(mainStruct).pNext = &(newStruct);\
+} while(false)
+
 		// 设备特性
 		vk::PhysicalDeviceFeatures2 pdf2 = {};
-		pdf2.features.setSamplerAnisotropy(vk::True);
-		vk::PhysicalDeviceVulkan11Features pdv11f;
+		pdf2.features.setSamplerAnisotropy(vk::True); // 各向异性采样
+		pdf2.features.setSparseBinding(DeviceMemoryManager::g_SparseBindingEnabled ? VK_TRUE : VK_FALSE);
+
+
+		vk::PhysicalDeviceVulkan11Features pdv11f = {};
 		pdv11f.setShaderDrawParameters(vk::True);
-		vk::PhysicalDeviceVulkan13Features pdv13f;
-		pdv13f.setDynamicRendering(vk::True);
-		pdv13f.setSynchronization2(vk::True);
-		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT pdedsfe;
-		pdedsfe.setExtendedDynamicState(vk::True);
-		vk::StructureChain<
-			vk::PhysicalDeviceFeatures2,
-			vk::PhysicalDeviceVulkan11Features,
-			vk::PhysicalDeviceVulkan13Features,
-			vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT> featureChain = {
-			pdf2,
-			pdv11f,
-			pdv13f,
-			pdedsfe
-		};
 
-		deviceCreateInfo.setPNext(&(featureChain.get<vk::PhysicalDeviceFeatures2>()));
+		vk::PhysicalDeviceVulkan13Features pdv13f = {};
+		pdv13f.setDynamicRendering(vk::True);	// 动态渲染
+		pdv13f.setSynchronization2(vk::True);	// 异步信号
 
+		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT pdedsfe = {};
+		pdedsfe.setExtendedDynamicState(vk::True);	// 动态渲染扩展
 
+		PnextChainPushFront(pdf2, pdv11f);
+		PnextChainPushFront(pdv11f, pdv13f);
+		PnextChainPushFront(pdv13f, pdedsfe);
+
+		vk::PhysicalDeviceCoherentMemoryFeaturesAMD pdcmfAMD = {};
+		if (DeviceMemoryManager::VK_AMD_device_coherent_memory_enabled)
+		{
+			pdcmfAMD.setDeviceCoherentMemory(vk::True);
+			PnextChainPushFront(pdf2, pdcmfAMD);
+		}
+
+		vk::PhysicalDeviceBufferDeviceAddressFeaturesKHR pdbdafKHR = {};
+		if (DeviceMemoryManager::VK_KHR_buffer_device_address_enabled)
+		{
+			pdbdafKHR.setBufferDeviceAddress(vk::True);
+			PnextChainPushFront(pdf2, pdbdafKHR);
+		}
+
+		vk::PhysicalDeviceMemoryPriorityFeaturesEXT pdmpfEXT = {};
+		if (DeviceMemoryManager::VK_EXT_memory_priority_enabled)
+		{
+			pdmpfEXT.setMemoryPriority(vk::True);
+			PnextChainPushFront(pdf2, pdmpfEXT);
+		}
+
+		vk::PhysicalDeviceMaintenance5FeaturesKHR pdm5fKHR = {};
+		if (DeviceMemoryManager::VK_KHR_maintenance5_enabled)
+		{
+			pdm5fKHR.setMaintenance5(vk::True);
+			PnextChainPushFront(pdf2, pdm5fKHR);
+		}
+
+		deviceCreateInfo.setPNext(&pdf2);
 		m_vkDevice = m_phyDevice.createDevice(deviceCreateInfo);
 
 		m_vkQueue = m_vkDevice.getQueue(m_nQueueFamilyIndex.value(), 0);
@@ -347,6 +402,8 @@ namespace LT {
 		RENDERER_ASSERT(features.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering, "The device did not support dynamic rendering.");
 		RENDERER_ASSERT(features.get<vk::PhysicalDeviceVulkan13Features>().synchronization2, "");
 		RENDERER_ASSERT(features.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState, "");
+
+		DeviceMemoryManager::CheckVMASupportedExtension(m_phyDevice);
 	}
 
 
@@ -473,6 +530,11 @@ namespace LT {
 
 	vk::Device& vkContext::GetVkDevice() {
 		return GetInstance().m_vkDevice;
+	}
+
+	vk::Instance& vkContext::GetVulkanInstance()
+	{
+		return GetInstance().m_vkInstance;
 	}
 
 	vk::PhysicalDevice& vkContext::GetPhysicalDevice()

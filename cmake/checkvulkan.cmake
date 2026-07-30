@@ -10,6 +10,14 @@ else()
 	message(FATAL_ERROR "vulkan not found")
 endif()
 
+# check VulkanMemoryAllcator
+if(NOT EXISTS "${VMA_INSTALLED_DIR}/include/vk_mem_alloc.h")
+    message(FATAL_ERROR "Library VulkanMemoryAllocator does not found.")
+endif()
+
+
+
+
 #find_package(Slang REQUIRED)
 #
 #if(${Slang_FOUND})

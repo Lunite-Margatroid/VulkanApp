@@ -41,10 +41,17 @@ namespace LT {
 				.setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst)
 				.setSharingMode(vk::SharingMode::eExclusive)
 				;
-			m_vkBuffer = device.createBuffer(bci);
+			//m_vkBuffer = device.createBuffer(bci);
 
-			// 分配空间
-			DeviceMemoryManager::AllocateMemory(this);
+			//// 分配空间
+			//DeviceMemoryManager::AllocateMemory(this);
+
+			VmaAllocationCreateInfo vaci = {};
+			vaci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+			
+			m_vkBuffer = DeviceMemoryManager::CreateBuffer(m_nID, bci, vaci);
+
+
 		}
 		// 填充
 		StagingBuffer* stagingBuffer = BufferManager::CreateStagingBuffer(m_nSize, m_pBuffer);

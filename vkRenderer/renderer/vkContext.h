@@ -37,6 +37,8 @@ namespace LT {
 		std::optional<uint32_t> m_nQueueFamilyIndex; // 支持图形的命令队列
 		std::optional<uint32_t> m_nQueueIndexForSurface; // 支持sruface的命令队列
 
+		// 是否支持各向异性采样
+		// CheckPhysicalDeivceFeatures会修改该字段
 		bool m_bIsAnisotropySampleSupported;
 
 	private:
@@ -71,6 +73,7 @@ namespace LT {
 		static void Release();
 		static vkContext& GetInstance();
 		static vk::Device& GetVkDevice();
+		static vk::Instance& GetVulkanInstance();
 		static vk::PhysicalDevice& GetPhysicalDevice();
 		static vk::SwapchainKHR& GetNativeSwapChain();
 		static SwapChain& GetSwapChain();

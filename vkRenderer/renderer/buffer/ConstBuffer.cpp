@@ -36,10 +36,15 @@ namespace LT {
 				.setUsage(vk::BufferUsageFlagBits::eUniformBuffer)
 				.setSharingMode(vk::SharingMode::eExclusive)
 				;
-			m_vkBuffer = device.createBuffer(bci);
+
+			VmaAllocationCreateInfo vaci = {};
+			vaci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+			vaci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+
+			m_vkBuffer = DeviceMemoryManager::CreateBuffer(m_nID, bci, vaci);
 
 			// ∑÷≈‰ø’º‰
-			DeviceMemoryManager::AllocateMemory(this);
+			// DeviceMemoryManager::AllocateMemory(this);
 
 			m_pMapped = DeviceMemoryManager::GetInstance().MapMemory(*reinterpret_cast<Buffer*>(this));
 		}

@@ -42,8 +42,8 @@ namespace LT
 		}
 		m_nSize = 0;
 
-		vk::Device& device = vkContext::GetVkDevice();
-		device.destroyBuffer(m_vkBuffer);
+		//vk::Device& device = vkContext::GetVkDevice();
+		//device.destroyBuffer(m_vkBuffer);
 		ReleaseDeviceMemory();
 	}
 
@@ -59,7 +59,8 @@ namespace LT
 
 	void Buffer::ReleaseDeviceMemory()
 	{
-		DeviceMemoryManager::FreeMemory(*this);
+		// DeviceMemoryManager::FreeMemory(*this);
+		DeviceMemoryManager::ReleaseBuffer(m_nID, m_vkBuffer);
 	}
 
 	size_t Buffer::Size() const{
