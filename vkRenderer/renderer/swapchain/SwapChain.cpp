@@ -8,9 +8,9 @@ namespace LT {
 		// TODO: 在此处插入 return 语句
 		return m_vkSwapChain;
 	}
-	SwapChain::SwapChain()
+	SwapChain::SwapChain(uint32_t nWidth, uint32_t nHeight)
 	{
-		InitSwapChain();
+		InitSwapChain(nWidth, nHeight);
 		CreateImageViews();
 	}
 	SwapChain::~SwapChain()
@@ -23,7 +23,7 @@ namespace LT {
 		}
 	}
 
-	void SwapChain::InitSwapChain() {
+	void SwapChain::InitSwapChain(uint32_t nWidth, uint32_t nHeight) {
 		vk::SurfaceKHR surface = vkContext::GetInstance().m_vkSurface;
 		assert(surface);
 		// 查询所有能力的接口

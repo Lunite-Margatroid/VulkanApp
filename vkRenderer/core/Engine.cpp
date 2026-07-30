@@ -18,9 +18,9 @@ namespace LT {
 	Engine::~Engine() {
 		
 	}
-	void Engine::InitRenderer(const std::vector<const char*>& extensions, HWND hWnd)
+	void Engine::InitRenderer(const std::vector<const char*>& extensions,vk::SurfaceKHR surface)
 	{
-		vkContext::Init(extensions, hWnd);
+		vkContext::Init(extensions, surface);
 	}
 
 	void Engine::InitSwapChain() {
@@ -71,6 +71,7 @@ namespace LT {
 		m_nWidth = width;
 		m_nHeight = height;
 		vkContext::ResizeSwapChain(width, height);
+		m_pDebugRenderer->Resize(width, height);
 	}
 
 	void Engine::DrawFrame()

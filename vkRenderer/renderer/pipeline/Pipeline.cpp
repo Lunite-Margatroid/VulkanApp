@@ -213,7 +213,7 @@ namespace LT {
 			ImageManager::DeleteImage(m_vecDepthBuffer[i]);
 		}
 
-		device.destroyDescriptorSetLayout( m_vkDescSetLayout );
+		device.destroyDescriptorSetLayout(m_vkDescSetLayout);
 
 		device.destroyShaderModule(m_vkShaderMod);
 		device.destroyPipelineLayout(m_vkPipelineLayout);
@@ -313,7 +313,7 @@ namespace LT {
 			.setLoadOp(vk::AttachmentLoadOp::eClear)
 			.setStoreOp(vk::AttachmentStoreOp::eDontCare)
 			.setClearValue(clearValueDepth);
-			;
+		;
 
 
 		// ¬º»Î‰÷»æ≤Ÿ◊˜
@@ -337,8 +337,8 @@ namespace LT {
 		debugCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
 
 		// ∞Û∂®∂•µ„ª∫≥Â
-		std::array<vk::Buffer, 1> vertexBuffers{m_pVertexBuffer->GetNativeBuffer()};
-		std::array<vk::DeviceSize, 1> offsets{0};
+		std::array<vk::Buffer, 1> vertexBuffers{ m_pVertexBuffer->GetNativeBuffer() };
+		std::array<vk::DeviceSize, 1> offsets{ 0 };
 		debugCommandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
 		// ∞Û∂®∂•µ„ª∫≥Â
@@ -539,7 +539,7 @@ namespace LT {
 			.setPImageIndices(&nImgIndex)
 			;
 		// Ã·ΩªΩªªª¡¥√¸¡Ó
-		vk::Result resultPresent =vkContext::GetCmdQueueForSurface().presentKHR(pi);
+		vk::Result resultPresent = vkContext::GetCmdQueueForSurface().presentKHR(pi);
 
 		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)
 		{
@@ -582,7 +582,7 @@ namespace LT {
 	}
 
 	void Pipeline::UpdateConstBuffer() {
-		
+
 	}
 
 	void Pipeline::UpdateDescriptorSets()
@@ -605,7 +605,7 @@ namespace LT {
 				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
 				;
 
-			std::array<vk::WriteDescriptorSet,2> wds;
+			std::array<vk::WriteDescriptorSet, 2> wds;
 			wds[0]
 				.setDstSet(m_vecDescriptorSets[i])
 				.setDstBinding(0)
@@ -628,5 +628,29 @@ namespace LT {
 
 		}
 	}
-	
+
+	void Pipeline::Resize(uint32_t nWidth, uint32_t nHeight)
+	{
+		if (nWidth == 0 || nHeight == 0)
+		{
+			return;
+		}
+		if (m_vecDepthBuffer.size() > 0)
+		{
+			if (m_vecDepthBuffer.front()->GetWidth() == nWidth && m_vecDepthBuffer.front()->GetHeight() == nHeight)
+			{
+				return;
+			}
+		}
+
+		for (auto* pDepthBuffer : m_vecDepthBuffer)
+		{
+			ImageManager::DeleteImage(pDepthBuffer);
+		}
+		for (size_t i = 0; i < m_vecDepthBuffer.size(); i++)
+		{
+			m_vecDepthBuffer[i] = ImageManager::CreateImage2DDepthBuffer(nWidth, nHeight);
+		}
+	}
+
 } //namespace LT

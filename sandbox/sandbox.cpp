@@ -17,6 +17,12 @@
 #include "EngineCommon.h"
 #include "Engine.h"
 
+#define VK_USE_PLATFORM_WIN32_KHR
+
+#define VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
+
+#include "vulkan\vulkan.hpp"
+
 
 void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngine);
 
@@ -53,7 +59,18 @@ int main() {
 	SDL_GetWindowWMInfo(window, &windowInfo);
 	// 初始化上下文
 	std::unique_ptr<LT::Engine> pEngine(new LT::Engine());
-	pEngine->InitRenderer(extensions, windowInfo.info.win.window);
+
+
+	vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
+	surfaceCreateInfo
+		.setHwnd(window->)
+		.setPNext(nullptr)
+		.setHinstance(GetModuleHandle(nullptr));
+
+	m_vkSurface = m_vkInstance.createWin32SurfaceKHR(surfaceCreateInfo);
+
+
+	pEngine->InitRenderer(extensions, );
 	// 初始化交换链
 	pEngine->InitSwapChain();
 
@@ -98,6 +115,7 @@ void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngi
 	switch (event.window.event) {
 		case SDL_WindowEventID::SDL_WINDOWEVENT_RESIZED:
 		case SDL_WindowEventID::SDL_WINDOWEVENT_SIZE_CHANGED:
+		case SDL_WindowEventID::SDL_WINDOWEVENT_MAXIMIZED:
 			pEngine->WaitIdel();
 			pEngine->ResizeSwapChain(event.window.data1, event.window.data2);
 			break;
@@ -108,7 +126,6 @@ void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngi
 			break;
 
 		case SDL_WindowEventID::SDL_WINDOWEVENT_MOVED:
-		case SDL_WindowEventID::SDL_WINDOWEVENT_MAXIMIZED:
 			break;
 		default:
 			break;

@@ -151,4 +151,9 @@ namespace LT {
 	void Renderer::DrawFrame() {
 		m_pPipeline->DrawFrame();
 	}
-} // namespace
+
+	void Renderer::Resize(uint32_t nWidth, uint32_t nHeight) {
+		m_pPipeline->Resize(nWidth, nHeight);
+	}
+
+} // namespace LT

@@ -80,7 +80,7 @@ namespace LT {
 
 		static bool GetIsAnisotropySampleSupported();
 
-		static void InitSwapChain();
+		static void InitSwapChain(uint32_t nWidth, uint32_t nHeight);
 		static void ReleaseSwapChain();
 
 		static void WaitIdel();

@@ -8,7 +8,7 @@ namespace LT {
 	private:
 		vk::SwapchainKHR m_vkSwapChain;
 
-		void InitSwapChain();
+		void InitSwapChain(uint32_t nWidth, uint32_t nHeight);
 		void CreateImageViews();
 
 	public:
@@ -29,7 +29,7 @@ namespace LT {
 		vk::SwapchainKHR& NativeVKSwapChain() noexcept;
 
 
-		SwapChain();
+		SwapChain(uint32_t nWidth, uint32_t nHeight);
 		~SwapChain();
 
 	};

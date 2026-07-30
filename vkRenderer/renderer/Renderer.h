@@ -30,6 +30,8 @@ namespace LT {
 		void SetViewMat(const float* pViewMat);
 		void SetProjectionMat(const float* pProjectionMat);
 
+		void Resize(uint32_t nWidth, uint32_t nHeight);
+
 		void UpdateConstBufer();
 
 		void DrawFrame();

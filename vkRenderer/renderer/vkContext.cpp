@@ -58,11 +58,11 @@ namespace LT {
 		return *s_pVkContext;
 	}
 
-	void vkContext::InitSwapChain()
+	void vkContext::InitSwapChain(uint32_t nWidth, uint32_t nHeight)
 	{
 		if (!(GetInstance().m_pSwapChain))
 		{
-			GetInstance().m_pSwapChain.reset(new SwapChain());
+			GetInstance().m_pSwapChain.reset(new SwapChain(nWidth, nHeight));
 		}
 		else
 		{
@@ -331,16 +331,7 @@ do{\
 	}
 
 	void vkContext::CreateSurface(HWND hWnd) {
-		if (!hWnd)
-			return;
 
-		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
-		surfaceCreateInfo
-			.setHwnd(hWnd)
-			.setPNext(nullptr)
-			.setHinstance(GetModuleHandle(nullptr));
-
-		m_vkSurface = m_vkInstance.createWin32SurfaceKHR(surfaceCreateInfo);
 	}
 
 	void vkContext::CreateCommandPool()

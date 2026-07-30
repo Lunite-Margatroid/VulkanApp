@@ -72,5 +72,7 @@ namespace LT {
 		void UpdateConstBuffer();
 
 		void UpdateDescriptorSets();
+
+		void Resize(uint32_t nWidth, uint32_t nHeight);
 	};
 }// namespace LT
