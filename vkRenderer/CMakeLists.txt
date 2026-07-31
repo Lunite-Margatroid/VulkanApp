@@ -12,6 +12,7 @@ file(GLOB SOURCES
 	"logger/*.cpp"
 	"renderer/deviceImage/*.cpp"
 	"renderer/sampler/*.cpp"
+	"renderer/mesh/*.cpp"
 )
 
 #set(HEADERS
@@ -32,6 +33,8 @@ file(GLOB PRIVATE_HEADERS
 	"core/image/*.h"
 	"renderer/deviceImage/*.h"
 	"renderer/sampler/*.h"
+	"renderer/mesh/*.h"
+	"renderer/mesh/*.hpp"
 )
 
 # ´´½¨¾²Ì¬¿â
@@ -72,6 +75,7 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/deviceImage"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/sampler"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/mesh"
 		"${CMAKE_CURRENT_SOURCE_DIR}/logger"
         "${GLM_INSTALLED_DIR}/Include"
 		"${OIIO_INSTALLED_DIR}/include"
