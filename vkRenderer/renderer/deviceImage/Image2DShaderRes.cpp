@@ -28,7 +28,12 @@ namespace LT {
 			.setInitialLayout(vk::ImageLayout::eUndefined)
 			;
 
-		m_vkImage = device.createImage(ici);
+		// m_vkImage = device.createImage(ici);
+
+		VmaAllocationCreateInfo vaci = {};
+		vaci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+
+		m_vkImage = DeviceMemoryManager::CreateImage(m_nID, ici, vaci);
 
 		RENDERER_ASSERT(m_vkImage, "Failed to create vk::Image for Image2DShaderRes");
 	}
@@ -36,7 +41,7 @@ namespace LT {
 	{
 		RENDERER_ASSERT(pData, "pData is nullptr in AssignMemory for Image2DShaderRes");
 
-		DeviceMemoryManager::AllocateMemory(this);
+		//DeviceMemoryManager::AllocateMemory(this);
 
 		DeviceMemoryManager::AsignMemory(this, nSize, pData);
 

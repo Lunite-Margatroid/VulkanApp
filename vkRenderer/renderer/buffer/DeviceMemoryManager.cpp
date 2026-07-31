@@ -287,93 +287,93 @@ do{\
 	}
 
 	DeviceMemoryManager::~DeviceMemoryManager() {
-		if (m_mapVkMemory.size() > 0) {
+		if (m_mapBufferAllocation.size() > 0 || m_mapImageAllocation.size() > 0) {
 			LOG_WARNING("%s, device memory did not free", __FUNCTION__);
 		}
 		vmaDestroyAllocator(m_vmaDeviceMemAllocator);
 
 	}
 
-	vk::DeviceMemory DeviceMemoryManager::AllocateDeviceMemory(vk::MemoryRequirements vkMemRequire, vk::MemoryPropertyFlags memoryPorp)
-	{
+	//vk::DeviceMemory DeviceMemoryManager::AllocateDeviceMemory(vk::MemoryRequirements vkMemRequire, vk::MemoryPropertyFlags memoryPorp)
+	//{
 
-		vk::DeviceMemory memory;
-		vk::Device& device = vkContext::GetVkDevice();
+	//	vk::DeviceMemory memory;
+	//	vk::Device& device = vkContext::GetVkDevice();
 
 
 
-		vk::PhysicalDevice& phyDevice = vkContext::GetPhysicalDevice();
-		vk::PhysicalDeviceMemoryProperties vkMemProp = phyDevice.getMemoryProperties();
+	//	vk::PhysicalDevice& phyDevice = vkContext::GetPhysicalDevice();
+	//	vk::PhysicalDeviceMemoryProperties vkMemProp = phyDevice.getMemoryProperties();
 
-		for (uint32_t i = 0; i < vkMemProp.memoryTypeCount; i++) {
-			if (vkMemRequire.memoryTypeBits & (1 << i)) {
-				if ((vkMemProp.memoryTypes[i].propertyFlags & memoryPorp) == memoryPorp) {
+	//	for (uint32_t i = 0; i < vkMemProp.memoryTypeCount; i++) {
+	//		if (vkMemRequire.memoryTypeBits & (1 << i)) {
+	//			if ((vkMemProp.memoryTypes[i].propertyFlags & memoryPorp) == memoryPorp) {
 
-					vk::MemoryAllocateInfo mai;
-					mai.setAllocationSize(vkMemRequire.size)
-						.setMemoryTypeIndex(i)
-						;
-					memory = device.allocateMemory(mai);
+	//				vk::MemoryAllocateInfo mai;
+	//				mai.setAllocationSize(vkMemRequire.size)
+	//					.setMemoryTypeIndex(i)
+	//					;
+	//				memory = device.allocateMemory(mai);
 
-					break;
-				}
-			}
+	//				break;
+	//			}
+	//		}
 
-		}
-		RENDERER_ASSERT(memory, "Memory Allocation Failed.");
-		return memory;
-	}
+	//	}
+	//	RENDERER_ASSERT(memory, "Memory Allocation Failed.");
+	//	return memory;
+	//}
 
-	void DeviceMemoryManager::AllocateMemory(Buffer& buffer, vk::MemoryPropertyFlags memoryPorp)
-	{
-		BufferID bufferID = buffer.GetBufferID();
-		vk::Buffer nativeBuffer = buffer.GetNativeBuffer();
-		vk::Device& device = vkContext::GetVkDevice();
+	//void DeviceMemoryManager::AllocateMemory(Buffer& buffer, vk::MemoryPropertyFlags memoryPorp)
+	//{
+	//	BufferID bufferID = buffer.GetBufferID();
+	//	vk::Buffer nativeBuffer = buffer.GetNativeBuffer();
+	//	vk::Device& device = vkContext::GetVkDevice();
 
-		if (m_mapVkMemory.contains(bufferID)) {
-			LOG_WARNING("%s, the buffer memory has been allocated", __FUNCTION__);
-			return;
-		}
-		// 分配空间
-		vk::MemoryRequirements vkMemRequire = device.getBufferMemoryRequirements(nativeBuffer);
+	//	if (m_mapVkMemory.contains(bufferID)) {
+	//		LOG_WARNING("%s, the buffer memory has been allocated", __FUNCTION__);
+	//		return;
+	//	}
+	//	// 分配空间
+	//	vk::MemoryRequirements vkMemRequire = device.getBufferMemoryRequirements(nativeBuffer);
 
-		vk::DeviceMemory memory = AllocateDeviceMemory(vkMemRequire, memoryPorp);
-		m_mapVkMemory[bufferID] = memory;
-		device.bindBufferMemory(nativeBuffer, memory, 0);
-	}
-	void DeviceMemoryManager::AllocateImageMemory(DeviceImage& image, vk::MemoryPropertyFlags memoryPorp)
-	{
-		ImageID imageID = image.GetImageID();
-		vk::Image nativeImage = image.GetNativeDeviceImage();
-		vk::Device& device = vkContext::GetVkDevice();
+	//	vk::DeviceMemory memory = AllocateDeviceMemory(vkMemRequire, memoryPorp);
+	//	m_mapVkMemory[bufferID] = memory;
+	//	device.bindBufferMemory(nativeBuffer, memory, 0);
+	//}
+	//void DeviceMemoryManager::AllocateImageMemory(DeviceImage& image, vk::MemoryPropertyFlags memoryPorp)
+	//{
+	//	ImageID imageID = image.GetImageID();
+	//	vk::Image nativeImage = image.GetNativeDeviceImage();
+	//	vk::Device& device = vkContext::GetVkDevice();
 
-		if (m_mapVkImageMemory.contains(imageID)) {
-			LOG_WARNING("%s, the image memory has been allocated", __FUNCTION__);
-			return;
-		}
+	//	if (m_mapVkImageMemory.contains(imageID)) {
+	//		LOG_WARNING("%s, the image memory has been allocated", __FUNCTION__);
+	//		return;
+	//	}
 
-		vk::MemoryRequirements vkMemRequire = device.getImageMemoryRequirements(nativeImage);
-		vk::DeviceMemory memory = AllocateDeviceMemory(vkMemRequire, memoryPorp);
-		m_mapVkImageMemory[imageID] = memory;
-		device.bindImageMemory(nativeImage, memory, 0);
+	//	vk::MemoryRequirements vkMemRequire = device.getImageMemoryRequirements(nativeImage);
+	//	vk::DeviceMemory memory = AllocateDeviceMemory(vkMemRequire, memoryPorp);
+	//	m_mapVkImageMemory[imageID] = memory;
+	//	device.bindImageMemory(nativeImage, memory, 0);
 
-	}
-	void DeviceMemoryManager::AllocateMemory(VertexBuffer* pVertexBuffer)
-	{
-		GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pVertexBuffer), vk::MemoryPropertyFlagBits::eDeviceLocal);
-	}
-	void DeviceMemoryManager::AllocateMemory(StagingBuffer* pStagingBuffer)
-	{
-		GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pStagingBuffer), vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible);
-	}
-	void DeviceMemoryManager::AllocateMemory(IndexBuffer* pIndexBuffer)
-	{
-		GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pIndexBuffer), vk::MemoryPropertyFlagBits::eDeviceLocal);
-	}
-	void DeviceMemoryManager::AllocateMemory(ConstBuffer* pConstBuffer)
-	{
-		GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pConstBuffer), vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible);
-	}
+	//}
+	//void DeviceMemoryManager::AllocateMemory(VertexBuffer* pVertexBuffer)
+	//{
+	//	GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pVertexBuffer), vk::MemoryPropertyFlagBits::eDeviceLocal);
+	//}
+	//void DeviceMemoryManager::AllocateMemory(StagingBuffer* pStagingBuffer)
+	//{
+	//	GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pStagingBuffer), vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible);
+	//}
+	//void DeviceMemoryManager::AllocateMemory(IndexBuffer* pIndexBuffer)
+	//{
+	//	GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pIndexBuffer), vk::MemoryPropertyFlagBits::eDeviceLocal);
+	//}
+	//void DeviceMemoryManager::AllocateMemory(ConstBuffer* pConstBuffer)
+	//{
+	//	GetInstance().AllocateMemory(*reinterpret_cast<Buffer*>(pConstBuffer), vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible);
+	//}
 	void DeviceMemoryManager::AsignMemory(StagingBuffer* stagingBuffer, size_t nSize, void* pData)
 	{
 		auto iter = GetInstance().m_mapBufferAllocation.find(stagingBuffer->GetBufferID());
@@ -419,29 +419,29 @@ do{\
 
 		vmaUnmapMemory(GetInstance().m_vmaDeviceMemAllocator, iter->second);
 	}
-	void DeviceMemoryManager::FreeMemory(Buffer& buffer)
-	{
-		auto iter = GetInstance().m_mapVkMemory.find(buffer.GetBufferID());
-		if (iter != GetInstance().m_mapVkMemory.end())
-		{
-			vkContext::GetVkDevice().freeMemory(iter->second);
-			GetInstance().m_mapVkMemory.erase(iter);
-		}
-		else
-		{
-			LOG_WARNING("%s, the buffer did not allocate", __FUNCTION__);
-		}
-	}
-	void DeviceMemoryManager::AllocateMemory(Image2DShaderRes* pImage)
-	{
-		DeviceMemoryManager& instance = GetInstance();
-		instance.AllocateImageMemory(*reinterpret_cast<DeviceImage*>(pImage), vk::MemoryPropertyFlagBits::eDeviceLocal);
-	}
-	void DeviceMemoryManager::AllocateMemory(Image2DDepthBuffer* pDepth)
-	{
-		DeviceMemoryManager& instance = GetInstance();
-		instance.AllocateImageMemory(*reinterpret_cast<DeviceImage*>(pDepth), vk::MemoryPropertyFlagBits::eDeviceLocal);
-	}
+	//void DeviceMemoryManager::FreeMemory(Buffer& buffer)
+	//{
+	//	auto iter = GetInstance().m_mapVkMemory.find(buffer.GetBufferID());
+	//	if (iter != GetInstance().m_mapVkMemory.end())
+	//	{
+	//		vkContext::GetVkDevice().freeMemory(iter->second);
+	//		GetInstance().m_mapVkMemory.erase(iter);
+	//	}
+	//	else
+	//	{
+	//		LOG_WARNING("%s, the buffer did not allocate", __FUNCTION__);
+	//	}
+	//}
+	//void DeviceMemoryManager::AllocateMemory(Image2DShaderRes* pImage)
+	//{
+	//	DeviceMemoryManager& instance = GetInstance();
+	//	instance.AllocateImageMemory(*reinterpret_cast<DeviceImage*>(pImage), vk::MemoryPropertyFlagBits::eDeviceLocal);
+	//}
+	//void DeviceMemoryManager::AllocateMemory(Image2DDepthBuffer* pDepth)
+	//{
+	//	DeviceMemoryManager& instance = GetInstance();
+	//	instance.AllocateImageMemory(*reinterpret_cast<DeviceImage*>(pDepth), vk::MemoryPropertyFlagBits::eDeviceLocal);
+	//}
 	void DeviceMemoryManager::AsignMemory(Image2DShaderRes* pImage, size_t nSize, const void* pData)
 	{
 		StagingBuffer* pStagingBuffer = BufferManager::CreateStagingBuffer(nSize, pData);
@@ -494,23 +494,25 @@ do{\
 
 		BufferManager::DeleteBuffer(pStagingBuffer->GetBufferID());
 	}
-	void DeviceMemoryManager::FreeImageMemory(DeviceImage& image)
-	{
-		DeviceMemoryManager& instance = DeviceMemoryManager::GetInstance();
-		auto iter = instance.m_mapVkImageMemory.find(image.GetImageID());
-		if (iter == instance.m_mapVkImageMemory.end())
-		{
-			LOG_WARNING("%s, the image did not allocate", __FUNCTION__);
-		}
-		else
-		{
-			vk::Device& device = vkContext::GetVkDevice();
-			device.freeMemory(iter->second);
-			instance.m_mapVkImageMemory.erase(iter);
-		}
-	}
+	//void DeviceMemoryManager::FreeImageMemory(DeviceImage& image)
+	//{
+	//	DeviceMemoryManager& instance = DeviceMemoryManager::GetInstance();
+	//	auto iter = instance.m_mapVkImageMemory.find(image.GetImageID());
+	//	if (iter == instance.m_mapVkImageMemory.end())
+	//	{
+	//		LOG_WARNING("%s, the image did not allocate", __FUNCTION__);
+	//	}
+	//	else
+	//	{
+	//		vk::Device& device = vkContext::GetVkDevice();
+	//		device.freeMemory(iter->second);
+	//		instance.m_mapVkImageMemory.erase(iter);
+	//	}
+	//}
 	vk::Buffer DeviceMemoryManager::CreateBuffer(BufferID nBufferID, const vk::BufferCreateInfo& bci, const VmaAllocationCreateInfo& vaci)
 	{
+		RENDERER_ASSERT(!(GetInstance().m_mapBufferAllocation.contains(nBufferID)), "repeat allocating");
+
 		VkBuffer tBuffer;
 		VmaAllocation allocation;
 
@@ -522,17 +524,43 @@ do{\
 	}
 	void DeviceMemoryManager::ReleaseBuffer(BufferID nBufferID, vk::Buffer vkBuffer)
 	{
-		auto map = GetInstance().m_mapBufferAllocation;
+		auto& map = GetInstance().m_mapBufferAllocation;
 		auto iter = map.find(nBufferID);
 		if (iter != map.end())
 		{
-			BufferManager::GetInstance();
 			vmaDestroyBuffer(GetInstance().m_vmaDeviceMemAllocator, vkBuffer, iter->second);
 			map.erase(iter);
 		}
 		else
 		{
 			// WARNING
+			LOG_WARNING("Invalid release. The Buffer does not exist.");
+		}
+	}
+	vk::Image DeviceMemoryManager::CreateImage(ImageID nImageID, const vk::ImageCreateInfo& ici, const VmaAllocationCreateInfo& vaci)
+	{
+		RENDERER_ASSERT(!(GetInstance().m_mapImageAllocation.contains(nImageID)), "repeat allocating");
+
+		VkImage tImage;
+		VmaAllocation allocation;
+		vmaCreateImage(GetInstance().m_vmaDeviceMemAllocator, ici, &vaci, &tImage, &allocation, nullptr);
+
+		GetInstance().m_mapImageAllocation[nImageID] = allocation;
+
+		return vk::Image(tImage);
+	}
+	void DeviceMemoryManager::ReleaseImage(ImageID nImageID, vk::Image vkImage)
+	{
+		auto& map = GetInstance().m_mapImageAllocation;
+		auto iter = map.find(nImageID);
+		if (iter != map.end())
+		{
+			vmaDestroyImage(GetInstance().m_vmaDeviceMemAllocator, vkImage, iter->second);
+			map.erase(iter);
+		}
+		else
+		{
+			LOG_WARNING("Invalid release. The Image does not exist.");
 		}
 	}
 } // namespace LT

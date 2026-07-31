@@ -11,7 +11,6 @@ namespace LT {
 	ImageViewable::~ImageViewable()
 	{
 		vkContext::GetVkDevice().destroyImageView(m_vkImageView);
-		DeviceMemoryManager::FreeImageMemory(*this);
 	}
 	vk::ImageView ImageViewable::GetNativeImageView()
 	{

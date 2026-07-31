@@ -32,7 +32,12 @@ namespace LT {
 			.setInitialLayout(vk::ImageLayout::eUndefined)
 			;
 
-		m_vkImage = device.createImage(ici);
+		// m_vkImage = device.createImage(ici);
+		VmaAllocationCreateInfo vaci = {};
+		vaci.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+
+		m_vkImage = DeviceMemoryManager::CreateImage(m_nID, ici, vaci);
+
 
 		RENDERER_ASSERT(m_vkImage, "Depth Buffer Create Failed.");
 	}
@@ -42,7 +47,7 @@ namespace LT {
 		if (m_vkImageView)
 			return;
 
-		DeviceMemoryManager::AllocateMemory(this);
+		//DeviceMemoryManager::AllocateMemory(this);
 
 		vk::ImageSubresourceRange isr;
 		isr
@@ -61,7 +66,7 @@ namespace LT {
 			.setSubresourceRange(isr)
 			;
 
-		  m_vkImageView = vkContext::GetVkDevice().createImageView(ivci);
+		m_vkImageView = vkContext::GetVkDevice().createImageView(ivci);
 	}
 
 

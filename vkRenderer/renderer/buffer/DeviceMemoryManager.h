@@ -14,10 +14,8 @@
 namespace LT {
 	class DeviceMemoryManager {
 	private:
-		std::map<BufferID, vk::DeviceMemory> m_mapVkMemory;
-		std::map<ImageID, vk::DeviceMemory> m_mapVkImageMemory;
-
 		std::map<BufferID, VmaAllocation> m_mapBufferAllocation;
+		std::map<ImageID, VmaAllocation> m_mapImageAllocation;
 
 		VmaAllocator m_vmaDeviceMemAllocator;
 
@@ -25,11 +23,11 @@ namespace LT {
 		~DeviceMemoryManager();
 
 
-		vk::DeviceMemory AllocateDeviceMemory(vk::MemoryRequirements, vk::MemoryPropertyFlags);
+		//vk::DeviceMemory AllocateDeviceMemory(vk::MemoryRequirements, vk::MemoryPropertyFlags);
 
-		void AllocateMemory(Buffer& buffer, vk::MemoryPropertyFlags memoryPorp);
+		//void AllocateMemory(Buffer& buffer, vk::MemoryPropertyFlags memoryPorp);
 
-		void AllocateImageMemory(DeviceImage& image, vk::MemoryPropertyFlags memoryPorp);
+		//void AllocateImageMemory(DeviceImage& image, vk::MemoryPropertyFlags memoryPorp);
 	public:
 		/// <summary>
 		/// 把目标Buffer的Memory映射出来。只有Staging和ConstBuffer有效
@@ -76,26 +74,26 @@ namespace LT {
 
 		static DeviceMemoryManager& GetInstance();
 
-		static void AllocateMemory(VertexBuffer* vertexBuffer);
-		static void AllocateMemory(StagingBuffer* stagingBuffer);
-		static void AllocateMemory(IndexBuffer* pIndexBuffer);
-		static void AllocateMemory(ConstBuffer* pConstBuffer);
+		//static void AllocateMemory(VertexBuffer* vertexBuffer);
+		//static void AllocateMemory(StagingBuffer* stagingBuffer);
+		//static void AllocateMemory(IndexBuffer* pIndexBuffer);
+		//static void AllocateMemory(ConstBuffer* pConstBuffer);
 		static void AsignMemory(StagingBuffer* stagingBuffer, size_t nSize, void* pData);
 		static void AsignMemory(ConstBuffer* pConstBuffer, size_t nSize, void* pData);
-		static void FreeMemory(Buffer& buffer);
+		//static void FreeMemory(Buffer& buffer);
 
 
-		static void AllocateMemory(Image2DShaderRes* pImage);
-		static void AllocateMemory(Image2DDepthBuffer* pDepth);
+		//static void AllocateMemory(Image2DShaderRes* pImage);
+		//static void AllocateMemory(Image2DDepthBuffer* pDepth);
 
 		static void AsignMemory(Image2DShaderRes* pImage, size_t nSize, const void* pData);
-		static void FreeImageMemory(DeviceImage& image);
+		//static void FreeImageMemory(DeviceImage& image);
 
 		static vk::Buffer CreateBuffer(BufferID nBufferID, const vk::BufferCreateInfo& bci,const VmaAllocationCreateInfo& vaci);
 		static void ReleaseBuffer(BufferID nBufferID, vk::Buffer vkBuffer);
 
-		static vk::Image CreateImageBuffer(ImageID nImageID,const vk::ImageCreateInfo& ici, const VmaAllocationCreateInfo& vaci);
-		
+		static vk::Image CreateImage(ImageID nImageID,const vk::ImageCreateInfo& ici, const VmaAllocationCreateInfo& vaci);
+		static void ReleaseImage(ImageID nImageID, vk::Image vkImage);
 	};
 
 } // namespace LT
