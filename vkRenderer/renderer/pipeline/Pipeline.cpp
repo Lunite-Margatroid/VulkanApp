@@ -14,7 +14,10 @@
 #include "ImageManager.h"
 
 namespace LT {
-	Pipeline::Pipeline() {
+	Pipeline::Pipeline()
+		:m_nWidth(vkContext::GetSwapChain().m_sSwapChainInfo.width)
+		,m_nHeight(vkContext::GetSwapChain().m_sSwapChainInfo.height)
+	{
 
 		CreateSyncObjects();
 
@@ -200,10 +203,8 @@ namespace LT {
 
 
 		// 创建深度缓冲
-		int nWidth = vkContext::GetSwapChain().m_sSwapChainInfo.width;
-		int nHeight = vkContext::GetSwapChain().m_sSwapChainInfo.height;
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
-			m_vecDepthBuffer.push_back(ImageManager::CreateImage2DDepthBuffer(nWidth, nHeight));
+			m_vecDepthBuffer.push_back(ImageManager::CreateImage2DDepthBuffer(m_nWidth, m_nHeight));
 		}
 	}
 
@@ -544,8 +545,7 @@ namespace LT {
 		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)
 		{
 			vkContext::WaitIdel();
-			vkContext::ReleaseSwapChain();
-			vkContext::InitSwapChain();
+			vkContext::GetInstance().ResizeSwapChain(m_nWidth, m_nHeight);
 		}
 		else
 		{
@@ -635,6 +635,12 @@ namespace LT {
 		{
 			return;
 		}
+		if (m_nWidth == nWidth && m_nHeight == nHeight)
+			return;
+
+		m_nWidth = nWidth;
+		m_nHeight = nHeight;
+
 		if (m_vecDepthBuffer.size() > 0)
 		{
 			if (m_vecDepthBuffer.front()->GetWidth() == nWidth && m_vecDepthBuffer.front()->GetHeight() == nHeight)

@@ -13,11 +13,11 @@ namespace LT {
 	private:
 		vk::Instance m_vkInstance;
 	private:
-		vk::PhysicalDevice m_phyDevice;
-		vk::Device m_vkDevice;
-
 
 		vk::SurfaceKHR m_vkSurface;
+
+		vk::PhysicalDevice m_phyDevice;
+		vk::Device m_vkDevice;
 		// vk命令队列
 		// 使用GetCmdQueue和GetCmdQueueForSurface获取命令队列
 		vk::Queue m_vkQueue;
@@ -42,12 +42,12 @@ namespace LT {
 		bool m_bIsAnisotropySampleSupported;
 
 	private:
-		vkContext(const std::vector<const char* >& extensions, HWND hWnd = NULL);
+		vkContext(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd);
 
 		void CreateVkInstance(const std::vector<const char* >& extensions);
 		void PickPhyDevice();
 		void CreateVkDevice();
-		void CreateSurface(HWND hWnd = NULL);
+		void CreateSurface(void* hWnd = NULL);
 
 		void CreateCommandPool();
 		void CreateCommandBuffer();
@@ -63,13 +63,18 @@ namespace LT {
 				m_nQueueIndexForSurface.has_value() && \
 				m_nQueueFamilyIndex.value() == m_nQueueIndexForSurface.value();
 		}
+
+		void InitSwapChain(uint32_t nWidth, uint32_t nHeight);
+		void ReleaseSwapChain();
+
+
 		~vkContext();
 
 		// ------------ 静态 ----------------------
 	private:
 		static vkContext* s_pVkContext;
 	public:
-		static void Init(const std::vector<const char* >& extensions, HWND hWnd = NULL);
+		static void Init(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd);
 		static void Release();
 		static vkContext& GetInstance();
 		static vk::Device& GetVkDevice();
@@ -79,9 +84,6 @@ namespace LT {
 		static SwapChain& GetSwapChain();
 
 		static bool GetIsAnisotropySampleSupported();
-
-		static void InitSwapChain(uint32_t nWidth, uint32_t nHeight);
-		static void ReleaseSwapChain();
 
 		static void WaitIdel();
 

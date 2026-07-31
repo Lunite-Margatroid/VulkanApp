@@ -12,6 +12,10 @@ namespace LT {
 
 	class Pipeline {
 	protected:
+		// render target size
+		uint32_t m_nWidth;
+		uint32_t m_nHeight;
+
 		// debug shader
 		vk::ShaderModule m_vkShaderMod;
 

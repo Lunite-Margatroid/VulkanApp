@@ -8,37 +8,43 @@ namespace LT {
 		// TODO: 在此处插入 return 语句
 		return m_vkSwapChain;
 	}
-	SwapChain::SwapChain(uint32_t nWidth, uint32_t nHeight)
+	SwapChain::SwapChain(uint32_t nWidth, uint32_t nHeight, vk::Device device, vk::PhysicalDevice vkPhyDeivce, vk::SurfaceKHR vkSurface, vk::SharingMode eImageShaderingMode)
+		:m_vkDevice(device)
+		,m_vkPhyDevice(vkPhyDeivce)
+		,m_vkSurface(vkSurface)
 	{
+		m_vkSwapCreateInfo.setImageSharingMode(eImageShaderingMode);
 		InitSwapChain(nWidth, nHeight);
 		CreateImageViews();
 	}
 	SwapChain::~SwapChain()
 	{
-		vkContext::GetInstance().m_vkDevice.destroySwapchainKHR(m_vkSwapChain);
+		m_vkDevice.destroySwapchainKHR(m_vkSwapChain);
 
 		for (auto imageView : m_imageViews)
 		{
-			vkContext::GetInstance().m_vkDevice.destroyImageView(imageView);
+			m_vkDevice.destroyImageView(imageView);
 		}
 	}
 
 	void SwapChain::InitSwapChain(uint32_t nWidth, uint32_t nHeight) {
-		vk::SurfaceKHR surface = vkContext::GetInstance().m_vkSurface;
-		assert(surface);
+
+		RENDERER_ASSERT(m_vkSurface, "%s", __FUNCTION__);
 		// 查询所有能力的接口
-		auto surfaceCapabilities = vkContext::GetInstance().m_phyDevice.getSurfaceCapabilitiesKHR(surface);
-		assert(surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max());
+		auto surfaceCapabilities = m_vkPhyDevice.getSurfaceCapabilitiesKHR(m_vkSurface);
+		RENDERER_ASSERT(surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max(), "%s", __FUNCTION__);
 		LOG_INFO("Width: %d  Hight: %d\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
+
 
 		// 缓冲尺寸
 		m_sSwapChainInfo.width = std::clamp<uint32_t>(
-			surfaceCapabilities.currentExtent.width,
+			nWidth,
 			surfaceCapabilities.minImageExtent.width,
-			surfaceCapabilities.maxImageExtent.width);
+			surfaceCapabilities.maxImageExtent.width
+		);
 
 		m_sSwapChainInfo.height = std::clamp<uint32_t>(
-			surfaceCapabilities.currentExtent.height,
+			nHeight,
 			surfaceCapabilities.minImageExtent.height,
 			surfaceCapabilities.maxImageExtent.height
 		);
@@ -47,7 +53,7 @@ namespace LT {
 			return;
 
 		// 查询支持的像素格式
-		std::vector<vk::SurfaceFormatKHR> formats = vkContext::GetInstance().m_phyDevice.getSurfaceFormatsKHR(surface);
+		std::vector<vk::SurfaceFormatKHR> formats = m_vkPhyDevice.getSurfaceFormatsKHR(m_vkSurface);
 		// 默认格式
 		m_sSwapChainInfo.surfaceFormat = formats[0];
 		for (const auto& surfaceFormat : formats) {
@@ -59,7 +65,7 @@ namespace LT {
 		}
 
 		// 查询支持的交换模式
-		std::vector<vk::PresentModeKHR> presentModes = vkContext::GetInstance().m_phyDevice.getSurfacePresentModesKHR(surface);
+		std::vector<vk::PresentModeKHR> presentModes = m_vkPhyDevice.getSurfacePresentModesKHR(m_vkSurface);
 		// vk::PresentModeKHR::eFifo为一定支持的格式
 		m_sSwapChainInfo.presentMode = vk::PresentModeKHR::eFifo;
 		for (const auto& presentMode : presentModes)
@@ -77,9 +83,8 @@ namespace LT {
 		m_sSwapChainInfo.nImageCount = std::clamp<uint32_t>(SWAPCHAIN_DEFAULT_IMAGE_NUM, surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
 
 		// 创建SwapChain
-		vk::SwapchainCreateInfoKHR swapCreateInfo;
-		swapCreateInfo
-			.setSurface(vkContext::GetInstance().m_vkSurface)				// Surface Instance
+		m_vkSwapCreateInfo
+			.setSurface(m_vkSurface)				// Surface Instance
 			.setMinImageCount(m_sSwapChainInfo.nImageCount)					// 缓冲数量
 			.setImageExtent(swapChainExtent)								// 缓冲尺寸
 			.setImageFormat(m_sSwapChainInfo.surfaceFormat.format)			// 缓冲像素格式
@@ -93,22 +98,8 @@ namespace LT {
 			.setClipped(true)												// if 尺寸不合 then 裁剪
 			.setOldSwapchain(nullptr);										// 上一个交换链的指针 Resize后需要重新创建交换链
 
-
-		// 是否允许多个Cmd Queue并行访问SwapChain
-		if (vkContext::GetInstance().IsGraphicsSurfaceSameQueue())
-		{
-			swapCreateInfo.setImageSharingMode(vk::SharingMode::eExclusive); // 同一时刻仅允许一个cmd Queue使用。多个Queue使用时需要显式转交所有权
-			// eExclusive 性能会高一点
-		}
-		else
-		{
-			// 创建QueueForSurface成功是交换链的前置条件
-			// 创建了Queue For Surface and 存在两个Queue
-			swapCreateInfo.setImageSharingMode(vk::SharingMode::eConcurrent); // 同一时刻仅允许多个cmd Queue使用
-		}
-
-		m_vkSwapChain = vkContext::GetInstance().m_vkDevice.createSwapchainKHR(swapCreateInfo);
-		m_sSwapChainInfo.images = vkContext::GetInstance().m_vkDevice.getSwapchainImagesKHR(m_vkSwapChain);
+		m_vkSwapChain = m_vkDevice.createSwapchainKHR(m_vkSwapCreateInfo);
+		m_sSwapChainInfo.images = m_vkDevice.getSwapchainImagesKHR(m_vkSwapChain);
 	}
 
 	void SwapChain::CreateImageViews() {
@@ -131,8 +122,55 @@ namespace LT {
 				.setSubresourceRange(subRes)
 				.setComponents(componentMapping)
 				.setImage(image);
-			vk::ImageView imageView =  LT::vkContext::GetInstance().m_vkDevice.createImageView(imgViewInfo);
+			vk::ImageView imageView = m_vkDevice.createImageView(imgViewInfo);
 			m_imageViews.emplace_back(std::move(imageView));
 		}
+	}
+
+	void SwapChain::Resize(uint32_t nWidth, uint32_t nHeight) {
+		// 删除ImageView
+		for (auto& imageView : m_imageViews)
+		{
+			m_vkDevice.destroyImageView(imageView);
+		}
+		m_imageViews.clear();
+
+		// 删除vkSwapChain
+		m_vkDevice.destroySwapchainKHR(m_vkSwapChain);
+
+
+		// 缓冲尺寸
+		m_sSwapChainInfo.width = nWidth;
+		m_sSwapChainInfo.height = nHeight;
+
+		auto surfaceCapabilities = m_vkPhyDevice.getSurfaceCapabilitiesKHR(m_vkSurface);
+		RENDERER_ASSERT(surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max(), "%s", __FUNCTION__);
+
+		// 缓冲尺寸
+		m_sSwapChainInfo.width = std::clamp<uint32_t>(
+			nWidth,
+			surfaceCapabilities.minImageExtent.width,
+			surfaceCapabilities.maxImageExtent.width
+		);
+
+		m_sSwapChainInfo.height = std::clamp<uint32_t>(
+			nHeight,
+			surfaceCapabilities.minImageExtent.height,
+			surfaceCapabilities.maxImageExtent.height
+		);
+
+
+
+		vk::Extent2D swapChainExtent{ static_cast<uint32_t>(m_sSwapChainInfo.width), static_cast<uint32_t>(m_sSwapChainInfo.height) };
+
+		// 创建SwapChain
+		m_vkSwapCreateInfo
+			.setImageExtent(swapChainExtent)// 缓冲尺寸
+			;
+
+		m_vkSwapChain = m_vkDevice.createSwapchainKHR(m_vkSwapCreateInfo);
+		m_sSwapChainInfo.images = m_vkDevice.getSwapchainImagesKHR(m_vkSwapChain);
+
+		CreateImageViews();
 	}
 }

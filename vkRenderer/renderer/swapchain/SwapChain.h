@@ -8,6 +8,13 @@ namespace LT {
 	private:
 		vk::SwapchainKHR m_vkSwapChain;
 
+		// 下面三个对象的生命周期不由SwapChain管理
+		vk::PhysicalDevice m_vkPhyDevice;
+		vk::Device m_vkDevice;
+		vk::SurfaceKHR m_vkSurface;
+
+		vk::SwapchainCreateInfoKHR m_vkSwapCreateInfo = {};
+
 		void InitSwapChain(uint32_t nWidth, uint32_t nHeight);
 		void CreateImageViews();
 
@@ -28,8 +35,9 @@ namespace LT {
 
 		vk::SwapchainKHR& NativeVKSwapChain() noexcept;
 
+		void Resize(uint32_t nWidth, uint32_t nHeight);
 
-		SwapChain(uint32_t nWidth, uint32_t nHeight);
+		SwapChain(uint32_t nWidth, uint32_t nHeight, vk::Device device, vk::PhysicalDevice vkPhyDeivce, vk::SurfaceKHR Surface, vk::SharingMode eImageShaderingMode = vk::SharingMode::eConcurrent);
 		~SwapChain();
 
 	};

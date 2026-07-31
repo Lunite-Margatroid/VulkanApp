@@ -17,12 +17,9 @@
 #include "EngineCommon.h"
 #include "Engine.h"
 
-#define VK_USE_PLATFORM_WIN32_KHR
 
-#define VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
-
-#include "vulkan\vulkan.hpp"
-
+constexpr uint32_t DEFAULT_WIDTH = 1280u;
+constexpr uint32_t DEFAULT_HEIGHT = 720u;
 
 void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngine);
 
@@ -36,7 +33,7 @@ int main() {
 
 
 	SDL_Window* window = SDL_CreateWindow("Vulkan Window", SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+		SDL_WINDOWPOS_CENTERED, DEFAULT_WIDTH, DEFAULT_HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 	if (window == NULL) {
 		std::cout << "Could not create SDL window." << std::endl;
 		return 1;
@@ -60,19 +57,7 @@ int main() {
 	// 初始化上下文
 	std::unique_ptr<LT::Engine> pEngine(new LT::Engine());
 
-
-	vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
-	surfaceCreateInfo
-		.setHwnd(window->)
-		.setPNext(nullptr)
-		.setHinstance(GetModuleHandle(nullptr));
-
-	m_vkSurface = m_vkInstance.createWin32SurfaceKHR(surfaceCreateInfo);
-
-
-	pEngine->InitRenderer(extensions, );
-	// 初始化交换链
-	pEngine->InitSwapChain();
+	pEngine->InitRenderer(extensions, DEFAULT_WIDTH, DEFAULT_HEIGHT, windowInfo.info.win.window);
 
 	// Poll for user input.
 	bool stillRunning = true;
@@ -114,15 +99,20 @@ void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngi
 
 	switch (event.window.event) {
 		case SDL_WindowEventID::SDL_WINDOWEVENT_RESIZED:
+			break;
 		case SDL_WindowEventID::SDL_WINDOWEVENT_SIZE_CHANGED:
 		case SDL_WindowEventID::SDL_WINDOWEVENT_MAXIMIZED:
 			pEngine->WaitIdel();
+			pEngine->ResumeRendering();
 			pEngine->ResizeSwapChain(event.window.data1, event.window.data2);
+			break;
+		case SDL_WindowEventID::SDL_WINDOWEVENT_RESTORED:
+			pEngine->ResumeRendering();
 			break;
 
 		case SDL_WindowEventID::SDL_WINDOWEVENT_MINIMIZED:
 			pEngine->WaitIdel();
-			pEngine->ResizeSwapChain(0, 0);
+			pEngine->PauseRendering();
 			break;
 
 		case SDL_WindowEventID::SDL_WINDOWEVENT_MOVED:

@@ -10,7 +10,7 @@
 namespace LT {
 	vkContext* vkContext::s_pVkContext = nullptr;
 
-	vkContext::vkContext(const std::vector<const char* >& extensions, HWND hWnd)
+	vkContext::vkContext(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd)
 	{
 		m_bIsAnisotropySampleSupported = false;
 
@@ -19,6 +19,8 @@ namespace LT {
 
 		CreateSurface(hWnd);
 		CreateVkDevice();
+
+		InitSwapChain(nWidth, nHeight);
 
 		// 着色器编译器初始化
 		SlangComplier::Init();
@@ -31,7 +33,7 @@ namespace LT {
 	}
 
 	vkContext::~vkContext() {
-
+		ReleaseSwapChain();
 
 		m_vkDevice.destroyDescriptorPool(m_vkDescriptorPool);
 
@@ -60,13 +62,17 @@ namespace LT {
 
 	void vkContext::InitSwapChain(uint32_t nWidth, uint32_t nHeight)
 	{
-		if (!(GetInstance().m_pSwapChain))
+		if (m_vkSurface)
 		{
-			GetInstance().m_pSwapChain.reset(new SwapChain(nWidth, nHeight));
-		}
-		else
-		{
-			LOG_WARNING("Repeating Init Swap Chain.");
+			if (!(m_pSwapChain))
+			{
+				m_pSwapChain.reset(new SwapChain(nWidth, nHeight,m_vkDevice, m_phyDevice, m_vkSurface, 
+					IsGraphicsSurfaceSameQueue() ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent));
+			}
+			else
+			{
+				LOG_WARNING("Repeating Init Swap Chain.");
+			}
 		}
 	}
 
@@ -74,9 +80,9 @@ namespace LT {
 
 	void vkContext::ReleaseSwapChain()
 	{
-		if (GetInstance().m_pSwapChain)
+		if (m_pSwapChain)
 		{
-			GetInstance().m_pSwapChain.reset();
+			m_pSwapChain.reset();
 		}
 	}
 
@@ -86,10 +92,10 @@ namespace LT {
 		s_pVkContext = nullptr;
 	}
 
-	void vkContext::Init(const std::vector<const char* >& extensions, HWND hWnd) {
+	void vkContext::Init(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd) {
 		if (!s_pVkContext)
 		{
-			s_pVkContext = new vkContext(extensions, hWnd);
+			s_pVkContext = new vkContext(extensions, nWidth, nHeight, hWnd);
 		}
 	}
 
@@ -234,7 +240,12 @@ namespace LT {
 
 		// 设备扩展
 		// 支持交换链
-		std::vector<const char*> extensions{ vk::KHRSwapchainExtensionName };
+		std::vector<const char*> extensions;
+		// 如果不创建交换链 就不添加交换链扩展
+		if (m_nQueueIndexForSurface.has_value())
+		{
+			extensions.push_back(vk::KHRSwapchainExtensionName);
+		}
 		extensions.push_back(vk::KHRShaderDrawParametersExtensionName);
 		extensions.push_back(vk::KHRDynamicRenderingExtensionName);
 		// VMA支持扩展
@@ -330,8 +341,21 @@ do{\
 		}
 	}
 
-	void vkContext::CreateSurface(HWND hWnd) {
+	void vkContext::CreateSurface(void* hWnd) {
+		if (hWnd)
+		{
+#ifdef WIN32
+			vk::Win32SurfaceCreateInfoKHR sci;
+			sci
+				.setHwnd(static_cast<HWND>(hWnd))
+				.setHinstance(GetModuleHandle(nullptr))
+				.setPNext(nullptr)
+				;
 
+			m_vkSurface = m_vkInstance.createWin32SurfaceKHR(sci);
+#endif
+
+		}
 	}
 
 	void vkContext::CreateCommandPool()
@@ -400,16 +424,18 @@ do{\
 
 	void vkContext::ResizeSwapChain(unsigned int width, unsigned int height)
 	{
+		if (width == 0 || height == 0)
+			return;
+
 		vkContext& context = GetInstance();
 
-		if (context.m_pSwapChain->m_sSwapChainInfo.height == height && context.m_pSwapChain->m_sSwapChainInfo.width)
+		if (context.m_pSwapChain->m_sSwapChainInfo.height == height && context.m_pSwapChain->m_sSwapChainInfo.width == width)
 		{
 			return;
 		}
 
 		vkContext::WaitIdel();
-		vkContext::ReleaseSwapChain();
-		vkContext::InitSwapChain();
+		vkContext::GetInstance().m_pSwapChain->Resize(width, height);
 	}
 
 

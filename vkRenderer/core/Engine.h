@@ -16,12 +16,14 @@ namespace LT {
 		unsigned int m_nWidth;
 		unsigned int m_nHeight;
 
+		bool m_bRenderingPaused;
+
 	public:
 		Engine();
 		~Engine();
 
-		void InitRenderer(const std::vector<const char*>& extensions, HWND hWnd = NULL);
-		void InitSwapChain();
+		void InitRenderer(const std::vector<const char*>& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd);
+		void InitSwapChain(uint32_t nWidth, uint32_t nHeight, void* hWnd);
 
 		void ReleaseRenderer();
 		void ReleaseSwapChain();
@@ -31,5 +33,8 @@ namespace LT {
 		void ResizeSwapChain(unsigned int width, unsigned int height);
 
 		void DrawFrame();
+
+		void PauseRendering();
+		void ResumeRendering();
 	};
 }
