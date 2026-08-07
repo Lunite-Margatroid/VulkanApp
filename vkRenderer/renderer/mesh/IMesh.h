@@ -5,6 +5,7 @@
 
 namespace LT {
 	class IMesh {
-	
+	public:
+		virtual ~IMesh() {}
 	};
 } // namespace LT
