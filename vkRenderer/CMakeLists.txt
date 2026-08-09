@@ -42,26 +42,61 @@ add_library(vkRenderer STATIC ${SOURCES} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
 # 链接vulkan
 target_link_libraries(vkRenderer PRIVATE Vulkan::Vulkan)
 # 链接slang
+if(WIN32)
 target_link_libraries(vkRenderer 
 	PRIVATE 
-		debug "$ENV{VK_SDK_PATH}/Lib/slangd.lib"
-		optimized "$ENV{VK_SDK_PATH}/Lib/slang.lib"
+		debug "${SLANG_INSTALLED_DIR}/lib/slangd.lib"
+		optimized "${SLANG_INSTALLED_DIR}/lib/slang.lib"
 )
+elseif(UNIX)
+	target_link_libraries(vkRenderer 
+		PRIVATE 
+			"${SLANG_INSTALLED_DIR}/lib/libslangd.so"
+	)
+else()
+	message(FATAL_ERROR "Unsupported platform")
+endif()
+
 
 # 链接OpenImageIO
-target_link_libraries(vkRenderer 
-	PRIVATE
-		debug "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_d.lib"
-		optimized "${OIIO_INSTALLED_DIR}/lib/OpenImageIO.lib"
-)
-target_link_libraries(vkRenderer 
-	PRIVATE 
-		debug "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_Util_d.lib"
-		optimized "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_Util.lib"
-)
+if(${OpenImageIO_FOUND})
+	target_link_libraries(vkRenderer PRIVATE OpenImageIO::OpenImageIO)
+else()
+	# 使用输入参数
+	if(WIN32)
+		target_link_libraries(vkRenderer 
+			PRIVATE
+				debug "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_d.lib"
+				optimized "${OIIO_INSTALLED_DIR}/lib/OpenImageIO.lib"
+		)
+		target_link_libraries(vkRenderer 
+			PRIVATE 
+				debug "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_Util_d.lib"
+				optimized "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_Util.lib"
+		)
+	elseif(UNIX)
+		target_link_libraries(vkRenderer
+			PRIVATE 
+				"${OIIO_INSTALLED_DIR}/lib/libOpenImageIO.so"
+		)
+		target_link_libraries(vkRenderer
+			PRIVATE 
+				"${OIIO_INSTALLED_DIR}/lib/libOpenImageIO_Util.so"
+		)
+	else()
+		message(FATAL_ERROR "Unsupported platform")
+	endif()
+
+	target_include_directories(vkRenderer 
+		PRIVATE 
+			"${OIIO_INSTALLED_DIR}/include"
+	)
+
+endif()
 
 
 
+# 使用utf-8编码编译源文件
 target_compile_options(vkRenderer PRIVATE "/utf-8")
 
 # 设置包含目录
@@ -77,8 +112,14 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/sampler"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/mesh"
 		"${CMAKE_CURRENT_SOURCE_DIR}/logger"
-        "${GLM_INSTALLED_DIR}/Include"
-		"${OIIO_INSTALLED_DIR}/include"
-		"${VMA_INSTALLED_DIR}/include"
+        "${GLM_INSTALLED_DIR}/include"
+		"${SLANG_INSTALLED_DIR}/include"
 
 )
+
+# VMA
+if(EXISTS "${VMA_INSTALLED_DIR}/include/vma/vk_mem_alloc.h")
+	target_include_directories(vkRenderer PRIVATE "${VMA_INSTALLED_DIR}/include/vma")
+else()
+	target_include_directories(vkRenderer PRIVATE "${VMA_INSTALLED_DIR}/include")
+endif()

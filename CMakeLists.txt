@@ -4,8 +4,12 @@ cmake_minimum_required(VERSION 3.15)
 project(VulkanApp)
 
 # 检查是否为 Windows 平台
-if(NOT WIN32)
-    message(FATAL_ERROR "This project only supports Windows platform.")
+if(WIN32)
+    message(STATUS "Building on Windows")
+elseif(UNIX)
+    message(STATUS "Building on Unix-like platform")
+else()
+    message(FATAL_ERROR "Unsupported platform")
 endif()
 
 # c++ 20
@@ -22,20 +26,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 if(DEFINED ENV{VULKAN_SDK})
     message(STATUS "VULKAN_SDK = $ENV{VULKAN_SDK}")
-    set(ENV_VULKAN_PATH $ENV{VULKAN_SDK})
+    set(SDK_DEFAULT_INSTALLED_DIR $ENV{VULKAN_SDK})
 else()
-    message(FATAL_ERROR "VULKAN_SDK is not defined")
-    set(ENV_VULKAN_PATH "")
+    message(STATUS "VULKAN_SDK is not defined")
+    set(SDK_DEFAULT_INSTALLED_DIR "")
 endif()
 
 # 依赖库目录
-# SDL2
-if(NOT DEFINED SDL2_INSTALLED_DIR)
-    set(SDL2_INSTALLED_DIR "${ENV_VULKAN_PATH}" CACHE PATH "SDL2 Installed dir")
+# SDL3
+if(NOT DEFINED SDL3_INSTALLED_DIR)
+    set(SDL3_INSTALLED_DIR "${SDK_DEFAULT_INSTALLED_DIR}" CACHE PATH "SDL3 Installed dir")
 endif()
 # glm
 if(NOT DEFINED GLM_INSTALLED_DIR)
-    set(GLM_INSTALLED_DIR "${ENV_VULKAN_PATH}" CACHE PATH "glm installed dir")
+    set(GLM_INSTALLED_DIR "${SDK_DEFAULT_INSTALLED_DIR}" CACHE PATH "glm installed dir")
 endif()
 # OpenImageIO
 if(NOT DEFINED OIIO_INSTALLED_DIR)
@@ -43,15 +47,20 @@ if(NOT DEFINED OIIO_INSTALLED_DIR)
 endif()
 # VulkanMemoryAllocator
 if(NOT DEFINED VMA_INSTALLED_DIR)
-    set(VMA_INSTALLED_DIR "" CACHE PATH "VulkanMemoryAllcator installed dir")
+    set(VMA_INSTALLED_DIR "${SDK_DEFAULT_INSTALLED_DIR}" CACHE PATH "VulkanMemoryAllcator installed dir")
 endif()
 
-message(STATUS "SDL2_INSTALLED_DIR = ${SDL2_INSTALLED_DIR}")
+if(NOT DEFINED SLANG_INSTALLED_DIR)
+    set(SLANG_INSTALLED_DIR "${SDK_DEFAULT_INSTALLED_DIR}" CACHE PATH "Slang installed dir")
+endif()
+    
+message(STATUS "SDL3_INSTALLED_DIR = ${SDL3_INSTALLED_DIR}")
 message(STATUS "GLM_INSTALLED_DIR = ${GLM_INSTALLED_DIR}")
 message(STATUS "OIIO_INSTALLED_DIR = ${OIIO_INSTALLED_DIR}")
 message(STATUS "VMA_INSTALLED_DIR = ${VMA_INSTALLED_DIR}")
+message(STATUS "SLANG_INSTALLED_DIR = ${SLANG_INSTALLED_DIR}")
 
-# 检查vulkan Slang
+# 检查依赖库
 include(cmake/checkvulkan.cmake)
 
 

@@ -9,12 +9,23 @@ set(SOURCES
 add_executable(sandbox ${SOURCES})
 
 # Á´½Ó¾²Ì¬¿â
-target_link_libraries(sandbox 
-    PRIVATE 
-        vkRenderer 
-        debug "${SDL2_INSTALLED_DIR}/lib/SDL2d.lib"
-        optimized "${SDL2_INSTALLED_DIR}/lib/SDL2.lib"
-)
+if(WIN32)
+    target_link_libraries(sandbox 
+        PRIVATE 
+            vkRenderer 
+            debug "${SDL3_INSTALLED_DIR}/lib/SDL3d.lib"
+            optimized "${SDL3_INSTALLED_DIR}/lib/SDL3.lib"
+    )
+elseif(UNIX)
+    target_link_libraries(sandbox
+        PRIVATE
+            vkRenderer
+            debug "${SDL3_INSTALLED_DIR}/debug/lib/libSDL3.so"
+            optimized "${SDL3_INSTALLED_DIR}/lib/libSDL3.so"
+        )
+else()
+    message(FATAL_ERROR "Unsupported platform")
+endif()
 
 
 # ÉèÖÃ°üº¬Ä¿Â¼
@@ -22,7 +33,7 @@ target_include_directories(sandbox
     PRIVATE 
         "${CMAKE_SOURCE_DIR}/vkRenderer/core"
         "${CMAKE_SOURCE_DIR}/vkRenderer/logger"
-        "${SDL2_INSTALLED_DIR}/Include"
+        "${SDL3_INSTALLED_DIR}/$<IF:$<CONFIG:Debug>,debug/include,include>"
 		"${Vulkan_INCLUDE_DIRS}"
 )
 

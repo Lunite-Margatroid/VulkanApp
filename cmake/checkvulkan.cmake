@@ -11,12 +11,15 @@ else()
 endif()
 
 # check VulkanMemoryAllcator
-if(NOT EXISTS "${VMA_INSTALLED_DIR}/include/vk_mem_alloc.h")
+if(NOT EXISTS "${VMA_INSTALLED_DIR}/include/vk_mem_alloc.h" AND NOT EXISTS "${VMA_INSTALLED_DIR}/include/vma/vk_mem_alloc.h")
     message(FATAL_ERROR "Library VulkanMemoryAllocator does not found.")
 endif()
 
 
-
+find_package(OpenImageIO REQUIRED)
+if(${OpenImageIO_FOUND})
+	message(STATUS "OpenImageIO found")
+endif()
 
 #find_package(Slang REQUIRED)
 #
