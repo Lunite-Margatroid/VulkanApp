@@ -26,21 +26,21 @@ namespace LT {
 
 		std::vector<vk::DescriptorSet> m_vecDescriptorSets;
 
-		std::vector<vk::Semaphore> m_vkSemRenderFinish;	// ÊıÁ¿ÓëswapchainµÄimageÒ»ÖÂ
-		std::vector<vk::Semaphore> m_vkSemPresentComplete;	// ÊıÁ¿Óëflight frameÒ»ÖÂ
+		std::vector<vk::Semaphore> m_vkSemRenderFinish;	// æ•°é‡ä¸swapchainçš„imageä¸€è‡´
+		std::vector<vk::Semaphore> m_vkSemPresentComplete;	// æ•°é‡ä¸flight frameä¸€è‡´
 
-		std::vector<vk::Fence> m_vkFenceDraw;	// ÊıÁ¿Óëflight frameÒ»ÖÂ
+		std::vector<vk::Fence> m_vkFenceDraw;	// æ•°é‡ä¸flight frameä¸€è‡´
 
-		std::vector<Image2DDepthBuffer*> m_vecDepthBuffer; // Éî¶È»º³å
+		std::vector<Image2DDepthBuffer*> m_vecDepthBuffer; // æ·±åº¦ç¼“å†²
 
 		uint64_t m_nFrameCount;
 
-		// BufferµÄmemory²»ÓÉ¸ÃpipelineÊµÀı¹ÜÀí
+		// Bufferçš„memoryä¸ç”±è¯¥pipelineå®ä¾‹ç®¡ç†
 		std::vector<ConstBuffer*> m_vecConstBufferMVPMat;
 		ImageSampler* m_pSampler;
 		Image2DShaderRes* m_pImage;
 
-		// ¸ÃÊµÀı²»ÓÉPipeline¹ÜÀí
+		// è¯¥å®ä¾‹ä¸ç”±Pipelineç®¡ç†
 		VertexBuffer* m_pVertexBuffer;
 		IndexBuffer* m_pIndexBuffer;
 

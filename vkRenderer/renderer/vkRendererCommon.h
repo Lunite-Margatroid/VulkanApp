@@ -35,7 +35,7 @@ inline std::string ReadText(const std::filesystem::path& filePath) {
     }
 
     std::string content;
-    content.reserve(std::filesystem::file_size(filePath)); // Ô¤·ÖÅä¿Õ¼ä
+    content.reserve(std::filesystem::file_size(filePath)); // é¢„åˆ†é…ç©ºé—´
     content.assign(std::istreambuf_iterator<char>(file),
         std::istreambuf_iterator<char>());
     return content;

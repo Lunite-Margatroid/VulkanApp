@@ -30,14 +30,14 @@ namespace LT {
 		//void AllocateImageMemory(DeviceImage& image, vk::MemoryPropertyFlags memoryPorp);
 	public:
 		/// <summary>
-		/// °ÑÄ¿±êBufferµÄMemoryÓ³Éä³öÀ´¡£Ö»ÓĞStagingºÍConstBufferÓĞĞ§
+		/// æŠŠç›®æ ‡Bufferçš„Memoryæ˜ å°„å‡ºæ¥ã€‚åªæœ‰Stagingå’ŒConstBufferæœ‰æ•ˆ
 		/// </summary>
 		/// <param name="buffer"></param>
 		/// <returns></returns>
 		void* MapMemory(Buffer& buffer);
 
 		/// <summary>
-		/// ¹Ø±ÕÓ³Éä
+		/// å…³é—­æ˜ å°„
 		/// </summary>
 		/// <param name="buffer"></param>
 		void UnmapMemory(Buffer& buffer);
@@ -59,13 +59,13 @@ namespace LT {
 		static bool VK_KHR_external_memory_win32_enabled;
 		static bool g_SparseBindingEnabled;
 
-		// Ã²ËÆ¸úVK_KHR_maintenance5_enabledÊÇÖØ¸´µÄ£¿
+		// è²Œä¼¼è·ŸVK_KHR_maintenance5_enabledæ˜¯é‡å¤çš„ï¼Ÿ
 		static bool s_bMaintenance5ExtensionAvailable;
 	public:
 
-		// ¼ì²éVMAÀ©Õ¹Ö§³Ö
-		// ÔÚ´´½¨DeviceÖ®Ç°µ÷ÓÃ
-		// »ù±¾¶¼ÊÇ´ÓVMA¹Ù·½µÄSampleÖĞ¿½±´µÄ ¿ÉÄÜÓĞÈßÓà
+		// æ£€æŸ¥VMAæ‰©å±•æ”¯æŒ
+		// åœ¨åˆ›å»ºDeviceä¹‹å‰è°ƒç”¨
+		// åŸºæœ¬éƒ½æ˜¯ä»VMAå®˜æ–¹çš„Sampleä¸­æ‹·è´çš„ å¯èƒ½æœ‰å†—ä½™
 		static void CheckVMASupportedExtension(vk::PhysicalDevice physicalDevice);
 		static uint32_t GetVkVersion();
 

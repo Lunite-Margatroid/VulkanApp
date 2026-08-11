@@ -35,7 +35,7 @@ namespace LT {
 
 		if (!m_vkBuffer)
 		{
-			// 创建Buffer对象
+			// 鍒涘缓Buffer瀵硅薄
 			vk::BufferCreateInfo bci;
 			bci.setSize(m_nSize)
 				.setUsage(vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst)
@@ -43,7 +43,7 @@ namespace LT {
 				;
 			//m_vkBuffer = device.createBuffer(bci);
 
-			//// 分配空间
+			//// 鍒嗛厤绌洪棿
 			//DeviceMemoryManager::AllocateMemory(this);
 
 			VmaAllocationCreateInfo vaci = {};
@@ -53,7 +53,7 @@ namespace LT {
 
 
 		}
-		// 填充
+		// 濉厖
 		StagingBuffer* stagingBuffer = BufferManager::CreateStagingBuffer(m_nSize, m_pBuffer);
 		DeviceCopy(stagingBuffer, m_nSize);
 		BufferManager::DeleteBuffer(stagingBuffer);

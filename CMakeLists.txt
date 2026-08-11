@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(VulkanApp)
 
-# ¼ì²éÊÇ·ñÎª Windows Æ½Ì¨
+# æ£€æŸ¥æ˜¯å¦ä¸º Windows å¹³å°
 if(WIN32)
     message(STATUS "Building on Windows")
 elseif(UNIX)
@@ -15,10 +15,10 @@ endif()
 # c++ 20
 set(CMAKE_CXX_STANDARD 20)
 
-# Êä³öÄ¿Â¼
-# ¾²Ì¬¿â
+# è¾“å‡ºç›®å½•
+# é™æ€åº“
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-# ¿ÉÖ´ĞĞÎÄ¼ş ¶¯Ì¬¿â
+# å¯æ‰§è¡Œæ–‡ä»¶ åŠ¨æ€åº“
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 
@@ -32,7 +32,7 @@ else()
     set(SDK_DEFAULT_INSTALLED_DIR "")
 endif()
 
-# ÒÀÀµ¿âÄ¿Â¼
+# ä¾èµ–åº“ç›®å½•
 # SDL3
 if(NOT DEFINED SDL3_INSTALLED_DIR)
     set(SDL3_INSTALLED_DIR "${SDK_DEFAULT_INSTALLED_DIR}" CACHE PATH "SDL3 Installed dir")
@@ -60,18 +60,18 @@ message(STATUS "OIIO_INSTALLED_DIR = ${OIIO_INSTALLED_DIR}")
 message(STATUS "VMA_INSTALLED_DIR = ${VMA_INSTALLED_DIR}")
 message(STATUS "SLANG_INSTALLED_DIR = ${SLANG_INSTALLED_DIR}")
 
-# ¼ì²éÒÀÀµ¿â
+# æ£€æŸ¥ä¾èµ–åº“
 include(cmake/checkvulkan.cmake)
 
 
-# Ìí¼Ó×ÓÄ¿Â¼
+# æ·»åŠ å­ç›®å½•
 add_subdirectory(vkRenderer)
 add_subdirectory(sandbox)
 
-# ¿½±´dll
+# æ‹·è´dll
 include(cmake/cpydll.cmake)
-# ¿½±´×ÅÉ«Æ÷ÎÄ¼ş
+# æ‹·è´ç€è‰²å™¨æ–‡ä»¶
 include(cmake/cpyslang.cmake)
 
-# ¿½±´×ÊÔ´ÎÄ¼ş
+# æ‹·è´èµ„æºæ–‡ä»¶
 include(cmake/cpyasset.cmake)

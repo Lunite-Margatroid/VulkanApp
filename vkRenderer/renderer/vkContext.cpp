@@ -22,7 +22,7 @@ namespace LT {
 
 		InitSwapChain(nWidth, nHeight);
 
-		// ×ÅÉ«Æ÷±àÒëÆ÷³õÊ¼»¯
+		// ç€è‰²å™¨ç¼–è¯‘å™¨åˆå§‹åŒ–
 		SlangComplier::Init();
 
 		CreateCommandPool();
@@ -37,9 +37,9 @@ namespace LT {
 
 		m_vkDevice.destroyDescriptorPool(m_vkDescriptorPool);
 
-		// Ïú»ÙCommand Pool
+		// é”€æ¯Command Pool
 		m_vkDevice.destroyCommandPool(m_vkCommandPool);
-		// command buffer»á¸úËæcommand pool ×Ô¶¯ÊÍ·Å
+		// command bufferä¼šè·Ÿéšcommand pool è‡ªåŠ¨é‡Šæ”¾
 		m_vecCommandBuffers.clear();
 
 
@@ -113,7 +113,7 @@ namespace LT {
 
 		std::vector<const char* > layers;
 
-		// ÑéÖ¤²ã
+		// éªŒè¯å±‚
 #ifdef _DEBUG
 		layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
@@ -149,7 +149,7 @@ namespace LT {
 	}
 
 	void vkContext::PickPhyDevice() {
-		// »ñÈ¡ËùÓĞµÄÍ¼ĞÎÉè±¸
+		// è·å–æ‰€æœ‰çš„å›¾å½¢è®¾å¤‡
 		auto phyDevices = m_vkInstance.enumeratePhysicalDevices();
 		for (int i = 0; i < phyDevices.size(); i++)
 		{
@@ -158,18 +158,18 @@ namespace LT {
 
 
 		m_phyDevice = phyDevices[0];
-		// µÚÒ»¸öÍ¼ĞÎÉè±¸
-		// m_phyDevice.getFeatures(); // Ö§³ÖµÄÌØĞÔ
+		// ç¬¬ä¸€ä¸ªå›¾å½¢è®¾å¤‡
+		// m_phyDevice.getFeatures(); // æ”¯æŒçš„ç‰¹æ€§
 		LOG_INFO("Pick Physical Device: %s\n", static_cast<const char*>(m_phyDevice.getProperties().deviceName.data()));
 
-		// ¼ì²éÌØĞÔ
+		// æ£€æŸ¥ç‰¹æ€§
 		vkContext::CheckPhysicalDeivceFeatures();
 	}
 
 	void vkContext::CreateVkDevice() {
-		// ´´½¨ÃüÁî¶ÓÁĞºÍÉè±¸
+		// åˆ›å»ºå‘½ä»¤é˜Ÿåˆ—å’Œè®¾å¤‡
 
-		// »ñÈ¡¶ÓÁĞ×å ÕÒµ½Ö§³ÖÍ¼ĞÎµÄ¶ÓÁĞ×å£¿
+		// è·å–é˜Ÿåˆ—æ— æ‰¾åˆ°æ”¯æŒå›¾å½¢çš„é˜Ÿåˆ—æ—ï¼Ÿ
 		auto vecQueueFamilys = m_phyDevice.getQueueFamilyProperties();
 		for (int i = 0; i < vecQueueFamilys.size(); i++)
 		{
@@ -180,7 +180,7 @@ namespace LT {
 			}
 		}
 
-		// ²éÑ¯Ö§³ÖsurfaceµÄ¶ÓÁĞ×å
+		// æŸ¥è¯¢æ”¯æŒsurfaceçš„é˜Ÿåˆ—æ—
 
 		if (m_vkSurface)
 		{
@@ -201,7 +201,7 @@ namespace LT {
 
 
 
-		// Ä¬ÈÏµÄ Í¼ĞÎµÄÃüÁî¶ÓÁĞ
+		// é»˜è®¤çš„ å›¾å½¢çš„å‘½ä»¤é˜Ÿåˆ—
 		vk::DeviceQueueCreateInfo queueCreateInfo;
 		float priority = 1.0f;
 		queueCreateInfo
@@ -211,20 +211,20 @@ namespace LT {
 
 
 
-		// ´´½¨Éè±¸
+		// åˆ›å»ºè®¾å¤‡
 		vk::DeviceCreateInfo deviceCreateInfo;
 		if (IsGraphicsSurfaceSameQueue() || !m_nQueueIndexForSurface.has_value())
 		{
-			// if ´æÔÚÒ»¸öÍ¬Ê±Ö§³ÖSurfaceºÍGraphicsµÄÃüÁî¶ÓÁĞ or ²»ĞèÒª´´½¨Surface
-			// then Ö»ĞèÒª´´½¨Ò»¸öÃüÁî¶ÓÁĞ
+			// if å­˜åœ¨ä¸€ä¸ªåŒæ—¶æ”¯æŒSurfaceå’ŒGraphicsçš„å‘½ä»¤é˜Ÿåˆ— or ä¸éœ€è¦åˆ›å»ºSurface
+			// then åªéœ€è¦åˆ›å»ºä¸€ä¸ªå‘½ä»¤é˜Ÿåˆ—
 			deviceCreateInfo
 				.setQueueCreateInfos(queueCreateInfo)
 				.setQueueCreateInfoCount(1);
 		}
 		else
 		{
-			// Èç¹ûÖ§³ÖGraphicsºÍÖ§³ÖSurfaceµÄÖ¸Áî¶ÓÁĞ²»ÊÇÍ¬Ò»¸öÃüÁî¶ÓÁĞ
-			// Ôò´´½¨Á½¸öÃüÁî¶ÓÁĞ
+			// å¦‚æœæ”¯æŒGraphicså’Œæ”¯æŒSurfaceçš„æŒ‡ä»¤é˜Ÿåˆ—ä¸æ˜¯åŒä¸€ä¸ªå‘½ä»¤é˜Ÿåˆ—
+			// åˆ™åˆ›å»ºä¸¤ä¸ªå‘½ä»¤é˜Ÿåˆ—
 			vk::DeviceQueueCreateInfo queueCreateInfoForSurface;
 			queueCreateInfoForSurface
 				.setPQueuePriorities(&priority)
@@ -238,17 +238,17 @@ namespace LT {
 				.setQueueCreateInfoCount(2);
 		}
 
-		// Éè±¸À©Õ¹
-		// Ö§³Ö½»»»Á´
+		// è®¾å¤‡æ‰©å±•
+		// æ”¯æŒäº¤æ¢é“¾
 		std::vector<const char*> extensions;
-		// Èç¹û²»´´½¨½»»»Á´ ¾Í²»Ìí¼Ó½»»»Á´À©Õ¹
+		// å¦‚æœä¸åˆ›å»ºäº¤æ¢é“¾ å°±ä¸æ·»åŠ äº¤æ¢é“¾æ‰©å±•
 		if (m_nQueueIndexForSurface.has_value())
 		{
 			extensions.push_back(vk::KHRSwapchainExtensionName);
 		}
 		extensions.push_back(vk::KHRShaderDrawParametersExtensionName);
 		extensions.push_back(vk::KHRDynamicRenderingExtensionName);
-		// VMAÖ§³ÖÀ©Õ¹
+		// VMAæ”¯æŒæ‰©å±•
 		if (DeviceMemoryManager::VK_KHR_get_memory_requirements2_enabled)
 			extensions.push_back(VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME);
 		if (DeviceMemoryManager::VK_KHR_dedicated_allocation_enabled)
@@ -283,9 +283,9 @@ do{\
 (mainStruct).pNext = &(newStruct);\
 } while(false)
 
-		// Éè±¸ÌØĞÔ
+		// è®¾å¤‡ç‰¹æ€§
 		vk::PhysicalDeviceFeatures2 pdf2 = {};
-		pdf2.features.setSamplerAnisotropy(vk::True); // ¸÷ÏòÒìĞÔ²ÉÑù
+		pdf2.features.setSamplerAnisotropy(vk::True); // å„å‘å¼‚æ€§é‡‡æ ·
 		pdf2.features.setSparseBinding(DeviceMemoryManager::g_SparseBindingEnabled ? VK_TRUE : VK_FALSE);
 
 
@@ -293,11 +293,11 @@ do{\
 		pdv11f.setShaderDrawParameters(vk::True);
 
 		vk::PhysicalDeviceVulkan13Features pdv13f = {};
-		pdv13f.setDynamicRendering(vk::True);	// ¶¯Ì¬äÖÈ¾
-		pdv13f.setSynchronization2(vk::True);	// Òì²½ĞÅºÅ
+		pdv13f.setDynamicRendering(vk::True);	// åŠ¨æ€æ¸²æŸ“
+		pdv13f.setSynchronization2(vk::True);	// å¼‚æ­¥ä¿¡å·
 
 		vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT pdedsfe = {};
-		pdedsfe.setExtendedDynamicState(vk::True);	// ¶¯Ì¬äÖÈ¾À©Õ¹
+		pdedsfe.setExtendedDynamicState(vk::True);	// åŠ¨æ€æ¸²æŸ“æ‰©å±•
 
 		PnextChainPushFront(pdf2, pdv11f);
 		PnextChainPushFront(pdv11f, pdv13f);
@@ -374,7 +374,7 @@ do{\
 		vk::CommandBufferAllocateInfo cbai;
 		cbai.setCommandPool(m_vkCommandPool)
 			.setLevel(vk::CommandBufferLevel::ePrimary)
-			.setCommandBufferCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM);	// ÊıÁ¿¸úflight frameÒ»ÖÂ
+			.setCommandBufferCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM);	// æ•°é‡è·Ÿflight frameä¸€è‡´
 
 		m_vecCommandBuffers = m_vkDevice.allocateCommandBuffers(cbai);
 
@@ -411,7 +411,7 @@ do{\
 			vk::PhysicalDeviceVulkan13Features, 
 			vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
 
-		// ¸÷ÏòÒìĞÔ²ÉÑù
+		// å„å‘å¼‚æ€§é‡‡æ ·
 		m_bIsAnisotropySampleSupported = features.get<vk::PhysicalDeviceFeatures2>().features.samplerAnisotropy;
 
 		RENDERER_ASSERT(features.get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering, "The device did not support dynamic rendering.");
@@ -473,7 +473,7 @@ do{\
 		vk::Device& device = vkContext::GetVkDevice();
 		vk::Queue& queue = vkContext::GetCmdQueue();
 
-		// ´´½¨ÁÙÊ±µÄcommand buffer
+		// åˆ›å»ºä¸´æ—¶çš„command buffer
 		vk::CommandBufferAllocateInfo cbai;
 		cbai
 			.setCommandBufferCount(1)
@@ -483,7 +483,7 @@ do{\
 
 		std::vector<vk::CommandBuffer> vkTempCmdBuffers = device.allocateCommandBuffers(cbai);
 
-		// ¿ªÊ¼¼ÇÂ¼ÃüÁî
+		// å¼€å§‹è®°å½•å‘½ä»¤
 		vk::CommandBufferBeginInfo cbbi;
 		cbbi.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 		vkTempCmdBuffers[0].begin(cbbi);
@@ -496,15 +496,15 @@ do{\
 		vk::Queue& queue = vkContext::GetCmdQueue();
 		vk::Device& device = vkContext::GetVkDevice();
 
-		// ½áÊø¼ÇÂ¼ÃüÁî
+		// ç»“æŸè®°å½•å‘½ä»¤
 		cmdBuffer.end();
 
-		// Ìá½»ÃüÁî
+		// æäº¤å‘½ä»¤
 		vk::SubmitInfo si;
 		si.setCommandBuffers(cmdBuffer);
 		queue.submit(si);
 
-		// µÈ´ıÃüÁîÖ´ĞĞÍê³É
+		// ç­‰å¾…å‘½ä»¤æ‰§è¡Œå®Œæˆ
 		queue.waitIdle();
 
 		device.freeCommandBuffers(vkContext::GetCmdPool(), cmdBuffer);
@@ -561,7 +561,7 @@ do{\
 
 	vk::SwapchainKHR& vkContext::GetNativeSwapChain()
 	{
-		// TODO: ÔÚ´Ë´¦²åÈë return Óï¾ä
+		// TODO: åœ¨æ­¤å¤„æ’å…¥ return è¯­å¥
 		return GetInstance().m_pSwapChain->NativeVKSwapChain();
 	}
 

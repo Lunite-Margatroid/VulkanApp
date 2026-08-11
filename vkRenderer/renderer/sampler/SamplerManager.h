@@ -3,48 +3,48 @@
 #include "ImageSampler.h"
 
 namespace LT {
-	// ¶¨ÒåHash SamplerCreateInfoµÄ·Âº¯Êı
+	// å®šä¹‰Hash SamplerCreateInfoçš„ä»¿å‡½æ•°
 	struct SamplerCreateInfoHash {
 		size_t operator()(const vk::SamplerCreateInfo& info) const noexcept {
-			uint64_t seed = 0x9e3779b97f4a7c15ULL; // »Æ½ğ±ÈÀı³£Êı
+			uint64_t seed = 0x9e3779b97f4a7c15ULL; // é»„é‡‘æ¯”ä¾‹å¸¸æ•°
 
-			// ×éºÏËùÓĞÓ°Ïì²ÉÑùÆ÷´´½¨µÄ×Ö¶Î
+			// ç»„åˆæ‰€æœ‰å½±å“é‡‡æ ·å™¨åˆ›å»ºçš„å­—æ®µ
 			auto hash_combine = [&seed](auto value) {
 				seed ^= static_cast<uint64_t>(value) + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
 				};
 
-			// »ù´¡¹ıÂË²ÎÊı
+			// åŸºç¡€è¿‡æ»¤å‚æ•°
 			hash_combine(info.magFilter);
 			hash_combine(info.minFilter);
 			hash_combine(info.mipmapMode);
 
-			// Ñ°Ö·Ä£Ê½
+			// å¯»å€æ¨¡å¼
 			hash_combine(info.addressModeU);
 			hash_combine(info.addressModeV);
 			hash_combine(info.addressModeW);
 
-			// LOD Ïà¹Ø
-			hash_combine(std::bit_cast<uint32_t>(info.mipLodBias)); // float×ª»»Î»Ä£Ê½
+			// LOD ç›¸å…³
+			hash_combine(std::bit_cast<uint32_t>(info.mipLodBias)); // floatè½¬æ¢ä½æ¨¡å¼
 			hash_combine(std::bit_cast<uint32_t>(info.minLod));
 			hash_combine(std::bit_cast<uint32_t>(info.maxLod));
 
-			// ¸÷ÏòÒìĞÔ
-			hash_combine(info.anisotropyEnable ? vk::True : vk::False);            // ¸ñÊ½»¯Bool32
+			// å„å‘å¼‚æ€§
+			hash_combine(info.anisotropyEnable ? vk::True : vk::False);            // æ ¼å¼åŒ–Bool32
 			hash_combine(std::bit_cast<uint32_t>(info.maxAnisotropy));
 
-			// ±È½Ï¹¦ÄÜ
-			hash_combine(info.compareEnable ? vk::True : vk::False); // ¸ñÊ½»¯Bool32
+			// æ¯”è¾ƒåŠŸèƒ½
+			hash_combine(info.compareEnable ? vk::True : vk::False); // æ ¼å¼åŒ–Bool32
 			hash_combine(info.compareOp);
 
-			// ±ß½çÑÕÉ«ºÍ¹éÒ»»¯
+			// è¾¹ç•Œé¢œè‰²å’Œå½’ä¸€åŒ–
 			hash_combine(info.borderColor);
-			hash_combine(info.unnormalizedCoordinates ? vk::True : vk::False);   // ¸ñÊ½»¯bool32
+			hash_combine(info.unnormalizedCoordinates ? vk::True : vk::False);   // æ ¼å¼åŒ–bool32
 
 			return static_cast<size_t>(seed);
 		}
 	};
 
-	// ×Ô¶¨Òå±È½Ï·Âº¯Êı
+	// è‡ªå®šä¹‰æ¯”è¾ƒä»¿å‡½æ•°
 	struct SamplerCreateInfoEqual {
 		bool operator()(const vk::SamplerCreateInfo& a,
 			const vk::SamplerCreateInfo& b) const noexcept {
@@ -53,7 +53,7 @@ namespace LT {
 				return b != vk::False;
 				};
 
-			// ÒÀ´Î±È½ÏËùÓĞÓ°Ïì²ÉÑùÆ÷´´½¨µÄ×Ö¶Î
+			// ä¾æ¬¡æ¯”è¾ƒæ‰€æœ‰å½±å“é‡‡æ ·å™¨åˆ›å»ºçš„å­—æ®µ
 			return a.magFilter == b.magFilter &&
 				a.minFilter == b.minFilter &&
 				a.mipmapMode == b.mipmapMode &&
@@ -69,18 +69,18 @@ namespace LT {
 				a.maxLod == b.maxLod &&
 				a.borderColor == b.borderColor &&
 				funcNormalizeBool32(a.unnormalizedCoordinates) == funcNormalizeBool32(b.unnormalizedCoordinates);
-			// ºöÂÔ sType ºÍ pNext
+			// å¿½ç•¥ sType å’Œ pNext
 		}
 	};
 
-	// Ö»¹ÜGet¾¡¿ÉÄÜ²»Òªµ÷ÓÃdelete
+	// åªç®¡Getå°½å¯èƒ½ä¸è¦è°ƒç”¨delete
 	class SamplerManager {
 	private:
 		using SamplerMap = std::unordered_map<vk::SamplerCreateInfo, ImageSampler*, SamplerCreateInfoHash, SamplerCreateInfoEqual>;
 
 		SamplerMap m_mapImageSampler;
 		ImageSamplerID m_nIDCounter;
-		// ×î´óÖ§³ÖµÄ¸÷ÏòÒìĞÔ²ÉÑù
+		// æœ€å¤§æ”¯æŒçš„å„å‘å¼‚æ€§é‡‡æ ·
 		float m_fMaxAnis;
 
 		SamplerManager();
@@ -97,8 +97,8 @@ namespace LT {
 
 		static ImageSampler* GetDefaultImageSampler();
 		static ImageSampler* GetImageSampler(const vk::SamplerCreateInfo& sci);
-		// ¾¡¿ÉÄÜ²»Òªµ÷ÓÃ
-		// ¿ÉÄÜ²ú³öÒ°Ö¸Õë
+		// å°½å¯èƒ½ä¸è¦è°ƒç”¨
+		// å¯èƒ½äº§å‡ºé‡æŒ‡é’ˆ
 		static void DeleteImageSampler(ImageSampler* );
 	};
 

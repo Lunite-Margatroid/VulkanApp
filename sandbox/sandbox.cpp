@@ -53,19 +53,19 @@ int main() {
 
 	SDL_PropertiesID props = SDL_GetWindowProperties(window);
 
-	//»ñÈ¡ HWND Ö¸Õë
+	//è·å– HWND æŒ‡é’ˆ
 	void* hWnd = nullptr;
 #if _WIN32
 
 	hWnd = (HWND)SDL_GetPointerProperty(
 		props,
-		SDL_PROP_WINDOW_WIN32_HWND_POINTER,  // Windows Æ½Ì¨¶ÔÓ¦µÄÊôĞÔÃû
+		SDL_PROP_WINDOW_WIN32_HWND_POINTER,  // Windows å¹³å°å¯¹åº”çš„å±æ€§å
 		NULL
 	);
 
 #endif
 
-	// ³õÊ¼»¯ÉÏÏÂÎÄ
+	// åˆå§‹åŒ–ä¸Šä¸‹æ–‡
 	std::unique_ptr<LT::Engine> pEngine(new LT::Engine());
 
 	pEngine->InitRenderer(extensions, DEFAULT_WIDTH, DEFAULT_HEIGHT, hWnd);
@@ -85,7 +85,7 @@ int main() {
 				default:
 					if (event.type & 0x200)
 					{
-						// ´°¿ÚÊÂ¼ş
+						// çª—å£äº‹ä»¶
 						OnWindowEvent(event, window, pEngine.get());
 					}
 					break;
@@ -94,13 +94,13 @@ int main() {
 		pEngine->DrawFrame();
 		SDL_Delay(10);
 	}
-	// µÈ´ı¿ÕÏĞ
+	// ç­‰å¾…ç©ºé—²
 	pEngine->WaitIdel();
-	// ÊÍ·Å½»»»Á´
+	// é‡Šæ”¾äº¤æ¢é“¾
 	pEngine->ReleaseSwapChain();
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-	// ÊÍ·ÅÉÏÏÂÎÄ
+	// é‡Šæ”¾ä¸Šä¸‹æ–‡
 	pEngine->ReleaseRenderer();
 
 	return 0;

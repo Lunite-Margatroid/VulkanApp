@@ -65,7 +65,7 @@ namespace LT {
 	using BufferID = int64_t;
 
 	/// <summary>
-	/// »º³å¶ÔÏóµÄ»ùÀà
+	/// ç¼“å†²å¯¹è±¡çš„åŸºç±»
 	/// </summary>
 	class Buffer {
 		friend class BufferManager;

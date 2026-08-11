@@ -1,12 +1,12 @@
 # cpydll
 
-# ´´½¨Ò»¸ö×¨ÃÅ¿½±´ DLL µÄÄ¿±ê
+# åˆ›å»ºä¸€ä¸ªä¸“é—¨æ‹·è´ DLL çš„ç›®æ ‡
 add_custom_target(CopyDLLs ALL
     # DEPENDS sandbox
     COMMENT "Copying DLLs"
 )
 
-# ¿½±´SDL3¶¯Ì¬¿â
+# æ‹·è´SDL3åŠ¨æ€åº“
 if(WIN32)
 	if(EXISTS "${SDL3_INSTALLED_DIR}/Bin/SDL3.dll")
 		message(STATUS "Copy dll: ${SDL3_INSTALLED_DIR}/Bin/SDL3.dll")
@@ -22,7 +22,7 @@ if(WIN32)
 	endif()
 endif()
 
-# ¿½±´slang±àÒëdll
+# æ‹·è´slangç¼–è¯‘dll
 if(WIN32)
 	if(EXISTS "${ENV_VULKAN_PATH}/Bin/slang.dll")
 		message(STATUS "Copy dll: ${ENV_VULKAN_PATH}/Bin/slang.dll  glslang.dll")
@@ -50,8 +50,8 @@ if(WIN32)
 	endif()
 endif()
 
-# Èç¹ûÃ»ÓĞÕÒµ½OpenImageIO£¬Ôò¿½±´OpenImageIO¶¯Ì¬¿â
-# ¿½±´OpenImageIO¶¯Ì¬¿â
+# å¦‚æœæ²¡æœ‰æ‰¾åˆ°OpenImageIOï¼Œåˆ™æ‹·è´OpenImageIOåŠ¨æ€åº“
+# æ‹·è´OpenImageIOåŠ¨æ€åº“
 if(WIN32)
 	if(NOT ${OpenImageIO_FOUND})
 
@@ -62,7 +62,7 @@ if(WIN32)
 
 		foreach(DLL ${OIIO_DLLS})
 			message(STATUS "Found OpenImageIO DLL: ${dll}")
-			# ¹¹½¨Ä¿±êÎÄ¼şÂ·¾¶
+			# æ„å»ºç›®æ ‡æ–‡ä»¶è·¯å¾„
 			get_filename_component(DLL_NAME ${DLL} NAME)
 			set(DEST_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/${DLL_NAME}")
 

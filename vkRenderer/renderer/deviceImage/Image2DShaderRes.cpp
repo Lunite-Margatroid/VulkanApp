@@ -45,7 +45,7 @@ namespace LT {
 
 		DeviceMemoryManager::AsignMemory(this, nSize, pData);
 
-		// ³õÊ¼»¯ImageView
+		// åˆå§‹åŒ–ImageView
 		vk::ImageSubresourceRange isr;
 		isr
 			.setAspectMask(vk::ImageAspectFlagBits::eColor)

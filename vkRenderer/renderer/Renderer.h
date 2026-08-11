@@ -18,8 +18,8 @@ namespace LT {
 		} m_MVPMatBuf;
 
 
-		// ÓÉµ±Ç°ÊµÀı¹ÜÀí
-		std::vector<ConstBuffer*> m_vecConstBufferMVPMat; // ÊıÁ¿Óëflight frameÒ»ÖÂ
+		// ç”±å½“å‰å®ä¾‹ç®¡ç†
+		std::vector<ConstBuffer*> m_vecConstBufferMVPMat; // æ•°é‡ä¸flight frameä¸€è‡´
 		
 
 	public:

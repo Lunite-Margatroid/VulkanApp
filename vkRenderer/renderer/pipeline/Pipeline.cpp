@@ -23,7 +23,7 @@ namespace LT {
 
 		vk::Device& device = vkContext::GetVkDevice();
 
-		// ´´½¨×ÅÉ«Æ÷
+		// åˆ›å»ºç€è‰²å™¨
 		std::vector<std::string> vecEntryPoint = { "VertMain", "FragMain" };
 		std::filesystem::path shaderPath = "./slang/HelloTriangleShader.slang";
 		auto buffer = SlangComplier::GetInstance().CompileFromFile(shaderPath, vecEntryPoint);
@@ -37,7 +37,7 @@ namespace LT {
 
 		m_vkShaderMod = vkContext::GetVkDevice().createShaderModule(smci);
 
-		// ¶¥µãÊäÈë×´Ì¬
+		// é¡¶ç‚¹è¾“å…¥çŠ¶æ€
 		vk::PipelineVertexInputStateCreateInfo pvisci;
 		std::vector<vk::VertexInputBindingDescription> bindingDesc;
 		std::vector<vk::VertexInputAttributeDescription> vertDesc;
@@ -49,28 +49,28 @@ namespace LT {
 		pvisci.setVertexAttributeDescriptions(vertDesc)
 			.setVertexBindingDescriptions(bindingDesc);
 
-		// ¶¥µã×°Åä×´Ì¬
+		// é¡¶ç‚¹è£…é…çŠ¶æ€
 		vk::PipelineInputAssemblyStateCreateInfo piasci;
-		// Í¼ÔªÀàĞÍ
+		// å›¾å…ƒç±»å‹
 		// vk::PrimitiveTopology
-		piasci.setTopology(vk::PrimitiveTopology::eTriangleList); // Èı½ÇĞÎÁĞ±í
+		piasci.setTopology(vk::PrimitiveTopology::eTriangleList); // ä¸‰è§’å½¢åˆ—è¡¨
 
-		// Ö¸¶¨¶¯Ì¬×´Ì¬
+		// æŒ‡å®šåŠ¨æ€çŠ¶æ€
 		std::array<vk::DynamicState, 2> dss = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
 		vk::PipelineDynamicStateCreateInfo pdsci;
 		pdsci.setPDynamicStates(dss.data());
 		pdsci.setDynamicStateCount(dss.size());
-		// Viewport ´´½¨ĞÅÏ¢
+		// Viewport åˆ›å»ºä¿¡æ¯
 		vk::PipelineViewportStateCreateInfo pvsci;
 		pvsci.setViewportCount(1);
 		pvsci.setScissorCount(1);
-		// ÓÉÓÚ¶¯Ì¬×´Ì¬Viewport Scissor
-		// Viewport ºÍ ScissorÔÚPipelineÔËĞĞÖĞ¿ÉÒÔ¶¯Ì¬¸Ä±ä
-		// ²»ĞèÒªÖ¸¶¨ Viewport ºÍ Scissor
+		// ç”±äºåŠ¨æ€çŠ¶æ€Viewport Scissor
+		// Viewport å’Œ Scissoråœ¨Pipelineè¿è¡Œä¸­å¯ä»¥åŠ¨æ€æ”¹å˜
+		// ä¸éœ€è¦æŒ‡å®š Viewport å’Œ Scissor
 		//pvsci.setPViewports(&viewport);
 		//pvsci.setPScissors(&scissor);
 
-		// ¹âÕ¤»¯×´Ì¬
+		// å…‰æ …åŒ–çŠ¶æ€
 		vk::PipelineRasterizationStateCreateInfo prsci;
 		prsci
 			.setDepthClampEnable(vk::False)
@@ -82,14 +82,14 @@ namespace LT {
 			.setLineWidth(1.f)
 			;
 
-		// ³¬²ÉÑù
+		// è¶…é‡‡æ ·
 		vk::PipelineMultisampleStateCreateInfo pmsci;
 		pmsci
 			.setRasterizationSamples(vk::SampleCountFlagBits::e1)
 			.setSampleShadingEnable(vk::False)
 			;
 
-		// »ìºÏ×´Ì¬
+		// æ··åˆçŠ¶æ€
 		vk::PipelineColorBlendAttachmentState pcbas;
 		pcbas
 			.setBlendEnable(vk::True)
@@ -158,7 +158,7 @@ namespace LT {
 
 		std::array<vk::PipelineShaderStageCreateInfo, 2> stages = { pssciVert, pssciFrag };
 
-		// Éî¶ÈÄ£°å¼ì²â×´Ì¬
+		// æ·±åº¦æ¨¡æ¿æ£€æµ‹çŠ¶æ€
 		vk::PipelineDepthStencilStateCreateInfo pdssci;
 		pdssci
 			.setDepthTestEnable(vk::True)
@@ -202,7 +202,7 @@ namespace LT {
 
 
 
-		// ´´½¨Éî¶È»º³å
+		// åˆ›å»ºæ·±åº¦ç¼“å†²
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
 			m_vecDepthBuffer.push_back(ImageManager::CreateImage2DDepthBuffer(m_nWidth, m_nHeight));
 		}
@@ -264,11 +264,11 @@ namespace LT {
 	{
 		auto debugCommandBuffer = vkContext::GetCmdBuffer(nFrameIndex);
 
-		// ¿ªÊ¼Â¼Èë
+		// å¼€å§‹å½•å…¥
 		vk::CommandBufferBeginInfo cbbi;
 		debugCommandBuffer.begin(cbbi);
-		// Â¼ÈëÍ¼Ïñ×ª»»
-		// ×ª»»ÑÕÉ«»º³å
+		// å½•å…¥å›¾åƒè½¬æ¢
+		// è½¬æ¢é¢œè‰²ç¼“å†²
 		TransitionImageLayout(
 			imageIndex,
 			nFrameIndex,
@@ -280,7 +280,7 @@ namespace LT {
 			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 			vk::ImageAspectFlagBits::eColor
 		);
-		// ×ª»»Éî¶È»º³å
+		// è½¬æ¢æ·±åº¦ç¼“å†²
 		TransitionImageLayout(
 			imageIndex,
 			nFrameIndex,
@@ -295,7 +295,7 @@ namespace LT {
 
 		vk::ClearValue clearValue = vk::ClearColorValue(0.f, 0.f, 0.f, 1.f);
 
-		// Â¼Èë¶ÁĞ´äÖÈ¾Ä¿±ê²Ù×÷
+		// å½•å…¥è¯»å†™æ¸²æŸ“ç›®æ ‡æ“ä½œ
 		vk::RenderingAttachmentInfo rai;
 		rai
 			.setImageView(vkContext::GetSwapChain().m_imageViews[imageIndex])
@@ -317,7 +317,7 @@ namespace LT {
 		;
 
 
-		// Â¼ÈëäÖÈ¾²Ù×÷
+		// å½•å…¥æ¸²æŸ“æ“ä½œ
 		vk::RenderingInfo ri;
 		ri
 			.setRenderArea(
@@ -334,18 +334,18 @@ namespace LT {
 		debugCommandBuffer.beginRendering(ri);
 
 
-		// °ó¶¨Í¼ĞÎ¹ÜÏß
+		// ç»‘å®šå›¾å½¢ç®¡çº¿
 		debugCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
 
-		// °ó¶¨¶¥µã»º³å
+		// ç»‘å®šé¡¶ç‚¹ç¼“å†²
 		std::array<vk::Buffer, 1> vertexBuffers{ m_pVertexBuffer->GetNativeBuffer() };
 		std::array<vk::DeviceSize, 1> offsets{ 0 };
 		debugCommandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
-		// °ó¶¨¶¥µã»º³å
+		// ç»‘å®šé¡¶ç‚¹ç¼“å†²
 		debugCommandBuffer.bindIndexBuffer(m_pIndexBuffer->GetNativeBuffer(), 0, vk::IndexType::eUint32);
 
-		// °ó¶¨Const buffer
+		// ç»‘å®šConst buffer
 		debugCommandBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,
 			m_vkPipelineLayout,
@@ -355,8 +355,8 @@ namespace LT {
 		);
 
 
-		// Viewport ºÍ Scissor ±»Ö¸¶¨Îª¶¯Ì¬×´Ì¬
-		// ´´½¨²¢°ó¶¨
+		// Viewport å’Œ Scissor è¢«æŒ‡å®šä¸ºåŠ¨æ€çŠ¶æ€
+		// åˆ›å»ºå¹¶ç»‘å®š
 
 		// Viewport
 		vk::Viewport viewport;
@@ -477,29 +477,29 @@ namespace LT {
 
 		uint64_t nFrameIndex = m_nFrameCount % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
 		uint64_t nLastFrameIndex = (m_nFrameCount - 1) % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
-		// µÈ´ıÉÏÒ»Ö¡»æÖÆÍê³É
+		// ç­‰å¾…ä¸Šä¸€å¸§ç»˜åˆ¶å®Œæˆ
 		vk::Result result = device.waitForFences(m_vkFenceDraw[nFrameIndex], vk::True, UINT64_MAX);
 
 		RENDERER_ASSERT(result == vk::Result::eSuccess, "Failed to wait fence.");
 
 		device.resetFences(m_vkFenceDraw[nFrameIndex]);
 
-		// »ñÈ¡äÖÈ¾»º³å
-		// µÈ´ı½»»»Á´½»»»»º³åÍê³É
+		// è·å–æ¸²æŸ“ç¼“å†²
+		// ç­‰å¾…äº¤æ¢é“¾äº¤æ¢ç¼“å†²å®Œæˆ
 		auto imageIndex = device.acquireNextImageKHR(
 			nativeSwapChain,
 			UINT64_MAX,
-			m_vkSemPresentComplete[nFrameIndex] // Íê³Éºó·¢ÉäĞÅºÅ
+			m_vkSemPresentComplete[nFrameIndex] // å®Œæˆåå‘å°„ä¿¡å·
 		);
 
 		RENDERER_ASSERT(imageIndex.has_value(), "Acquire Image Failed.");
 
 		unsigned int nImgIndex = imageIndex.value;
 
-		// Â¼ÈëäÖÈ¾ÃüÁî
+		// å½•å…¥æ¸²æŸ“å‘½ä»¤
 		RecordCommandBufferDebug(nImgIndex, nFrameIndex);
 
-		// Ìá½»äÖÈ¾ÃüÁî
+		// æäº¤æ¸²æŸ“å‘½ä»¤
 		vk::PipelineStageFlags flagWaitDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
 
 		vk::Semaphore* pSemRenderFinish = nullptr;
@@ -519,27 +519,27 @@ namespace LT {
 
 		vk::SubmitInfo si;
 		si.setWaitSemaphoreCount(1)
-			.setPWaitSemaphores(&m_vkSemPresentComplete[nFrameIndex]) // µÈ´ı½»»»Á´½»»»Íê³É
+			.setPWaitSemaphores(&m_vkSemPresentComplete[nFrameIndex]) // ç­‰å¾…äº¤æ¢é“¾äº¤æ¢å®Œæˆ
 			.setPWaitDstStageMask(&flagWaitDstStageMask)
 			.setCommandBufferCount(1)
 			.setPCommandBuffers(&vkContext::GetCmdBuffer(nFrameIndex))
 			.setSignalSemaphoreCount(1)
-			.setPSignalSemaphores(pSemRenderFinish)	// Íê³Éºó·¢³öĞÅºÅ
+			.setPSignalSemaphores(pSemRenderFinish)	// å®Œæˆåå‘å‡ºä¿¡å·
 			;
 		vkContext::GetCmdQueue().submit(
 			si,
-			m_vkFenceDraw[nFrameIndex] // äÖÈ¾Íê³ÉÖ®Ç° ½ûÖ¹»ñÈ¡»º³å
+			m_vkFenceDraw[nFrameIndex] // æ¸²æŸ“å®Œæˆä¹‹å‰ ç¦æ­¢è·å–ç¼“å†²
 		);
 
-		// ½»»»Á´ÃüÁî
+		// äº¤æ¢é“¾å‘½ä»¤
 		vk::PresentInfoKHR pi;
 		pi.setWaitSemaphoreCount(1)
-			.setPWaitSemaphores(pSemRenderFinish)	// µÈ´ıäÖÈ¾Íê³É
+			.setPWaitSemaphores(pSemRenderFinish)	// ç­‰å¾…æ¸²æŸ“å®Œæˆ
 			.setSwapchainCount(1)
 			.setPSwapchains(&nativeSwapChain)
 			.setPImageIndices(&nImgIndex)
 			;
-		// Ìá½»½»»»Á´ÃüÁî
+		// æäº¤äº¤æ¢é“¾å‘½ä»¤
 		vk::Result resultPresent = vkContext::GetCmdQueueForSurface().presentKHR(pi);
 
 		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)

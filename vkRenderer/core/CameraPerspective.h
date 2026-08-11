@@ -5,8 +5,8 @@ namespace LT {
 	class CameraPerspective : public Camera
 	{
 	protected:
-		float m_fFov; // ×ÝÏòµÄÊÓ½Ç
-		float m_fAspect; // ¿í¸ß±È
+		float m_fFov; // è§†è§’
+		float m_fAspect; // å®½é«˜æ¯”
 		float m_fNear;
 		float m_fFar;
 

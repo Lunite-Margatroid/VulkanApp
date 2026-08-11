@@ -7,7 +7,7 @@ namespace LT {
 		friend class BufferManager;
 
 	protected:
-		// Í¨¹ıDevice::mapMemory»ñÈ¡µÄÖ¸Õë
+		// é€šè¿‡Device::mapMemoryè·å–çš„æŒ‡é’ˆ
 		void* m_pMapped;
 
 	protected:

@@ -1,5 +1,5 @@
 // class ImageManager
-// 位于Renderer层的图像资源管理
+// 浣嶄簬Renderer灞傜殑鍥惧儚璧勬簮绠＄悊
 
 #pragma once
 

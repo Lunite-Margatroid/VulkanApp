@@ -28,7 +28,7 @@ namespace LT {
 	void ConstBuffer::UpdateDataToGPU()
 	{
 		vk::Device& device = vkContext::GetVkDevice();
-		// 创建Buffer对象
+		// 鍒涘缓Buffer瀵硅薄
 		if (!m_vkBuffer)
 		{
 			vk::BufferCreateInfo bci;
@@ -43,13 +43,13 @@ namespace LT {
 
 			m_vkBuffer = DeviceMemoryManager::CreateBuffer(m_nID, bci, vaci);
 
-			// 分配空间
+			// 鍒嗛厤绌洪棿
 			// DeviceMemoryManager::AllocateMemory(this);
 
 			m_pMapped = DeviceMemoryManager::GetInstance().MapMemory(*reinterpret_cast<Buffer*>(this));
 		}
 
-		// 填充
+		// 濉厖
 		ConstBuffer::UpdateConstBuffer();
 	}
 	void ConstBuffer::UpdateConstBuffer()

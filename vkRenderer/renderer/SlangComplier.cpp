@@ -66,7 +66,7 @@ namespace LT {
 
 
 
-		//// ²éÑ¯Èë¿Úµã
+		//// æŸ¥è¯¢å…¥å£ç‚¹
 		//std::vector<Slang::ComPtr<slang::IEntryPoint>> vecPEntryPoint;
 		//for (const auto& strEntryPoint : vecEntryPoint)
 		//{

@@ -50,7 +50,7 @@ namespace LT {
 		m_Width = pSpec.width;
         m_Height = pSpec.height;
 		// m_Channals = pSpec.nchannels;
-		m_Channals = 4; // Ä¿Ç°È«¶¼×ª³ÉÁË4Í¨µÀ
+		m_Channals = 4; // ç›®å‰å…¨éƒ½è½¬æˆäº†4é€šé“
 
         TypeDesc type = TypeDesc(TypeDesc::UINT8);
 
@@ -115,8 +115,8 @@ namespace LT {
 
         //m_Data = new unsigned char[m_Height * m_Width * 4 * type.size()];
 
-        //// Ä¿Ç°È«¶¼×ª³ÉÁË4Í¨µÀ
-        //// TODO: ´¦Àí13Í¨µÀµÄÇé¿ö
+        //// ç›®å‰å…¨éƒ½è½¬æˆäº†4é€šé“
+        //// TODO: å¤„ç†13é€šé“çš„æƒ…å†µ
         //if (m_Channals != 4)
         //{
         //    m_Channals = 4;
@@ -125,15 +125,15 @@ namespace LT {
         //    unsigned char* pTempData = new unsigned char[m_Height * m_Width * spec.nchannels * type.size()];
         //    int count = GetPixelCount();
 
-        //    // ¶ÁÈ¡²¢×Ô¶¯×ª»»¸ñÊ½
+        //    // è¯»å–å¹¶è‡ªåŠ¨è½¬æ¢æ ¼å¼
         //    input->read_image(0, 0, 0, -1, type, pTempData, AutoStride, AutoStride, AutoStride);
         //    if (spec.nchannels == 1) {
-        //        // 1Í¨µÀ
+        //        // 1é€šé“
         //        if (m_Depth == 8) {
-        //            // 8Î»
+        //            // 8ä½
         //            unsigned char* pRes = pTempData;
         //            RGBA_8* pDist = reinterpret_cast<RGBA_8*>(m_Data);
-        //            // 8Î» 1Í¨µÀ×ª4Í¨µÀ
+        //            // 8ä½ 1é€šé“è½¬4é€šé“
         //            for (int i = 0; i < count; i++)
         //            {
         //                pDist[i].r = pRes[i];
@@ -143,10 +143,10 @@ namespace LT {
         //            }
         //        }
         //        else
-        //        {// 32Î»
+        //        {// 32ä½
         //            float* pRes = reinterpret_cast<float*>(pTempData);
         //            RGBA_32* pDist = reinterpret_cast<RGBA_32*>(m_Data);
-        //            // 32Î» 1Í¨µÀ×ª4Í¨µÀ
+        //            // 32ä½ 1é€šé“è½¬4é€šé“
         //            for (int i = 0; i < count; i++)
         //            {
         //                pDist[i].r = pRes[i];
@@ -157,12 +157,12 @@ namespace LT {
         //        }
         //    }
         //    else
-        //    {// 3Í¨µÀ
+        //    {// 3é€šé“
         //        if (m_Depth == 8) {
-        //            // 8Î»
+        //            // 8ä½
         //            RGB_8* pRes = reinterpret_cast<RGB_8*>(pTempData);
         //            RGBA_8* pDist = reinterpret_cast<RGBA_8*>(m_Data);
-        //            // 8Î» 3Í¨µÀ×ª4Í¨µÀ
+        //            // 8ä½ 3é€šé“è½¬4é€šé“
         //            for (int i = 0; i < count; i++)
         //            {
         //                pDist[i].r = pRes[i].r;
@@ -172,10 +172,10 @@ namespace LT {
         //            }
         //        }
         //        else
-        //        {// 32Î»
+        //        {// 32ä½
         //            RGB_32* pRes = reinterpret_cast<RGB_32*>(pTempData);
         //            RGBA_32* pDist = reinterpret_cast<RGBA_32*>(m_Data);
-        //            // 32Î» 3Í¨µÀ×ª4Í¨µÀ
+        //            // 32ä½ 3é€šé“è½¬4é€šé“
         //            for (int i = 0; i < count; i++)
         //            {
         //                pDist[i].r = pRes[i].r;
@@ -188,7 +188,7 @@ namespace LT {
         //    delete[] pTempData;
         //}
         //else {
-        //    // Èç¹ûÔ­Í¼ÊÇ4Í¨µÀ ÔòÖ±½Ó¶ÁÈ¡
+        //    // å¦‚æœåŸå›¾æ˜¯4é€šé“ åˆ™ç›´æ¥è¯»å–
         //    input->read_image(0, 0, 0, -1, type, m_Data, AutoStride, AutoStride, AutoStride);
         //}
         //if (!input->close()) {
@@ -215,7 +215,7 @@ namespace LT {
 
     bool ImgRes::Resize(int newSizeWidth, int newSizeHeight)
     {
-        // TODO: ´¦ÀíResize
+        // TODO: å¤„ç†Resize
         return false;
     }
 } // namespace LT

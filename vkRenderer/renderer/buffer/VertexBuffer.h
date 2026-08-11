@@ -27,7 +27,7 @@ namespace LT {
 		BufferDataType m_eDataType;
 		uint32_t m_nDimension;
 		uint32_t m_nOffset;
-		// ��ʱû�õ�
+		// 暂时没用到
 		uint32_t m_nStride;
 		VertexChannelDesc(
 			VertexChannel eChannelType,
@@ -85,7 +85,7 @@ namespace LT {
 		/// <summary>
 		/// 
 		/// </summary>
-		/// <param name="nTarget"> Ŀǰû���κκ��� </param>
+		/// <param name="nTarget"> 目前没有任何含义 </param>
 		void Bind(BindTarget nTarget) override;
 		void Unbind() override;
 

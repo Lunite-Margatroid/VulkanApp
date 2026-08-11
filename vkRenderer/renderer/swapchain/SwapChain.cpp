@@ -5,7 +5,7 @@
 namespace LT {
 	vk::SwapchainKHR& SwapChain::NativeVKSwapChain() noexcept
 	{
-		// TODO: ÔÚ´Ë´¦²åÈë return Óï¾ä
+		// TODO: åœ¨æ­¤å¤„æ’å…¥ return è¯­å¥
 		return m_vkSwapChain;
 	}
 	SwapChain::SwapChain(uint32_t nWidth, uint32_t nHeight, vk::Device device, vk::PhysicalDevice vkPhyDeivce, vk::SurfaceKHR vkSurface, vk::SharingMode eImageShaderingMode)
@@ -30,13 +30,13 @@ namespace LT {
 	void SwapChain::InitSwapChain(uint32_t nWidth, uint32_t nHeight) {
 
 		RENDERER_ASSERT(m_vkSurface, "%s", __FUNCTION__);
-		// ²éÑ¯ËùÓĞÄÜÁ¦µÄ½Ó¿Ú
+		// æŸ¥è¯¢æ‰€æœ‰èƒ½åŠ›çš„æ¥å£
 		auto surfaceCapabilities = m_vkPhyDevice.getSurfaceCapabilitiesKHR(m_vkSurface);
 		RENDERER_ASSERT(surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max(), "%s", __FUNCTION__);
 		LOG_INFO("Width: %d  Hight: %d\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
 
 
-		// »º³å³ß´ç
+		// ç¼“å†²å°ºå¯¸
 		m_sSwapChainInfo.width = std::clamp<uint32_t>(
 			nWidth,
 			surfaceCapabilities.minImageExtent.width,
@@ -52,21 +52,21 @@ namespace LT {
 		if (surfaceCapabilities.currentExtent.width == 0 || surfaceCapabilities.currentExtent.height == 0)
 			return;
 
-		// ²éÑ¯Ö§³ÖµÄÏñËØ¸ñÊ½
+		// æŸ¥è¯¢æ”¯æŒçš„åƒç´ æ ¼å¼
 		std::vector<vk::SurfaceFormatKHR> formats = m_vkPhyDevice.getSurfaceFormatsKHR(m_vkSurface);
-		// Ä¬ÈÏ¸ñÊ½
+		// é»˜è®¤æ ¼å¼
 		m_sSwapChainInfo.surfaceFormat = formats[0];
 		for (const auto& surfaceFormat : formats) {
-			// ²éÑ¯SRGB8Î»¸ñÊ½
+			// æŸ¥è¯¢SRGB8ä½æ ¼å¼
 			if (surfaceFormat.format == SWAPCHAIN_DEFAULT_PIXEL_FORMAT && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear) {
 				m_sSwapChainInfo.surfaceFormat = surfaceFormat;
 				break;
 			}
 		}
 
-		// ²éÑ¯Ö§³ÖµÄ½»»»Ä£Ê½
+		// æŸ¥è¯¢æ”¯æŒçš„äº¤æ¢æ¨¡å¼
 		std::vector<vk::PresentModeKHR> presentModes = m_vkPhyDevice.getSurfacePresentModesKHR(m_vkSurface);
-		// vk::PresentModeKHR::eFifoÎªÒ»¶¨Ö§³ÖµÄ¸ñÊ½
+		// vk::PresentModeKHR::eFifoä¸ºä¸€å®šæ”¯æŒçš„æ ¼å¼
 		m_sSwapChainInfo.presentMode = vk::PresentModeKHR::eFifo;
 		for (const auto& presentMode : presentModes)
 		{
@@ -79,24 +79,24 @@ namespace LT {
 
 		vk::Extent2D swapChainExtent{ static_cast<uint32_t>(m_sSwapChainInfo.width), static_cast<uint32_t>(m_sSwapChainInfo.height) };
 
-		// »º³åÊıÁ¿
+		// ç¼“å†²æ•°é‡
 		m_sSwapChainInfo.nImageCount = std::clamp<uint32_t>(SWAPCHAIN_DEFAULT_IMAGE_NUM, surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
 
-		// ´´½¨SwapChain
+		// åˆ›å»ºSwapChain
 		m_vkSwapCreateInfo
 			.setSurface(m_vkSurface)				// Surface Instance
-			.setMinImageCount(m_sSwapChainInfo.nImageCount)					// »º³åÊıÁ¿
-			.setImageExtent(swapChainExtent)								// »º³å³ß´ç
-			.setImageFormat(m_sSwapChainInfo.surfaceFormat.format)			// »º³åÏñËØ¸ñÊ½
-			.setImageColorSpace(m_sSwapChainInfo.surfaceFormat.colorSpace)	// »º³åÍ¼ÏñÉ«²Ê¿Õ¼ä
-			.setImageArrayLayers(1)											// Ã¿¸öImage°üº¬µÄ²ãÊı if ²»Ê¹ÓÃÁ¢ÌåäÖÈ¾ then 1
-			// vr ÂãÑÛ3DÖ®Àà¿ÉÄÜĞèÒª¸´Êı¸ölayers
-			.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)		// eColorAttachment Ö±½Ó×÷ÎªäÖÈ¾¶ÔÏó
-			.setPreTransform(vk::SurfaceTransformFlagBitsKHR::eIdentity)	// ²»±ä
-			.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)		// ºöÂÔAlphaÖ±½Ó¸²¸Ç
-			.setPresentMode(m_sSwapChainInfo.presentMode)					// ½»»»Ä£Ê½
-			.setClipped(true)												// if ³ß´ç²»ºÏ then ²Ã¼ô
-			.setOldSwapchain(nullptr);										// ÉÏÒ»¸ö½»»»Á´µÄÖ¸Õë ResizeºóĞèÒªÖØĞÂ´´½¨½»»»Á´
+			.setMinImageCount(m_sSwapChainInfo.nImageCount)					// ç¼“å†²æ•°é‡
+			.setImageExtent(swapChainExtent)								// ç¼“å†²å°ºå¯¸
+			.setImageFormat(m_sSwapChainInfo.surfaceFormat.format)			// ç¼“å†²åƒç´ æ ¼å¼
+			.setImageColorSpace(m_sSwapChainInfo.surfaceFormat.colorSpace)	// ç¼“å†²å›¾åƒè‰²å½©ç©ºé—´
+			.setImageArrayLayers(1)											// æ¯ä¸ªImageåŒ…å«çš„å±‚æ•° if ä¸ä½¿ç”¨ç«‹ä½“æ¸²æŸ“ then 1
+			// vr è£¸çœ¼3Dä¹‹ç±»å¯èƒ½éœ€è¦å¤æ•°ä¸ªlayers
+			.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)		// eColorAttachment ç›´æ¥ä½œä¸ºæ¸²æŸ“å¯¹è±¡
+			.setPreTransform(vk::SurfaceTransformFlagBitsKHR::eIdentity)	// ä¸å˜
+			.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)		// å¿½ç•¥Alphaç›´æ¥è¦†ç›–
+			.setPresentMode(m_sSwapChainInfo.presentMode)					// äº¤æ¢æ¨¡å¼
+			.setClipped(true)												// if å°ºå¯¸ä¸åˆ then è£å‰ª
+			.setOldSwapchain(nullptr);										// ä¸Šä¸€ä¸ªäº¤æ¢é“¾çš„æŒ‡é’ˆ Resizeåéœ€è¦é‡æ–°åˆ›å»ºäº¤æ¢é“¾
 
 		m_vkSwapChain = m_vkDevice.createSwapchainKHR(m_vkSwapCreateInfo);
 		m_sSwapChainInfo.images = m_vkDevice.getSwapchainImagesKHR(m_vkSwapChain);
@@ -128,25 +128,25 @@ namespace LT {
 	}
 
 	void SwapChain::Resize(uint32_t nWidth, uint32_t nHeight) {
-		// É¾³ıImageView
+		// åˆ é™¤ImageView
 		for (auto& imageView : m_imageViews)
 		{
 			m_vkDevice.destroyImageView(imageView);
 		}
 		m_imageViews.clear();
 
-		// É¾³ıvkSwapChain
+		// åˆ é™¤vkSwapChain
 		m_vkDevice.destroySwapchainKHR(m_vkSwapChain);
 
 
-		// »º³å³ß´ç
+		// ç¼“å†²å°ºå¯¸
 		m_sSwapChainInfo.width = nWidth;
 		m_sSwapChainInfo.height = nHeight;
 
 		auto surfaceCapabilities = m_vkPhyDevice.getSurfaceCapabilitiesKHR(m_vkSurface);
 		RENDERER_ASSERT(surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max(), "%s", __FUNCTION__);
 
-		// »º³å³ß´ç
+		// ç¼“å†²å°ºå¯¸
 		m_sSwapChainInfo.width = std::clamp<uint32_t>(
 			nWidth,
 			surfaceCapabilities.minImageExtent.width,
@@ -163,9 +163,9 @@ namespace LT {
 
 		vk::Extent2D swapChainExtent{ static_cast<uint32_t>(m_sSwapChainInfo.width), static_cast<uint32_t>(m_sSwapChainInfo.height) };
 
-		// ´´½¨SwapChain
+		// åˆ›å»ºSwapChain
 		m_vkSwapCreateInfo
-			.setImageExtent(swapChainExtent)// »º³å³ß´ç
+			.setImageExtent(swapChainExtent)// ç¼“å†²å°ºå¯¸
 			;
 
 		m_vkSwapChain = m_vkDevice.createSwapchainKHR(m_vkSwapCreateInfo);

@@ -8,7 +8,7 @@
 
 namespace LT {
 
-	// ----------- ÔìÒ»¸ö×ª»»¸ñÊ½Ã¶¾ÙµÄMap --------------------
+	// ----------- é€ ä¸€ä¸ªè½¬æ¢æ ¼å¼æšä¸¾çš„Map --------------------
 	struct TypeDimension {
 		BufferDataType m_eDataType;
 		uint32_t m_nDimension;
@@ -71,7 +71,7 @@ namespace LT {
 
 	void VertexBuffer::GetVertexDesc(std::vector<vk::VertexInputBindingDescription>& bindingDesc, std::vector<vk::VertexInputAttributeDescription>& vertexDesc)
 	{
-		// ´Óm_vecVertexChannelDesc´´½¨¶¥µãÊôĞÔÃèÊö
+		// ä»m_vecVertexChannelDescåˆ›å»ºé¡¶ç‚¹å±æ€§æè¿°
 
 		uint32_t nStride = 0u;
 
@@ -105,7 +105,7 @@ namespace LT {
 
 		if (!m_vkBuffer)
 		{
-			// ´´½¨Buffer¶ÔÏó
+			// åˆ›å»ºBufferå¯¹è±¡
 			vk::BufferCreateInfo bci;
 			bci.setSize(m_nSize)
 				.setUsage(vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst)
@@ -118,10 +118,10 @@ namespace LT {
 
 			// m_vkBuffer = device.createBuffer(bci);
 
-			// ·ÖÅä¿Õ¼ä
+			// åˆ†é…ç©ºé—´
 			// DeviceMemoryManager::AllocateMemory(this);
 		}
-		// Ìî³ä
+		// å¡«å……
 		StagingBuffer* stagingBuffer = BufferManager::CreateStagingBuffer(m_nSize, m_pBuffer);
 		DeviceCopy(stagingBuffer, m_nSize);
 		BufferManager::DeleteBuffer(stagingBuffer);

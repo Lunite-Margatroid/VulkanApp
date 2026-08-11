@@ -61,7 +61,7 @@ namespace LT {
 
 	void DeviceMemoryManager::CheckVMASupportedExtension(vk::PhysicalDevice physicalDevice)
 	{
-		// ¼ì²éVMAÖ§³ÖµÄÀ©Õ¹
+		// æ£€æŸ¥VMAæ”¯æŒçš„æ‰©å±•
 		uint32_t nExtensionsCount = 0;
 		vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &nExtensionsCount, nullptr);
 		std::vector<VkExtensionProperties> vecExtensions(nExtensionsCount);
@@ -334,7 +334,7 @@ do{\
 	//		LOG_WARNING("%s, the buffer memory has been allocated", __FUNCTION__);
 	//		return;
 	//	}
-	//	// ·ÖÅä¿Õ¼ä
+	//	// åˆ†é…ç©ºé—´
 	//	vk::MemoryRequirements vkMemRequire = device.getBufferMemoryRequirements(nativeBuffer);
 
 	//	vk::DeviceMemory memory = AllocateDeviceMemory(vkMemRequire, memoryPorp);
@@ -384,7 +384,7 @@ do{\
 
 		RENDERER_ASSERT(stagingBuffer->Size() >= nSize, "out of bounds");
 
-		// Ìî³ä
+		// å¡«å……
 		vk::Device& device = vkContext::GetVkDevice();
 
 		void* pDstData = nullptr;
@@ -407,7 +407,7 @@ do{\
 
 		RENDERER_ASSERT(pConstBuffer->Size() >= nSize, "out of bounds");
 
-		// Ìî³ä
+		// å¡«å……
 		vk::Device& device = vkContext::GetVkDevice();
 		//void* pDstData = device.mapMemory(iter->second, 0, nSize);
 

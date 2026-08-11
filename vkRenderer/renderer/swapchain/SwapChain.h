@@ -8,7 +8,7 @@ namespace LT {
 	private:
 		vk::SwapchainKHR m_vkSwapChain;
 
-		// 下面三个对象的生命周期不由SwapChain管理
+		// 涓嬮潰涓変釜瀵硅薄鐨勭敓鍛藉懆鏈熶笉鐢盨wapChain绠＄悊
 		vk::PhysicalDevice m_vkPhyDevice;
 		vk::Device m_vkDevice;
 		vk::SurfaceKHR m_vkSurface;

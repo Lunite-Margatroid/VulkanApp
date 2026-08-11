@@ -1,6 +1,6 @@
 # vkRenderer
 
-# Ô´ÎÄ¼ş
+# æºæ–‡ä»¶
 file(GLOB SOURCES 
     "renderer/*.cpp"
 	"renderer/swapchain/*.cpp"
@@ -18,7 +18,7 @@ file(GLOB SOURCES
 #set(HEADERS
 #    "Engine.h"
 #)
-# Í·ÎÄ¼ş
+# å¤´æ–‡ä»¶
 file(GLOB PUBLIC_HEADERS
     "core/*.h"
 	"logger/*.h"
@@ -37,11 +37,11 @@ file(GLOB PRIVATE_HEADERS
 	"renderer/mesh/*.hpp"
 )
 
-# ´´½¨¾²Ì¬¿â
+# åˆ›å»ºé™æ€åº“
 add_library(vkRenderer STATIC ${SOURCES} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
-# Á´½Óvulkan
+# é“¾æ¥vulkan
 target_link_libraries(vkRenderer PRIVATE Vulkan::Vulkan)
-# Á´½Óslang
+# é“¾æ¥slang
 if(WIN32)
 target_link_libraries(vkRenderer 
 	PRIVATE 
@@ -58,11 +58,11 @@ else()
 endif()
 
 
-# Á´½ÓOpenImageIO
+# é“¾æ¥OpenImageIO
 if(${OpenImageIO_FOUND})
 	target_link_libraries(vkRenderer PRIVATE OpenImageIO::OpenImageIO)
 else()
-	# Ê¹ÓÃÊäÈë²ÎÊı
+	# ä½¿ç”¨è¾“å…¥å‚æ•°
 	if(WIN32)
 		target_link_libraries(vkRenderer 
 			PRIVATE
@@ -96,10 +96,10 @@ endif()
 
 
 
-# Ê¹ÓÃutf-8±àÂë±àÒëÔ´ÎÄ¼ş
+# ä½¿ç”¨utf-8ç¼–ç ç¼–è¯‘æºæ–‡ä»¶
 target_compile_options(vkRenderer PRIVATE "/utf-8")
 
-# ÉèÖÃ°üº¬Ä¿Â¼
+# è®¾ç½®åŒ…å«ç›®å½•
 target_include_directories(vkRenderer 
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/core"
     PRIVATE 

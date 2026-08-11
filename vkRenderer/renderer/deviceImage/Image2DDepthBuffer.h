@@ -21,11 +21,11 @@ namespace LT {
 
 	public:
 		/// <summary>
-		/// ³õÊ¼»¯ÄÚ´æ²¢´´½¨ImageView
-		/// ¸Ã¶ÔÏó²»Ö§³ÖĞ´Èë ²ÎÊı±»ºöÂÔ
+		/// åˆå§‹åŒ–å†…å­˜å¹¶åˆ›å»ºImageView
+		/// è¯¥å¯¹è±¡ä¸æ”¯æŒå†™å…¥ å‚æ•°è¢«å¿½ç•¥
 		/// </summary>
-		/// <param name="pData"> ÂÔ </param>
-		/// <param name="nSize"> ÂÔ </param>
+		/// <param name="pData"> ç•¥ </param>
+		/// <param name="nSize"> ç•¥ </param>
 		void AssignMemory(const void* pData, size_t nSize) override;
 
 	};

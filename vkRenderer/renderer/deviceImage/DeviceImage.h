@@ -1,5 +1,5 @@
-// RendererµÄÍ¼Ïñ
-// °ü×°vkµÄImage¶ÔÏó
+// Rendererçš„å›¾åƒ
+// åŒ…è£…vkçš„Imageå¯¹è±¡
 
 #pragma once
 

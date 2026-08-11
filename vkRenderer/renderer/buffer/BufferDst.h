@@ -5,7 +5,7 @@ namespace LT {
 	class StagingBuffer;
 
 	/// <summary>
-	/// ´¿ĞéÀà¡£Æä×ÓÀà±ØĞëÂú×ãvk::BufferUsageFlagBits::eTransferDst
+	/// çº¯è™šç±»ã€‚å…¶å­ç±»å¿…é¡»æ»¡è¶³vk::BufferUsageFlagBits::eTransferDst
 	/// </summary>
 	class BufferDst : public Buffer{
 	protected:
@@ -14,12 +14,12 @@ namespace LT {
 
 	public:
 		/// <summary>
-		/// °ÑpStagingBufferµÄDeviceÊı¾İ¿½±´µ½µ±Ç°¶ÔÏó
+		/// æŠŠpStagingBufferçš„Deviceæ•°æ®æ‹·è´åˆ°å½“å‰å¯¹è±¡
 		/// </summary>
-		/// <param name="pStagingBuffer"> Ô´Êı¾İ </param>
-		/// <param name="nSize"> ¿½±´Êı¾İµÄ³ß´ç </param>
-		/// <param name="nSrcOffset"> Ô´Êı¾İµÄoffset </param>
-		/// <param name="nDstOffset"> Ä¿±êÊı¾İµÄoffset </param>
+		/// <param name="pStagingBuffer"> æºæ•°æ® </param>
+		/// <param name="nSize"> æ‹·è´æ•°æ®çš„å°ºå¯¸ </param>
+		/// <param name="nSrcOffset"> æºæ•°æ®çš„offset </param>
+		/// <param name="nDstOffset"> ç›®æ ‡æ•°æ®çš„offset </param>
 		void DeviceCopy(StagingBuffer* pStagingBuffer, const uint64_t nSize, const uint64_t nSrcOffset = 0u, const uint64_t nDstOffset = 0u);
 	};
 

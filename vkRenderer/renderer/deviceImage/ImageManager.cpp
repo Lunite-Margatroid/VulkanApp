@@ -82,8 +82,8 @@ namespace LT {
 	ImageManager::ImageManager()
 		: m_nImageIDCounter(0)
 	{
-		// ºÏ≤È…Ó∂»ª∫≥Â∏Ò Ω
-		// ºÏ≤ÈD32Float
+		// Ê£ÄÊü•Ê∑±Â∫¶ÁºìÂÜ≤Ê†ºÂºè
+		// Ê£ÄÊü•D32Float
 		{
 			vk::FormatProperties props = vkContext::GetPhysicalDevice().getFormatProperties(vk::Format::eD32Sfloat);
 			RENDERER_ASSERT(

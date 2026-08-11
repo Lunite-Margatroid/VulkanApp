@@ -26,7 +26,7 @@ namespace LT {
 	void StagingBuffer::UpdateDataToGPU()
 	{
 		vk::Device& device = vkContext::GetVkDevice();
-		// 创建Buffer对象
+		// 鍒涘缓Buffer瀵硅薄
 		if (!m_vkBuffer)
 		{
 			vk::BufferCreateInfo bci;
@@ -36,7 +36,7 @@ namespace LT {
 				;
 			//m_vkBuffer = device.createBuffer(bci);
 
-			// 分配空间
+			// 鍒嗛厤绌洪棿
 			//DeviceMemoryManager::AllocateMemory(this);
 
 			VmaAllocationCreateInfo vaci = {};
@@ -46,7 +46,7 @@ namespace LT {
 			m_vkBuffer = DeviceMemoryManager::CreateBuffer(m_nID, bci, vaci);
 		}
 
-		// 填充
+		// 濉厖
 		DeviceMemoryManager::AsignMemory(this, m_nSize, m_pBuffer);
 	}
 

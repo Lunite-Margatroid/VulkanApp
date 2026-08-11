@@ -1,14 +1,16 @@
 # sandbox
 
-# Ô´ÎÄ¼ş
+# æºæ–‡ä»¶
 set(SOURCES
     sandbox.cpp
 )
 
-# ´´½¨¿ÉÖ´ĞĞÎÄ¼ş
+# åˆ›å»ºå¯æ‰§è¡Œæ–‡ä»¶
 add_executable(sandbox ${SOURCES})
 
-# Á´½Ó¾²Ì¬¿â
+target_compile_options(sandbox PRIVATE "/utf-8")
+
+# é“¾æ¥é™æ€åº“
 if(WIN32)
     target_link_libraries(sandbox 
         PRIVATE 
@@ -28,14 +30,14 @@ else()
 endif()
 
 
-# ÉèÖÃ°üº¬Ä¿Â¼
+# è®¾ç½®åŒ…å«ç›®å½•
 target_include_directories(sandbox 
     PRIVATE 
         "${CMAKE_SOURCE_DIR}/vkRenderer/core"
         "${CMAKE_SOURCE_DIR}/vkRenderer/logger"
 		"${Vulkan_INCLUDE_DIRS}"
 )
-# SDL3 °üº¬Ä¿Â¼
+# SDL3 åŒ…å«ç›®å½•
 if(WIN32)
 	if(EXISTS "${SDL3_INSTALLED_DIR}/include/SDL3")
 		target_include_directories(

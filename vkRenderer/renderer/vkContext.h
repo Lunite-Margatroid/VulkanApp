@@ -18,8 +18,8 @@ namespace LT {
 
 		vk::PhysicalDevice m_phyDevice;
 		vk::Device m_vkDevice;
-		// vkÃüÁî¶ÓÁĞ
-		// Ê¹ÓÃGetCmdQueueºÍGetCmdQueueForSurface»ñÈ¡ÃüÁî¶ÓÁĞ
+		// vkå‘½ä»¤é˜Ÿåˆ—
+		// ä½¿ç”¨GetCmdQueueå’ŒGetCmdQueueForSurfaceè·å–å‘½ä»¤é˜Ÿåˆ—
 		vk::Queue m_vkQueue;
 		vk::Queue m_vkQueueForSurface;
 
@@ -33,12 +33,12 @@ namespace LT {
 
 		std::unique_ptr<SwapChain> m_pSwapChain;
 
-		// »ñÈ¡µÄÃüÁî¶ÓÁĞµÄË÷Òı À´×ÔÎïÀíÉè±¸
-		std::optional<uint32_t> m_nQueueFamilyIndex; // Ö§³ÖÍ¼ĞÎµÄÃüÁî¶ÓÁĞ
-		std::optional<uint32_t> m_nQueueIndexForSurface; // Ö§³ÖsrufaceµÄÃüÁî¶ÓÁĞ
+		// è·å–çš„å‘½ä»¤é˜Ÿåˆ—çš„ç´¢å¼• æ¥è‡ªç‰©ç†è®¾å¤‡
+		std::optional<uint32_t> m_nQueueFamilyIndex; // æ”¯æŒå›¾å½¢çš„å‘½ä»¤é˜Ÿåˆ—
+		std::optional<uint32_t> m_nQueueIndexForSurface; // æ”¯æŒsrufaceçš„å‘½ä»¤é˜Ÿåˆ—
 
-		// ÊÇ·ñÖ§³Ö¸÷ÏòÒìĞÔ²ÉÑù
-		// CheckPhysicalDeivceFeatures»áĞŞ¸Ä¸Ã×Ö¶Î
+		// æ˜¯å¦æ”¯æŒå„å‘å¼‚æ€§é‡‡æ ·
+		// CheckPhysicalDeivceFeaturesä¼šä¿®æ”¹è¯¥å­—æ®µ
 		bool m_bIsAnisotropySampleSupported;
 
 	private:
@@ -57,7 +57,7 @@ namespace LT {
 
 
 	public:
-		// ÕÒµ½ÁËÒ»¸öÍ¬Ê±Ö§³ÖSurfaceºÍGraphicsµÄQueueÇÒÖ»´´½¨ÁËÒ»¸öQueue
+		// æ‰¾åˆ°äº†ä¸€ä¸ªåŒæ—¶æ”¯æŒSurfaceå’ŒGraphicsçš„Queueä¸”åªåˆ›å»ºäº†ä¸€ä¸ªQueue
 		inline bool IsGraphicsSurfaceSameQueue() const noexcept {
 			return m_nQueueFamilyIndex.has_value() && \
 				m_nQueueIndexForSurface.has_value() && \
@@ -70,7 +70,7 @@ namespace LT {
 
 		~vkContext();
 
-		// ------------ ¾²Ì¬ ----------------------
+		// ------------ é™æ€ ----------------------
 	private:
 		static vkContext* s_pVkContext;
 	public:
