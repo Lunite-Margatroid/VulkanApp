@@ -33,9 +33,34 @@ target_include_directories(sandbox
     PRIVATE 
         "${CMAKE_SOURCE_DIR}/vkRenderer/core"
         "${CMAKE_SOURCE_DIR}/vkRenderer/logger"
-        "${SDL3_INSTALLED_DIR}/$<IF:$<CONFIG:Debug>,debug/include,include>"
 		"${Vulkan_INCLUDE_DIRS}"
 )
+# SDL3 °üº¬Ä¿Â¼
+if(WIN32)
+	if(EXISTS "${SDL3_INSTALLED_DIR}/include/SDL3")
+		target_include_directories(
+			sandbox
+				PRIVATE
+					"${SDL3_INSTALLED_DIR}/include/SDL3"
+		)
+	elseif(EXISTS "${SDL3_INSTALLED_DIR}/include")
+		target_include_directories(
+			sandbox
+				PRIVATE
+					"${SDL3_INSTALLED_DIR}/include"
+		)
+		
+	else()
+		message(FATAL_ERROR "Cannot find SLD3 include dir")
+	endif()
+elseif(UNIX)
+	target_include_directories(sandbox 
+		PRIVATE 
+			"${SDL3_INSTALLED_DIR}/$<IF:$<CONFIG:Debug>,debug/include,include>"
+			)
+
+endif()
+
 
 set_target_properties(
     sandbox PROPERTIES

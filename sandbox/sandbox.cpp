@@ -1,13 +1,10 @@
-//#define VK_USE_PLATFORM_WIN32_KHR
-
-
 // Tell SDL not to mess with main()
 #define SDL_MAIN_HANDLED
 
 #include <glm/glm.hpp>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_syswm.h>
-#include <SDL2/SDL_vulkan.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3/SDL_vulkan.h>
 
 #include <iostream>
 #include <vector>
@@ -17,6 +14,9 @@
 #include "EngineCommon.h"
 #include "Engine.h"
 
+#if _WIN32
+#include <windows.h>
+#endif
 
 constexpr uint32_t DEFAULT_WIDTH = 1280u;
 constexpr uint32_t DEFAULT_HEIGHT = 720u;
@@ -26,14 +26,13 @@ void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngi
 int main() {
 
 	// Create an SDL window that supports Vulkan rendering.
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
+	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
 		std::cout << "Could not initialize SDL." << std::endl;
 		return 1;
 	}
 
 
-	SDL_Window* window = SDL_CreateWindow("Vulkan Window", SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED, DEFAULT_WIDTH, DEFAULT_HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+	SDL_Window* window = SDL_CreateWindow("Vulkan Window", DEFAULT_WIDTH, DEFAULT_HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
 	if (window == NULL) {
 		std::cout << "Could not create SDL window." << std::endl;
 		return 1;
@@ -51,13 +50,25 @@ int main() {
 	layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
 
-	SDL_SysWMinfo windowInfo;
-	SDL_VERSION(&windowInfo.version);
-	SDL_GetWindowWMInfo(window, &windowInfo);
+
+	SDL_PropertiesID props = SDL_GetWindowProperties(window);
+
+	//获取 HWND 指针
+	void* hWnd = nullptr;
+#if _WIN32
+
+	hWnd = (HWND)SDL_GetPointerProperty(
+		props,
+		SDL_PROP_WINDOW_WIN32_HWND_POINTER,  // Windows 平台对应的属性名
+		NULL
+	);
+
+#endif
+
 	// 初始化上下文
 	std::unique_ptr<LT::Engine> pEngine(new LT::Engine());
 
-	pEngine->InitRenderer(extensions, DEFAULT_WIDTH, DEFAULT_HEIGHT, windowInfo.info.win.window);
+	pEngine->InitRenderer(extensions, DEFAULT_WIDTH, DEFAULT_HEIGHT, hWnd);
 
 	// Poll for user input.
 	bool stillRunning = true;
@@ -68,15 +79,15 @@ int main() {
 
 			switch (event.type) {
 
-				case SDL_QUIT:
+				case SDL_EventType::SDL_EVENT_QUIT:
 					stillRunning = false;
 					break;
-				case SDL_WINDOWEVENT:
-					OnWindowEvent(event, window, pEngine.get());
-					break;
-
 				default:
-					// Do nothing.
+					if (event.type & 0x200)
+					{
+						// 窗口事件
+						OnWindowEvent(event, window, pEngine.get());
+					}
 					break;
 			}
 		}
@@ -97,25 +108,25 @@ int main() {
 
 void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngine) {
 
-	switch (event.window.event) {
-		case SDL_WindowEventID::SDL_WINDOWEVENT_RESIZED:
+	switch (event.type) {
+		case SDL_EventType::SDL_EVENT_WINDOW_RESIZED:
 			break;
-		case SDL_WindowEventID::SDL_WINDOWEVENT_SIZE_CHANGED:
-		case SDL_WindowEventID::SDL_WINDOWEVENT_MAXIMIZED:
+		case SDL_EventType::SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+		case SDL_EventType::SDL_EVENT_WINDOW_MAXIMIZED:
 			pEngine->WaitIdel();
 			pEngine->ResumeRendering();
 			pEngine->ResizeSwapChain(event.window.data1, event.window.data2);
 			break;
-		case SDL_WindowEventID::SDL_WINDOWEVENT_RESTORED:
+		case SDL_EventType::SDL_EVENT_WINDOW_RESTORED:
 			pEngine->ResumeRendering();
 			break;
 
-		case SDL_WindowEventID::SDL_WINDOWEVENT_MINIMIZED:
+		case SDL_EventType::SDL_EVENT_WINDOW_MINIMIZED:
 			pEngine->WaitIdel();
 			pEngine->PauseRendering();
 			break;
 
-		case SDL_WindowEventID::SDL_WINDOWEVENT_MOVED:
+		case SDL_EventType::SDL_EVENT_WINDOW_MOVED:
 			break;
 		default:
 			break;

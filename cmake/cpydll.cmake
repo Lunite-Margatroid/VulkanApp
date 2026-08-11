@@ -53,7 +53,7 @@ endif()
 # 如果没有找到OpenImageIO，则拷贝OpenImageIO动态库
 # 拷贝OpenImageIO动态库
 if(WIN32)
-	if(not ${OpenImageIO_FOUND})
+	if(NOT ${OpenImageIO_FOUND})
 
 		file(GLOB OIIO_DLLS "${OIIO_INSTALLED_DIR}/bin/*.dll")
 		if(NOT EXISTS "${OIIO_INSTALLED_DIR}/bin/OpenImageIO.dll")

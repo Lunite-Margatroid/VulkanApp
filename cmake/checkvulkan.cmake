@@ -16,7 +16,7 @@ if(NOT EXISTS "${VMA_INSTALLED_DIR}/include/vk_mem_alloc.h" AND NOT EXISTS "${VM
 endif()
 
 
-find_package(OpenImageIO REQUIRED)
+find_package(OpenImageIO QUIET)
 if(${OpenImageIO_FOUND})
 	message(STATUS "OpenImageIO found")
 endif()
