@@ -96,12 +96,15 @@ endif()
 
 
 
-# 使用utf-8编码编译源文件
-target_compile_options(vkRenderer PRIVATE "/utf-8")
+# 使用utf-8编码编译源文件 仅windows
+if(WIN32)
+	target_compile_options(vkRenderer PRIVATE "/utf-8")
+endif()
 
 # 设置包含目录
 target_include_directories(vkRenderer 
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/core"
+
     PRIVATE 
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/swapchain"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
@@ -114,8 +117,11 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/logger"
         "${GLM_INSTALLED_DIR}/include"
 		"${SLANG_INSTALLED_DIR}/include"
+		"${Vulkan_INCLUDE_DIRS}"
+
 
 )
+
 
 # VMA
 if(EXISTS "${VMA_INSTALLED_DIR}/include/vma/vk_mem_alloc.h")

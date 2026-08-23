@@ -109,8 +109,10 @@ namespace LT {
 				VK_EXT_memory_priority_enabled = true;
 			else if (strcmp(vecExtensions[i].extensionName, VK_KHR_MAINTENANCE_5_EXTENSION_NAME) == 0)
 				s_bMaintenance5ExtensionAvailable = true;
+#if defined(_WIN32)
 			else if (strcmp(vecExtensions[i].extensionName, VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME) == 0)
 				VK_KHR_external_memory_win32_enabled = VMA_DYNAMIC_VULKAN_FUNCTIONS;
+#endif
 		}
 
 
@@ -274,7 +276,6 @@ do{\
 		{
 			vaci.flags |= VMA_ALLOCATOR_CREATE_KHR_EXTERNAL_MEMORY_WIN32_BIT;
 		}
-
 		//if (USE_CUSTOM_CPU_ALLOCATION_CALLBACKS)
 		//{
 		//	outInfo.pAllocationCallbacks = &g_CpuAllocationCallbacks;

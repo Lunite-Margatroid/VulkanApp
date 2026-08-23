@@ -6,7 +6,7 @@
 
 
 
-using namespace OIIO_CURRENT_NAMESPACE;
+using namespace OIIO_NAMESPACE;
 
 
 namespace LT {

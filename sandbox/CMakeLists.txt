@@ -8,7 +8,10 @@ set(SOURCES
 # 创建可执行文件
 add_executable(sandbox ${SOURCES})
 
-target_compile_options(sandbox PRIVATE "/utf-8")
+# 仅在windows下使用传递utf-8编码选项
+if(	WIN32)
+	target_compile_options(sandbox PRIVATE "/utf-8")
+endif()
 
 # 链接静态库
 if(WIN32)
@@ -63,9 +66,11 @@ elseif(UNIX)
 
 endif()
 
-
+if(WIN32)
 set_target_properties(
     sandbox PROPERTIES
     VS_DEBUGGER_WORKING_DIRECTORY "$(OutDir)"
-
 )
+else()
+
+endif()
