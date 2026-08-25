@@ -14,6 +14,7 @@ file(GLOB SOURCES
 	"renderer/sampler/*.cpp"
 	"renderer/mesh/*.cpp"
 	"util/*.cpp"
+	"renderer/pipeline/renderpass/*.cpp"
 )
 
 #set(HEADERS
@@ -23,12 +24,16 @@ file(GLOB SOURCES
 file(GLOB PUBLIC_HEADERS
     "core/*.h"
 	"logger/*.h"
+	"util/*.hpp"
+	"util/*.h"
 )
 
 file(GLOB PRIVATE_HEADERS
     "renderer/*.h"
 	"renderer/swapchain/*.h"
 	"renderer/pipeline/*.h"
+	"renderer/pipeline/renderpass/*.h"
+	"renderer/pipeline/renderpass/*.hpp"
     "exception/*.h"
 	"renderer/buffer/*.h"
 	"core/image/*.h"
@@ -36,8 +41,6 @@ file(GLOB PRIVATE_HEADERS
 	"renderer/sampler/*.h"
 	"renderer/mesh/*.h"
 	"renderer/mesh/*.hpp"
-	"util/*.hpp"
-	"util/*.h"
 )
 
 # 创建静态库
