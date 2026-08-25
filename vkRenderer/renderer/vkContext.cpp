@@ -278,8 +278,10 @@ namespace LT {
 			extensions.push_back(VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME);
 		if (DeviceMemoryManager::VK_KHR_maintenance5_enabled && DeviceMemoryManager::GetVkVersion() < VK_API_VERSION_1_4)
 			extensions.push_back(VK_KHR_MAINTENANCE_5_EXTENSION_NAME);
+#ifdef WIN32
 		if (DeviceMemoryManager::VK_KHR_external_memory_win32_enabled)
 			extensions.push_back(VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME);
+#endif
 
 		deviceCreateInfo
 			.setEnabledExtensionCount(extensions.size())

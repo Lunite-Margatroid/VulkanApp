@@ -57,7 +57,7 @@ target_link_libraries(vkRenderer
 elseif(UNIX)
 	target_link_libraries(vkRenderer 
 		PRIVATE 
-			"${SLANG_INSTALLED_DIR}/lib/libslangd.so"
+			"${SLANG_INSTALLED_DIR}/lib/libslang.so"
 	)
 else()
 	message(FATAL_ERROR "Unsupported platform")

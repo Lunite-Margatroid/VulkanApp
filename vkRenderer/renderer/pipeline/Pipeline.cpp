@@ -210,6 +210,7 @@ namespace LT {
 
 	Pipeline::~Pipeline() {
 		vk::Device& device = vkContext::GetVkDevice();
+		RENDERER_ASSERT(m_vecDepthBuffer.size() == RENDERER_DEFAULT_FLIGHT_FRAME_NUM, "func: %s. Depth Buffer Count Error.", __FUNCTION__);
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
 			ImageManager::DeleteImage(m_vecDepthBuffer[i]);
 		}
@@ -262,6 +263,9 @@ namespace LT {
 
 	void Pipeline::RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex)
 	{
+		RENDERER_ASSERT(imageIndex < m_vecDepthBuffer.size(), "func: %s. Depth Buffer Index Error. Image Index: %u. Depth Buffer Count: %u",
+		 __FUNCTION__, imageIndex, static_cast<unsigned int>(m_vecDepthBuffer.size()));
+
 		auto debugCommandBuffer = vkContext::GetCmdBuffer(nFrameIndex);
 
 		// 开始录入
@@ -429,7 +433,8 @@ namespace LT {
 				)
 			)
 			;
-
+		
+		RENDERER_ASSERT(nImageIndex < m_vecDepthBuffer.size(), "func: %s. Depth Buffer Index Error.", __FUNCTION__);
 		if ((eImageAspect & vk::ImageAspectFlagBits::eColor) == vk::ImageAspectFlagBits::eColor)
 		{
 			imageBarrier.setImage(vkContext::GetSwapChain().m_sSwapChainInfo.images[nImageIndex]);
@@ -495,6 +500,9 @@ namespace LT {
 		RENDERER_ASSERT(imageIndex.has_value(), "Acquire Image Failed.");
 
 		unsigned int nImgIndex = imageIndex.value;
+		// TODO: nImgIndex 可能大于2，暂时取模2
+		// 查一下原因
+		nImgIndex %= 2;
 
 		// 录入渲染命令
 		RecordCommandBufferDebug(nImgIndex, nFrameIndex);

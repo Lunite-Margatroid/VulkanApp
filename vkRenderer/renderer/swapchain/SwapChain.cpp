@@ -36,6 +36,13 @@ namespace LT {
 		LOG_INFO("Width: %d  Hight: %d\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
 
 
+		RENDERER_ASSERT(surfaceCapabilities.minImageExtent.width <= surfaceCapabilities.maxImageExtent.width, "Func: %s. clampFailed. clamp(%u, %d)", 
+			__FUNCTION__, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+
+		RENDERER_ASSERT(surfaceCapabilities.minImageExtent.height <= surfaceCapabilities.maxImageExtent.height, "Func: %s. clampFailed. clamp(%u, %d)", 
+			__FUNCTION__, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+
+
 		// 缓冲尺寸
 		m_sSwapChainInfo.width = std::clamp<uint32_t>(
 			nWidth,
@@ -49,6 +56,8 @@ namespace LT {
 			surfaceCapabilities.maxImageExtent.height
 		);
 
+		
+
 		if (surfaceCapabilities.currentExtent.width == 0 || surfaceCapabilities.currentExtent.height == 0)
 			return;
 
@@ -58,7 +67,7 @@ namespace LT {
 		m_sSwapChainInfo.surfaceFormat = formats[0];
 		for (const auto& surfaceFormat : formats) {
 			// 查询SRGB8位格式
-			if (surfaceFormat.format == SWAPCHAIN_DEFAULT_PIXEL_FORMAT && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear) {
+			if (surfaceFormat.format == SWAPCHAIN_DEFAULT_PIXEL_FORMAT && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
 				m_sSwapChainInfo.surfaceFormat = surfaceFormat;
 				break;
 			}
@@ -79,8 +88,16 @@ namespace LT {
 
 		vk::Extent2D swapChainExtent{ static_cast<uint32_t>(m_sSwapChainInfo.width), static_cast<uint32_t>(m_sSwapChainInfo.height) };
 
-		// 缓冲数量
-		m_sSwapChainInfo.nImageCount = std::clamp<uint32_t>(SWAPCHAIN_DEFAULT_IMAGE_NUM, surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
+		// 缓冲数量		
+		if(surfaceCapabilities.minImageCount <= surfaceCapabilities.maxImageCount)
+		{
+			m_sSwapChainInfo.nImageCount = std::clamp<uint32_t>(SWAPCHAIN_DEFAULT_IMAGE_NUM, surfaceCapabilities.minImageCount, surfaceCapabilities.maxImageCount);
+		}
+		else
+		{
+			m_sSwapChainInfo.nImageCount = SWAPCHAIN_DEFAULT_IMAGE_NUM;
+		}
+		
 
 		// 创建SwapChain
 		m_vkSwapCreateInfo
@@ -145,6 +162,8 @@ namespace LT {
 
 		auto surfaceCapabilities = m_vkPhyDevice.getSurfaceCapabilitiesKHR(m_vkSurface);
 		RENDERER_ASSERT(surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max(), "%s", __FUNCTION__);
+
+		RENDERER_ASSERT(surfaceCapabilities.minImageExtent.width <= surfaceCapabilities.maxImageExtent.width, "%s", __FUNCTION__);
 
 		// 缓冲尺寸
 		m_sSwapChainInfo.width = std::clamp<uint32_t>(
