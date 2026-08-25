@@ -7,12 +7,15 @@
 
 #include "DeviceMemoryManager.h"
 
+#include "vkRendererUtil.hpp"
+
 namespace LT {
 	vkContext* vkContext::s_pVkContext = nullptr;
 
 	vkContext::vkContext(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd)
 	{
 		m_bIsAnisotropySampleSupported = false;
+		m_bOwnInstanceAndSurface = true;
 
 		CreateVkInstance(extensions);
 		PickPhyDevice();
@@ -32,6 +35,29 @@ namespace LT {
 
 	}
 
+	vkContext::vkContext(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight)
+	{
+		m_vkInstance = vkInstance;
+		m_vkSurface = vkSurface;
+
+		m_bIsAnisotropySampleSupported = false;
+		m_bOwnInstanceAndSurface = false;
+
+		PickPhyDevice();
+
+		CreateVkDevice();
+
+		InitSwapChain(nWidth, nHeight);
+
+		// 着色器编译器初始化
+		SlangComplier::Init();
+
+		CreateCommandPool();
+		CreateCommandBuffer();
+
+		CreateDescriptorPool();
+	}
+
 	vkContext::~vkContext() {
 		ReleaseSwapChain();
 
@@ -47,8 +73,12 @@ namespace LT {
 
 		m_vkDevice.destroy();
 
-		m_vkInstance.destroySurfaceKHR(m_vkSurface);
-		m_vkInstance.destroy();
+
+		if (m_bOwnInstanceAndSurface)
+		{
+			m_vkInstance.destroySurfaceKHR(m_vkSurface);
+			m_vkInstance.destroy();
+		}
 
 
 
@@ -73,6 +103,11 @@ namespace LT {
 			{
 				LOG_WARNING("Repeating Init Swap Chain.");
 			}
+		}
+		else
+		{
+			LOG_WARNING("Init Swap Chain Failed. Surface is invalid.");
+
 		}
 	}
 
@@ -99,46 +134,24 @@ namespace LT {
 		}
 	}
 
+	void vkContext::Init(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight) {
+		if (!s_pVkContext)
+		{
+			s_pVkContext = new vkContext(vkInstance, vkSurface, nWidth, nHeight);
+		}
+	}
 
 	void vkContext::CreateVkInstance(const std::vector<const char* >& extensions) {
 
 		LOG_INFO("Create Vk Instance.\n");
 
-		vk::ApplicationInfo appInfo;
-		appInfo.setPApplicationName("vkRenderer")
-			.setApplicationVersion(1)
-			.setPEngineName("Lunite")
-			.setEngineVersion(1)
-			.setApiVersion(VK_API_VERSION_1_4);
-
-		std::vector<const char* > layers;
-
-		// 验证层
-#ifdef _DEBUG
-		layers.push_back("VK_LAYER_KHRONOS_validation");
-#endif
-
-		// Create vk instance
-		vk::InstanceCreateInfo instanceCreateInfo;
-		instanceCreateInfo.setFlags(vk::InstanceCreateFlags())
-			.setPApplicationInfo(&appInfo)
-			.setPEnabledLayerNames(layers)
-			.setEnabledLayerCount(layers.size())
-			.setPEnabledExtensionNames(extensions)
-			// .setEnabledExtensionCount(static_cast<uint32_t>(extensiont));
-			;
-
 		try {
-			m_vkInstance = vk::createInstance(instanceCreateInfo);
+			m_vkInstance = util::CreateVulkanInstance(extensions.data(), extensions.size());
 		}
 		catch (const std::exception& e) {
 			LOG_ERROR("vkInstance Create Failed.\n");
 		}
 
-		for (const char* layer : layers)
-		{
-			LOG_INFO("Enabled layers: %s\n", layer);
-		}
 
 		for (const char* extension : extensions)
 		{

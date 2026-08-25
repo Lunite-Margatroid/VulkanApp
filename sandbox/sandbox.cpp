@@ -1,6 +1,15 @@
 // Tell SDL not to mess with main()
 #define SDL_MAIN_HANDLED
 
+#ifdef _WIN32
+#define VK_USE_PLATFORM_WIN32_KHR
+#endif
+
+#include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_raii.hpp"
+
+#include "vkRendererUtil.hpp"
+
 #include <glm/glm.hpp>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -41,7 +50,16 @@ int main() {
 	// Surface Win32Surface SwapChain
 	
 		
-	std::vector<const char*> extensions{ "VK_KHR_win32_surface","VK_KHR_surface" };
+	std::vector<const char*> extensions;
+
+	{
+		uint32_t nCount = 0;
+		const char* const* vecExt = SDL_Vulkan_GetInstanceExtensions(&nCount);
+		for (int i = 0; i < nCount; i++)
+		{
+			extensions.push_back(vecExt[i]);
+		}
+	}
 
 
 	// Use validation layers if this is a debug build
@@ -51,24 +69,23 @@ int main() {
 #endif
 
 
-	SDL_PropertiesID props = SDL_GetWindowProperties(window);
+	vk::Instance vkInstance = LT::util::CreateVulkanInstance(extensions.data(), extensions.size());
 
-	//获取 HWND 指针
-	void* hWnd = nullptr;
-#if _WIN32
 
-	hWnd = (HWND)SDL_GetPointerProperty(
-		props,
-		SDL_PROP_WINDOW_WIN32_HWND_POINTER,  // Windows 平台对应的属性名
-		NULL
-	);
 
-#endif
+
+	vk::SurfaceKHR vkSurface;
+	if (!SDL_Vulkan_CreateSurface(window, vkInstance, NULL, reinterpret_cast<VkSurfaceKHR*>(&vkSurface)))
+	{
+		std::cout << "SDL Create Surface Failed: " << SDL_GetError() << std::endl;
+		return 1;
+	}
+
 
 	// 初始化上下文
 	std::unique_ptr<LT::Engine> pEngine(new LT::Engine());
 
-	pEngine->InitRenderer(extensions, DEFAULT_WIDTH, DEFAULT_HEIGHT, hWnd);
+	pEngine->InitRenderer(vkInstance, vkSurface, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
 	// Poll for user input.
 	bool stillRunning = true;
@@ -98,10 +115,18 @@ int main() {
 	pEngine->WaitIdel();
 	// 释放交换链
 	pEngine->ReleaseSwapChain();
-	SDL_DestroyWindow(window);
-	SDL_Quit();
 	// 释放上下文
 	pEngine->ReleaseRenderer();
+
+	SDL_Vulkan_DestroySurface(vkInstance, vkSurface, NULL);
+
+	
+	vkInstance.destroy();
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+
+
+
 
 	return 0;
 }

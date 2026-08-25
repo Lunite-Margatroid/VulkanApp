@@ -4,11 +4,6 @@
 #include "logger.h"
 
 
-
-
-using namespace OIIO_NAMESPACE;
-
-
 namespace LT {
 
     ImgRes::ImgRes(const std::string& path, int nDepth) :
@@ -34,36 +29,36 @@ namespace LT {
             return;
         }
 
-        std::unique_ptr<ImageInput> inputImage;
+        std::unique_ptr<OIIO::ImageInput> inputImage;
         
 
-        inputImage = ImageInput::open(path);
+        inputImage = OIIO::ImageInput::open(path);
 
         if (!inputImage)
         {
-            std::string err = geterror();
+            std::string err = OIIO::geterror();
 			LOG_ERROR("Cannt open file:%s. OIIO Error: %s\n", path.c_str(), err.c_str());
         }
 
-        const ImageSpec& pSpec = inputImage->spec();
+        const OIIO::ImageSpec& pSpec = inputImage->spec();
 
 		m_Width = pSpec.width;
         m_Height = pSpec.height;
 		// m_Channals = pSpec.nchannels;
 		m_Channals = 4; // 目前全都转成了4通道
 
-        TypeDesc type = TypeDesc(TypeDesc::UINT8);
+        OIIO::TypeDesc type = OIIO::TypeDesc(OIIO::TypeDesc::UINT8);
 
         switch (m_Depth)
         {
 		case 8:
-			type = TypeDesc(TypeDesc::UINT8);
+			type = OIIO::TypeDesc(OIIO::TypeDesc::UINT8);
 			break;
         case 16:
-			type = TypeDesc(TypeDesc::HALF);
+			type = OIIO::TypeDesc(OIIO::TypeDesc::HALF);
             break;
 		case 32:
-			type = TypeDesc(TypeDesc::FLOAT);
+			type = OIIO::TypeDesc(OIIO::TypeDesc::FLOAT);
 			break;
         default:
             break;
@@ -71,7 +66,7 @@ namespace LT {
 
 		m_Data = new unsigned char[m_Height * m_Width * m_Channals * (m_Depth / 8)];
 
-		inputImage->read_image(0, 0, 0, m_Channals, type, m_Data, AutoStride, AutoStride, AutoStride);
+		inputImage->read_image(0, 0, 0, m_Channals, type, m_Data, OIIO::AutoStride, OIIO::AutoStride, OIIO::AutoStride);
 
         if (inputImage->has_error())
         {

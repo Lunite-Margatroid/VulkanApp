@@ -13,6 +13,7 @@ file(GLOB SOURCES
 	"renderer/deviceImage/*.cpp"
 	"renderer/sampler/*.cpp"
 	"renderer/mesh/*.cpp"
+	"util/*.cpp"
 )
 
 #set(HEADERS
@@ -35,6 +36,8 @@ file(GLOB PRIVATE_HEADERS
 	"renderer/sampler/*.h"
 	"renderer/mesh/*.h"
 	"renderer/mesh/*.hpp"
+	"util/*.hpp"
+	"util/*.h"
 )
 
 # 创建静态库
@@ -103,11 +106,11 @@ endif()
 
 # 设置包含目录
 target_include_directories(vkRenderer 
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/core"
-
+    PUBLIC 
+		"${CMAKE_CURRENT_SOURCE_DIR}/core"
+		"${CMAKE_CURRENT_SOURCE_DIR}/util"
     PRIVATE 
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/swapchain"
-		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
         "${CMAKE_CURRENT_SOURCE_DIR}/exception"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/buffer"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/deviceImage"
@@ -117,6 +120,7 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/logger"
         "${GLM_INSTALLED_DIR}/include"
 		"${SLANG_INSTALLED_DIR}/include"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
 		"${Vulkan_INCLUDE_DIRS}"
 
 

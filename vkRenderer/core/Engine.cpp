@@ -25,26 +25,17 @@ namespace LT {
 
 		m_nWidth = nWidth;
 		m_nHeight = nHeight;
-		if (m_pDebugRenderer == nullptr) {
-			m_pDebugRenderer = new Renderer();
-		}
 
-		m_persCamera.SetAspect(static_cast<float>(m_nWidth) / static_cast<float>(m_nHeight));
+		InitDebugPipeline();
+	}
 
-		m_camera.SetLeft(-10.f);
-		m_camera.SetRight(10.f);
-		m_camera.SetTop(10.f);
-		m_camera.SetBottom(-10.f);
+	void Engine::InitRenderer(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight)
+	{
+		vkContext::Init(vkInstance, vkSurface, nWidth, nHeight);
+		m_nWidth = nWidth;
+		m_nHeight = nHeight;
 
-
-		glm::mat4 viewMat = m_persCamera.GetViewMat();
-		glm::mat4 projectionMat = m_persCamera.GetProjectionMat();
-		glm::mat4 modelMat = glm::mat4(1.0f);
-		m_pDebugRenderer->SetViewMat(reinterpret_cast<float*>(&viewMat));
-		m_pDebugRenderer->SetProjectionMat(reinterpret_cast<float*>(&projectionMat));
-		m_pDebugRenderer->SetModelMat(reinterpret_cast<float*>(&modelMat));
-
-		m_pDebugRenderer->UpdateConstBufer();
+		InitDebugPipeline();
 	}
 
 	void Engine::ReleaseRenderer()
@@ -130,6 +121,30 @@ namespace LT {
 	void Engine::ResumeRendering()
 	{
 		m_bRenderingPaused = false;
+	}
+
+	void Engine::InitDebugPipeline()
+	{
+		if (m_pDebugRenderer == nullptr) {
+			m_pDebugRenderer = new Renderer();
+		}
+
+		m_persCamera.SetAspect(static_cast<float>(m_nWidth) / static_cast<float>(m_nHeight));
+
+		m_camera.SetLeft(-10.f);
+		m_camera.SetRight(10.f);
+		m_camera.SetTop(10.f);
+		m_camera.SetBottom(-10.f);
+
+
+		glm::mat4 viewMat = m_persCamera.GetViewMat();
+		glm::mat4 projectionMat = m_persCamera.GetProjectionMat();
+		glm::mat4 modelMat = glm::mat4(1.0f);
+		m_pDebugRenderer->SetViewMat(reinterpret_cast<float*>(&viewMat));
+		m_pDebugRenderer->SetProjectionMat(reinterpret_cast<float*>(&projectionMat));
+		m_pDebugRenderer->SetModelMat(reinterpret_cast<float*>(&modelMat));
+
+		m_pDebugRenderer->UpdateConstBufer();
 	}
 
 } // namespace LT

@@ -41,8 +41,12 @@ namespace LT {
 		// CheckPhysicalDeivceFeatures会修改该字段
 		bool m_bIsAnisotropySampleSupported;
 
+		// vk::Instance和vk::SurfaceKHR的所有权是否属于自己
+		bool m_bOwnInstanceAndSurface;
+
 	private:
 		vkContext(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd);
+		vkContext(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight);
 
 		void CreateVkInstance(const std::vector<const char* >& extensions);
 		void PickPhyDevice();
@@ -75,6 +79,7 @@ namespace LT {
 		static vkContext* s_pVkContext;
 	public:
 		static void Init(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd);
+		static void Init(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight);
 		static void Release();
 		static vkContext& GetInstance();
 		static vk::Device& GetVkDevice();

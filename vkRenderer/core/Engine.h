@@ -18,11 +18,14 @@ namespace LT {
 
 		bool m_bRenderingPaused;
 
+
+
 	public:
 		Engine();
 		~Engine();
 
 		void InitRenderer(const std::vector<const char*>& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd);
+		void InitRenderer(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight);
 		void InitSwapChain(uint32_t nWidth, uint32_t nHeight, void* hWnd);
 
 		void ReleaseRenderer();
@@ -36,5 +39,8 @@ namespace LT {
 
 		void PauseRendering();
 		void ResumeRendering();
+		
+	private:
+		void InitDebugPipeline();
 	};
 }
