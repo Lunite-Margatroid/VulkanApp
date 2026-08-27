@@ -125,8 +125,8 @@ target_include_directories(vkRenderer
 		"${SLANG_INSTALLED_DIR}/include"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
 		"${Vulkan_INCLUDE_DIRS}"
-
-
+		"${OIIO_INSTALLED_DIR}/include"
+		"${VMA_INCLUDE_DIR}"
 )
 
 

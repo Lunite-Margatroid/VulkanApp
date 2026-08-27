@@ -11,8 +11,15 @@ else()
 endif()
 
 # check VulkanMemoryAllcator
-if(NOT EXISTS "${VMA_INSTALLED_DIR}/include/vk_mem_alloc.h" AND NOT EXISTS "${VMA_INSTALLED_DIR}/include/vma/vk_mem_alloc.h")
-    message(FATAL_ERROR "Library VulkanMemoryAllocator does not found.")
+if(NOT EXISTS "${VMA_INSTALLED_DIR}/include/vk_mem_alloc.h")
+	if(NOT EXISTS "${VMA_INSTALLED_DIR}/include/vma/vk_mem_alloc.h")
+		message(FATAL_ERROR "Library VulkanMemoryAllocator does not found.")
+	else()
+		set(VMA_INCLUDE_DIR "${VMA_INSTALLED_DIR}/include/vma")
+	endif()
+else()
+	set(VMA_INCLUDE_DIR "${VMA_INSTALLED_DIR}/include")
+	message(STATUS "VulkanMemoryAllocator found")
 endif()
 
 
