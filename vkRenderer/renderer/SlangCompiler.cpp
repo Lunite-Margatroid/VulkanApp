@@ -284,7 +284,7 @@ namespace LT {
 	}
 
 
-	std::vector<slang::PreprocessorMacroDesc> GenGraphicPPMacroDesc(const RenderPassFlag& nFlag) {
+	std::vector<slang::PreprocessorMacroDesc> SlangCompiler::GenGraphicPPMacroDesc(const RenderPassFlag& nFlag) {
 		std::vector<slang::PreprocessorMacroDesc> vecPPMacro;
 		if (HasVertexPos(nFlag)) {
 			vecPPMacro.emplace_back("VERT_POSITION", "1");
