@@ -2,7 +2,7 @@
 #include "vkContext.h"
 #include "SwapChain.h"
 
-#include "SlangComplier.h"
+#include "SlangCompiler.h"
 #include "Engine.h"
 
 #include "DeviceMemoryManager.h"
@@ -26,7 +26,7 @@ namespace LT {
 		InitSwapChain(nWidth, nHeight);
 
 		// 着色器编译器初始化
-		SlangComplier::Init();
+		SlangCompiler::Init();
 
 		CreateCommandPool();
 		CreateCommandBuffer();
@@ -50,7 +50,7 @@ namespace LT {
 		InitSwapChain(nWidth, nHeight);
 
 		// 着色器编译器初始化
-		SlangComplier::Init();
+		SlangCompiler::Init();
 
 		CreateCommandPool();
 		CreateCommandBuffer();
@@ -82,7 +82,7 @@ namespace LT {
 
 
 
-		SlangComplier::Release();
+		SlangCompiler::Release();
 	}
 
 	vkContext& vkContext::GetInstance() {

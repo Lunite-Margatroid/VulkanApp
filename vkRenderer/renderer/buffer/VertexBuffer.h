@@ -4,23 +4,67 @@
 #include "BufferDst.h"
 
 namespace LT {
-#define VERTEX_POSITION_BIT_FLAG	(1 << 4)
-#define VERTEX_UV_BIT_FLAG			(1 << 5)
-#define VERTEX_NORMAL_BIT_FLAG		(1 << 6)
-#define VERTEX_TANGENT_BIT_FLAG		(1 << 7)
-#define VERTEX_BITANGENT_BIT_FLAG	(1 << 8)
-#define VERTEX_COLOR_BIT_FLAG		(1 << 9)
-#define VERTEX_AO_BIT_FLAG			(1 << 10)
+constexpr uint32_t VERTEX_POSITION_BIT_FLAG		= (1 << 0);
+constexpr uint32_t VERTEX_UV0_BIT_FLAG			= (1 << 1);
+constexpr uint32_t VERTEX_UV1_BIT_FLAG			= (1 << 2);
+constexpr uint32_t VERTEX_UV2_BIT_FLAG			= (1 << 3);
+constexpr uint32_t VERTEX_UV3_BIT_FLAG			= (1 << 4);
+constexpr uint32_t VERTEX_UV4_BIT_FLAG			= (1 << 5);
+constexpr uint32_t VERTEX_NORMAL_BIT_FLAG		= (1 << 6);
+constexpr uint32_t VERTEX_TANGENT_BIT_FLAG		= (1 << 7);
+constexpr uint32_t VERTEX_BITANGENT_BIT_FLAG	= (1 << 8);
+constexpr uint32_t VERTEX_COLOR_BIT_FLAG		= (1 << 9);
+constexpr uint32_t VERTEX_AO_BIT_FLAG			= (1 << 10);
+
+constexpr uint32_t VERTEX_UV_CHANNEL_COUNT = 5;
+constexpr uint32_t VERTEX_CHANNEL_TOTAL_COUNT = 11;
+constexpr const char* VERTEX_CHANNEL_NAME[] = {
+	"VERT_POSITION",
+	"VERT_UV0",
+	"VERT_UV1",
+	"VERT_UV2",
+	"VERT_UV3",
+	"VERT_UV4",
+	"VERT_NORMAL",
+	"VERT_TANGENT",
+	"VERT_BITANGENT",
+	"VERT_COLOR",
+	"VERT_AO"
+};
+
+constexpr uint32_t VERTEX_DIMENSION[] = {
+	3, // position
+	2,2,3,3,3, // UVs
+	3, // normal
+	3, // tangent
+	3, // bitangent
+	4, // color
+	1  // AO
+};
+
+// Position float3	VERT_POSITION
+// UV0 float2	VERT_UV0
+// UV1 float2	VERT_UV1
+// UV2 float3	VERT_UV2
+// UV3 float3	VERT_UV3
+// UV4 float3	VERT_UV4
+// Normal float3	VERT_NORMAL
+// Tangent float3	VERT_TANGENT
+// Bitangent float3	VERT_BITANGENT
+// Color float4	VERT_COLOR
+// AO float	VERT_AO
 
 	enum class VertexChannel {
 		Position = VERTEX_POSITION_BIT_FLAG,
-		UV = VERTEX_UV_BIT_FLAG,
+		UV = VERTEX_UV0_BIT_FLAG,
 		Normal = VERTEX_NORMAL_BIT_FLAG,
 		Tangent = VERTEX_TANGENT_BIT_FLAG,
 		Bitangent = VERTEX_BITANGENT_BIT_FLAG,
 		Color = VERTEX_COLOR_BIT_FLAG,
 		AO = VERTEX_AO_BIT_FLAG
 	};
+
+	using VertexChannelFlag = uint32_t;
 
 	struct VertexChannelDesc {
 		VertexChannel m_eChannelType;

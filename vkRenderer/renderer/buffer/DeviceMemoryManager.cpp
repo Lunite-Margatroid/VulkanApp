@@ -420,29 +420,8 @@ do{\
 
 		vmaUnmapMemory(GetInstance().m_vmaDeviceMemAllocator, iter->second);
 	}
-	//void DeviceMemoryManager::FreeMemory(Buffer& buffer)
-	//{
-	//	auto iter = GetInstance().m_mapVkMemory.find(buffer.GetBufferID());
-	//	if (iter != GetInstance().m_mapVkMemory.end())
-	//	{
-	//		vkContext::GetVkDevice().freeMemory(iter->second);
-	//		GetInstance().m_mapVkMemory.erase(iter);
-	//	}
-	//	else
-	//	{
-	//		LOG_WARNING("%s, the buffer did not allocate", __FUNCTION__);
-	//	}
-	//}
-	//void DeviceMemoryManager::AllocateMemory(Image2DShaderRes* pImage)
-	//{
-	//	DeviceMemoryManager& instance = GetInstance();
-	//	instance.AllocateImageMemory(*reinterpret_cast<DeviceImage*>(pImage), vk::MemoryPropertyFlagBits::eDeviceLocal);
-	//}
-	//void DeviceMemoryManager::AllocateMemory(Image2DDepthBuffer* pDepth)
-	//{
-	//	DeviceMemoryManager& instance = GetInstance();
-	//	instance.AllocateImageMemory(*reinterpret_cast<DeviceImage*>(pDepth), vk::MemoryPropertyFlagBits::eDeviceLocal);
-	//}
+
+
 	void DeviceMemoryManager::AsignMemory(Image2DShaderRes* pImage, size_t nSize, const void* pData)
 	{
 		StagingBuffer* pStagingBuffer = BufferManager::CreateStagingBuffer(nSize, pData);

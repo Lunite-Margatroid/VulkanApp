@@ -74,20 +74,10 @@ namespace LT {
 
 		static DeviceMemoryManager& GetInstance();
 
-		//static void AllocateMemory(VertexBuffer* vertexBuffer);
-		//static void AllocateMemory(StagingBuffer* stagingBuffer);
-		//static void AllocateMemory(IndexBuffer* pIndexBuffer);
-		//static void AllocateMemory(ConstBuffer* pConstBuffer);
 		static void AsignMemory(StagingBuffer* stagingBuffer, size_t nSize, void* pData);
 		static void AsignMemory(ConstBuffer* pConstBuffer, size_t nSize, void* pData);
-		//static void FreeMemory(Buffer& buffer);
-
-
-		//static void AllocateMemory(Image2DShaderRes* pImage);
-		//static void AllocateMemory(Image2DDepthBuffer* pDepth);
-
 		static void AsignMemory(Image2DShaderRes* pImage, size_t nSize, const void* pData);
-		//static void FreeImageMemory(DeviceImage& image);
+
 
 		static vk::Buffer CreateBuffer(BufferID nBufferID, const vk::BufferCreateInfo& bci,const VmaAllocationCreateInfo& vaci);
 		static void ReleaseBuffer(BufferID nBufferID, vk::Buffer vkBuffer);

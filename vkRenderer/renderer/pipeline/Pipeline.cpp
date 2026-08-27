@@ -2,7 +2,7 @@
 #include "vkContext.h"
 #include "SwapChain.h"
 #include "Pipeline.h"
-#include "SlangComplier.h"
+#include "SlangCompiler.h"
 #include "IBindable.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
@@ -26,7 +26,7 @@ namespace LT {
 		// 创建着色器
 		std::vector<std::string> vecEntryPoint = { "VertMain", "FragMain" };
 		std::filesystem::path shaderPath = "./slang/HelloTriangleShader.slang";
-		auto buffer = SlangComplier::GetInstance().CompileFromFile(shaderPath, vecEntryPoint);
+		auto buffer = SlangCompiler::GetInstance().CompileFromFile(shaderPath, vecEntryPoint);
 
 		vk::ShaderModuleCreateInfo smci(
 			{},
