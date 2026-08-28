@@ -47,22 +47,11 @@ file(GLOB PRIVATE_HEADERS
 add_library(vkRenderer STATIC ${SOURCES} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
 # 链接vulkan
 target_link_libraries(vkRenderer PRIVATE Vulkan::Vulkan)
-# 链接slang
-if(WIN32)
-target_link_libraries(vkRenderer 
-	PRIVATE 
-		debug "${SLANG_INSTALLED_DIR}/lib/slangd.lib"
-		optimized "${SLANG_INSTALLED_DIR}/lib/slang.lib"
-)
-elseif(UNIX)
-	target_link_libraries(vkRenderer 
-		PRIVATE 
-			"${SLANG_INSTALLED_DIR}/lib/libslang.so"
-	)
-else()
-	message(FATAL_ERROR "Unsupported platform")
-endif()
 
+# 链接slang
+target_link_libraries(vkRenderer PRIVATE SlangCompiler)
+# 链接logger
+target_link_libraries(vkRenderer PUBLIC logger)
 
 # 链接OpenImageIO
 if(${OpenImageIO_FOUND})
@@ -114,13 +103,11 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/util"
     PRIVATE 
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/swapchain"
-        "${CMAKE_CURRENT_SOURCE_DIR}/exception"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/buffer"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/deviceImage"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/sampler"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/mesh"
-		"${CMAKE_CURRENT_SOURCE_DIR}/logger"
         "${GLM_INSTALLED_DIR}/include"
 		"${SLANG_INSTALLED_DIR}/include"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"

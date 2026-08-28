@@ -2,7 +2,7 @@
 #include "vkContext.h"
 #include "SwapChain.h"
 #include "Pipeline.h"
-#include "SlangCompiler.h"
+#include "SlangCompiler.hpp"
 #include "IBindable.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"

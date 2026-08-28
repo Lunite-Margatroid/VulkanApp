@@ -1,6 +1,7 @@
-#include "vkRendererCommon.h"
-#include "ExceptionAssert.h"
-
+#include <string>
+#include <exception>
+#include "ExceptionAssert.hpp"
+#include "logger.hpp"
 
 namespace LT {
 	ExceptionAssert::ExceptionAssert(const std::string& msg)

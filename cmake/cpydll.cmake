@@ -24,14 +24,14 @@ endif()
 
 # 拷贝slang编译dll
 if(WIN32)
-	if(EXISTS "${ENV_VULKAN_PATH}/Bin/slang.dll")
-		message(STATUS "Copy dll: ${ENV_VULKAN_PATH}/Bin/slang.dll  glslang.dll")
+	if(EXISTS "${SLANG_INSTALLED_DIR}/Bin/slang.dll")
+		message(STATUS "Copy dll: ${SLANG_INSTALLED_DIR}/Bin/slang.dll  glslang.dll")
 
 			add_custom_command(
 				TARGET CopyDLLs
 				POST_BUILD
 				COMMAND ${CMAKE_COMMAND} -E copy_if_different
-					"${ENV_VULKAN_PATH}/Bin/$<IF:$<CONFIG:Debug>,slangd.dll,slang.dll>"
+					"${SLANG_INSTALLED_DIR}/Bin/$<IF:$<CONFIG:Debug>,slangd.dll,slang.dll>"
 					"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug/$<IF:$<CONFIG:Debug>,slangd.dll,slang.dll>"
 				COMMENT "Coping slang.dll to output directory"
 			)
@@ -40,13 +40,13 @@ if(WIN32)
 				TARGET CopyDLLs
 				POST_BUILD
 				COMMAND ${CMAKE_COMMAND} -E copy_if_different
-					"${ENV_VULKAN_PATH}/Bin/$<IF:$<CONFIG:Debug>,glslangd.dll,glslang.dll>"
+					"${SLANG_INSTALLED_DIR}/Bin/$<IF:$<CONFIG:Debug>,glslangd.dll,glslang.dll>"
 					"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug/$<IF:$<CONFIG:Debug>,glslangd.dll,glslang.dll>"
 				COMMENT "Coping glslang.dll to output directory"
 			)
 
 	else()
-		message(FATAL_ERROR, "File does NOT exist: ${ENV_VULKAN_PATH}/Bin/slang.dll  glslang.dll")
+		message(FATAL_ERROR, "File does NOT exist: ${SLANG_INSTALLED_DIR}/Bin/slang.dll  glslang.dll")
 	endif()
 endif()
 

@@ -25,14 +25,14 @@ using BYTE = uint8_t;
 
 #endif
 
-#include "ExceptionAssert.h"
+#include "ExceptionAssert.hpp"
 
 #define VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
 
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 
-#include "logger.h"
+#include "logger.hpp"
 
 inline std::string ReadText(const std::filesystem::path& filePath) {
     std::string strFilePath = filePath.generic_string();

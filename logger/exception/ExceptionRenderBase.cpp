@@ -1,6 +1,7 @@
-#include "vkRendererCommon.h"
-#include "ExceptionRenderBase.h"
-
+#include <string>
+#include <exception>
+#include "ExceptionRenderBase.hpp"
+#include "logger.hpp"
 
 namespace LT
 {

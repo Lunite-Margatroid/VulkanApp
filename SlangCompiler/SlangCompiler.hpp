@@ -2,7 +2,6 @@
 #include <slang/slang.h>
 #include <slang/slang-com-ptr.h>
 #include <slang/slang-com-helper.h>
-#include "renderpass/RenderPass.hpp"
 
 namespace LT {
 	class SlangCompiler final {
@@ -20,9 +19,9 @@ namespace LT {
 		Slang::ComPtr<slang::IGlobalSession> m_pGlobalSession;
 		Slang::ComPtr<slang::ISession> m_pSession;
 	public:
-		std::vector<BYTE> CompileFromFile(const std::filesystem::path &path, const std::vector<std::string>& vecEntryPoint);
+		std::vector<uint8_t> CompileFromFile(const std::filesystem::path &path, const std::vector<std::string>& vecEntryPoint);
 
-		std::vector<BYTE> ComplieShader(const std::vector<std::string>& vecModules, const RenderPassFlag& nFlag);
+		std::vector<uint8_t> ComplieShader(const std::vector<std::string>& vecModules, const std::vector<std::pair<const char*, const char*>>& vecPPMacro);
 
 		Slang::ComPtr<slang::IGlobalSession> GetGlobalSession() const;
 	public:
@@ -30,8 +29,6 @@ namespace LT {
 		static void Release();
 
 		static SlangCompiler& GetInstance();
-
-		static std::vector<slang::PreprocessorMacroDesc> GenGraphicPPMacroDesc(const RenderPassFlag& nFlag);
 
 	private:
 		static SlangCompiler* s_pInstance;

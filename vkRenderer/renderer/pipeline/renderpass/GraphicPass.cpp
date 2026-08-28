@@ -2,7 +2,7 @@
 #include "vkRendererCommon.h"
 #include "GraphicPass.hpp"
 #include "vkContext.h"
-#include "SlangCompiler.h"
+#include "SlangCompiler.hpp"
 
 #include "VertexBuffer.h"
 
@@ -23,7 +23,7 @@ namespace LT {
 
 		// 创建着色器
 		{
-			std::vector<BYTE> binShader = SlangCompiler::GetInstance().ComplieShader(m_vecShaderModuleSrc, m_nFlag);
+			std::vector<BYTE> binShader = SlangCompiler::GetInstance().ComplieShader(m_vecShaderModuleSrc, GenGraphicPPMacroDesc(m_nFlag));
 
 			vk::ShaderModuleCreateInfo smci(
 				{},

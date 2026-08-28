@@ -1,5 +1,5 @@
 #pragma once
-#include "ExceptionRenderBase.h"
+#include "ExceptionRenderBase.hpp"
 
 namespace LT {
 	class ExceptionAssert : public ExceptionRenderBase{

@@ -2,7 +2,7 @@
 #include "vkContext.h"
 #include "SwapChain.h"
 
-#include "SlangCompiler.h"
+#include "SlangCompiler.hpp"
 #include "Engine.h"
 
 #include "DeviceMemoryManager.h"

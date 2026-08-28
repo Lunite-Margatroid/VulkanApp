@@ -73,6 +73,8 @@ namespace LT {
 		return static_cast<uint64_t>(nFlag) & (static_cast<uint64_t>(VertexChannel::UV) << nUVChannelIndex);
 	}
 
+	std::vector<std::pair<const char* , const char*>> GenGraphicPPMacroDesc(const RenderPassFlag& nFlag);
+
 	class RenderPass
 	{
 	public:

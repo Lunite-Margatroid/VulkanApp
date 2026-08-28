@@ -1,7 +1,6 @@
 #include "EngineCommon.h"
 
 #include "ImgRes.h"
-#include "logger.h"
 
 
 namespace LT {

@@ -65,6 +65,8 @@ include(cmake/checkvulkan.cmake)
 
 
 # 添加子目录
+add_subdirectory(logger)
+add_subdirectory(SlangCompiler)
 add_subdirectory(vkRenderer)
 add_subdirectory(sandbox)
 

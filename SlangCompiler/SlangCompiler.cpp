@@ -1,7 +1,27 @@
-#include "vkRendererCommon.h"
-#include "SlangCompiler.h"
+#include <vector>
+#include <string>
+#include <filesystem>
+#include <fstream>
+#include "SlangCompiler.hpp"
+
+#include "logger.hpp"
 
 namespace LT {
+
+	inline std::string ReadText(const std::filesystem::path& filePath) {
+		std::string strFilePath = filePath.generic_string();
+		std::ifstream file(strFilePath);
+		if (!file.is_open()) {
+			LOG_ERROR("Can not open file %s.", filePath.generic_string().c_str());
+		}
+
+		std::string content;
+		content.reserve(std::filesystem::file_size(filePath)); // 预分配空间
+		content.assign(std::istreambuf_iterator<char>(file),
+			std::istreambuf_iterator<char>());
+		return content;
+	}
+
 	SlangCompiler* SlangCompiler::s_pInstance = nullptr;
 
 	SlangCompiler::SlangCompiler() {
@@ -44,7 +64,7 @@ namespace LT {
 		}
 	}
 
-	std::vector<BYTE> SlangCompiler::CompileFromFile(const std::filesystem::path& path, const std::vector<std::string>& vecEntryPoint) {
+	std::vector<uint8_t> SlangCompiler::CompileFromFile(const std::filesystem::path& path, const std::vector<std::string>& vecEntryPoint) {
 
 		Slang::ComPtr<slang::IModule> pModule;
 		std::string strModuleName = path.stem().generic_string();
@@ -63,61 +83,6 @@ namespace LT {
 				LOG_ERROR_WITH_FILE("Slang Complier: Load module failed \"%s\"", strModuleName.c_str());
 			}
 		}
-
-
-
-		//// 查询入口点
-		//std::vector<Slang::ComPtr<slang::IEntryPoint>> vecPEntryPoint;
-		//for (const auto& strEntryPoint : vecEntryPoint)
-		//{
-		//	Slang::ComPtr<slang::IEntryPoint> pEntryPoint;
-		//	auto result = pModule->findEntryPointByName(strEntryPoint.c_str(), pEntryPoint.writeRef());
-
-		//	if (SLANG_FAILED(result))
-		//	{
-		//		LOG_ERROR_WITH_FILE("Slang Complier: Find entry point failed \"%s\"", strEntryPoint.c_str());
-		//	}
-
-		//	vecPEntryPoint.emplace_back(pEntryPoint);
-		//}
-
-		//if (vecPEntryPoint.size() != 2)
-		//{
-		//	LOG_ERROR("There should be 2 entry points.");
-		//}
-
-		//std::array<slang::IComponentType*, 3> arrComponentTypes = {
-		//	pModule.get(),
-		//	vecPEntryPoint[0].get(),
-		//	vecPEntryPoint[1].get()
-		//};
-
-		//Slang::ComPtr<slang::IComponentType> pComposedProgram;
-		//{
-		//	Slang::ComPtr<slang::IBlob> pDiagnoseBlob;
-		//	auto result = m_pSession->createCompositeComponentType(
-		//		arrComponentTypes.data(),
-		//		arrComponentTypes.size(),
-		//		pComposedProgram.writeRef(),
-		//		pDiagnoseBlob.writeRef()
-		//	);
-		//	if (SLANG_FAILED(result))
-		//	{
-		//		LOG_ERROR_WITH_FILE("Slang Complier: Compose failed.");
-		//	}
-		//}
-
-		//Slang::ComPtr<slang::IComponentType> pLinkedProgram;
-		//{
-		//	Slang::ComPtr<slang::IBlob> pDiagnoseBlob;
-		//	auto result = pComposedProgram->link(
-		//		pLinkedProgram.writeRef(),
-		//		pDiagnoseBlob.writeRef()
-		//	);
-		//	if (SLANG_FAILED(result)) {
-		//		LOG_ERROR_WITH_FILE("Slang Complier: Link failed.");
-		//	}
-		//}
 
 		Slang::ComPtr<slang::IComponentType> pLinkedProgram;
 		{
@@ -139,7 +104,7 @@ namespace LT {
 			}
 		}
 
-		std::vector<BYTE> vecOutCode;
+		std::vector<uint8_t> vecOutCode;
 		pSprivCode->getBufferSize();
 		pSprivCode->getBufferPointer();
 
@@ -148,7 +113,7 @@ namespace LT {
 		return vecOutCode;
 	}
 
-	std::vector<BYTE> SlangCompiler::ComplieShader(const std::vector<std::string>& vecModules, const RenderPassFlag& nFlag)
+	std::vector<uint8_t> SlangCompiler::ComplieShader(const std::vector<std::string>& vecModules, const std::vector<std::pair<const char*, const char*>>& vecPPMacro)
 	{
 		// TargetDesc
 		slang::TargetDesc td = {};
@@ -160,10 +125,8 @@ namespace LT {
 		sd.targets = &td;
 
 		// 预处理宏
-		std::vector<slang::PreprocessorMacroDesc> vecPPMacro = GenGraphicPPMacroDesc(nFlag);
-
 		sd.preprocessorMacroCount = vecPPMacro.size();
-		sd.preprocessorMacros = vecPPMacro.data();
+		sd.preprocessorMacros = reinterpret_cast<const slang::PreprocessorMacroDesc*>(vecPPMacro.data());
 
 		// 矩阵列主序
 		sd.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
@@ -256,7 +219,7 @@ namespace LT {
 			}
 		}
 
-		std::vector<BYTE> vecOutCode;
+		std::vector<uint8_t> vecOutCode;
 		pSprivCode->getBufferSize();
 		pSprivCode->getBufferPointer();
 
@@ -283,55 +246,5 @@ namespace LT {
 		}
 	}
 
-
-	std::vector<slang::PreprocessorMacroDesc> SlangCompiler::GenGraphicPPMacroDesc(const RenderPassFlag& nFlag) {
-		std::vector<slang::PreprocessorMacroDesc> vecPPMacro;
-		if (HasVertexPos(nFlag)) {
-			vecPPMacro.emplace_back("VERT_POSITION", "1");
-		}
-		if (HasUV(nFlag, 0))
-		{
-			vecPPMacro.emplace_back("VERT_UV0", "1");
-		}
-		if (HasUV(nFlag, 1))
-		{
-			vecPPMacro.emplace_back("VERT_UV1", "1");
-		}
-		if (HasUV(nFlag, 2))
-		{
-			vecPPMacro.emplace_back("VERT_UV2", "1");
-		}
-		if (HasUV(nFlag, 3))
-		{
-			vecPPMacro.emplace_back("VERT_UV3", "1");
-		}
-		if (HasUV(nFlag, 4))
-		{
-			vecPPMacro.emplace_back("VERT_UV4", "1");
-		}
-		if (HasNormal(nFlag))
-		{
-			vecPPMacro.emplace_back("VERT_NORMAL", "1");
-		}
-		if (HasTangent(nFlag))
-		{
-			vecPPMacro.emplace_back("VERT_TANGENT", "1");
-		}
-		if (HasBitangent(nFlag))
-		{
-			vecPPMacro.emplace_back("VERT_BITANGENT", "1");
-		}
-		if (HasColor(nFlag))
-		{
-			vecPPMacro.emplace_back("VERT_COLOR", "1");
-		}
-		if (HasAO(nFlag))
-		{
-			vecPPMacro.emplace_back("VERT_AO", "1");
-		}
-
-		return vecPPMacro;
-	
-	}
 }// namespace LT
 
