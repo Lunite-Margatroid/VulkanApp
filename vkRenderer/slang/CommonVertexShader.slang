@@ -11,7 +11,10 @@ struct MVPMatrix{
 	float3 cameraPos;
 };
 
-[[vk::binding(0)]]
+// (binding, set)
+// binding = 0
+// set = 0 : VertexShader
+[[vk::binding(0, 0)]]
 ConstantBuffer<MVPMatrix> u_MVPMatix;
 
 [shader("vertex")]
@@ -19,10 +22,10 @@ SVertexOutput VertMain(SVertexInput vertIn){
 	SVertexOutput output;
 // 顶点坐标
 #ifdef VERT_POSITION
-	output.vertPosition = mul(u_MVPMatix.mvpMat, float4(vertIn.vertPosition, 1.0));
+	output.fragPos = mul(u_MVPMatix.mvpMat, float4(vertIn.vertPosition, 1.0));
 	output.fragWorldPos = mul(u_MVPMatix.modelMat, float4(vertIn.vertPosition, 1.0)).xyz;
 #else
-	output.vertPosition = mul(u_MVPMatix.mvpMat, float4(0.0, 0.0, 0.0, 1.0));
+	output.fragPos = mul(u_MVPMatix.mvpMat, float4(0.0, 0.0, 0.0, 1.0));
 	output.fragWorldPos = mul(u_MVPMatix.modelMat, float4(0.0, 0.0, 0.0, 1.0)).xyz;
 #endif
 

@@ -3,6 +3,8 @@
 #include "RenderPass.hpp"
 #include "DeviceImage.h"
 
+#include "SlangCompiler.hpp"
+
 namespace LT {
 
 	class SwapChain;
@@ -12,6 +14,7 @@ namespace LT {
 		std::vector<std::string> m_vecShaderModuleSrc;
 		RenderPassFlag m_nFlag;
 		vk::ShaderModule m_vkShaderModule;
+		ShaderModuleInfo m_sShaderModuleInfo;
 
 	public:
 		~GraphicPass();

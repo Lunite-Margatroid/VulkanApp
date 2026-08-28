@@ -32,15 +32,14 @@ file(GLOB PRIVATE_HEADERS
     "renderer/*.h"
 	"renderer/swapchain/*.h"
 	"renderer/pipeline/*.h"
-	"renderer/pipeline/renderpass/*.h"
-	"renderer/pipeline/renderpass/*.hpp"
-    "exception/*.h"
 	"renderer/buffer/*.h"
 	"core/image/*.h"
 	"renderer/deviceImage/*.h"
 	"renderer/sampler/*.h"
 	"renderer/mesh/*.h"
 	"renderer/mesh/*.hpp"
+	"renderer/pipeline/renderpass/*.h"
+	"renderer/pipeline/renderpass/*.hpp"
 )
 
 # 创建静态库

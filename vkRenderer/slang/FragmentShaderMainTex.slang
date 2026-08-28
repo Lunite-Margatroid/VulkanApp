@@ -1,6 +1,9 @@
 #include "CommonVertexOutput.slang"
 
-[[vk::binding(0)]]
+// (binding, set)
+// binding = 0
+// set = 1 : FragmentShader
+[[vk::binding(1, 1)]]
 Sampler2D s_Texture;
 
 [shader("fragment")]

@@ -23,7 +23,8 @@ namespace LT {
 
 		// 创建着色器
 		{
-			std::vector<BYTE> binShader = SlangCompiler::GetInstance().ComplieShader(m_vecShaderModuleSrc, GenGraphicPPMacroDesc(m_nFlag));
+			m_sShaderModuleInfo.Clear();
+			std::vector<BYTE> binShader = SlangCompiler::GetInstance().CompileShader(m_vecShaderModuleSrc, GenGraphicPPMacroDesc(m_nFlag), m_sShaderModuleInfo);
 
 			vk::ShaderModuleCreateInfo smci(
 				{},
@@ -47,6 +48,96 @@ namespace LT {
 			.setVertexAttributeDescriptions(vecVertInputDesc)
 			.setVertexBindingDescriptions(vecInputBindDesc)
 			;
+
+		// 顶点装配状态
+		vk::PipelineInputAssemblyStateCreateInfo piasci = {};
+
+		// 图元类型
+		piasci.setTopology(GetPrimitiveTopology(m_nFlag));
+
+		// 指定动态状态
+		std::array<vk::DynamicState, 2> dss = {
+			vk::DynamicState::eViewport , vk::DynamicState::eScissor
+		};
+		vk::PipelineDynamicStateCreateInfo pdsci = {};
+		pdsci
+			.setPDynamicStates(dss.data())
+			.setDynamicStateCount(dss.size())
+			;
+
+		// Viewport
+		vk::PipelineViewportStateCreateInfo pvsci = {};
+		pvsci
+			.setViewportCount(1)
+			.setScissorCount(1)
+			;
+
+		// 光栅化状态
+		vk::PipelineRasterizationStateCreateInfo prsci = {};
+		prsci
+			.setDepthClampEnable(vk::False)
+			.setRasterizerDiscardEnable(vk::False)
+			.setPolygonMode(GetPolygonMode(m_nFlag))
+			.setCullMode(IsBackCull(m_nFlag) ? vk::CullModeFlagBits::eBack : vk::CullModeFlagBits::eNone)
+			.setFrontFace(IsClockwiseFront(m_nFlag) ? vk::FrontFace::eClockwise : vk::FrontFace::eCounterClockwise)
+			.setDepthBiasEnable(vk::False)
+			.setLineWidth(GetLineWidth(m_nFlag))
+			;
+
+		// 超采样
+		vk::PipelineMultisampleStateCreateInfo pmsci = {};
+		pmsci
+			.setRasterizationSamples(vk::SampleCountFlagBits::e1)
+			.setSampleShadingEnable(vk::False)
+			;
+
+		// 混合状态
+		vk::PipelineColorBlendAttachmentState pcbas = {};
+		pcbas
+			.setBlendEnable(IsBlendEnabled(m_nFlag) ? vk::True : vk::False)
+			.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA)
+			.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+			.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
+			.setColorBlendOp(vk::BlendOp::eAdd)
+			.setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+			.setDstAlphaBlendFactor(vk::BlendFactor::eZero)
+			.setAlphaBlendOp(vk::BlendOp::eAdd)
+			;
+		vk::PipelineColorBlendStateCreateInfo pcbsci = {};
+		pcbsci
+			.setLogicOpEnable(vk::False)
+			.setAttachmentCount(1)
+			.setPAttachments(&pcbas)
+			;
+
+		SLANG_TEXTURE_2D;
+
+		// Pipeline Layout
+		std::vector<vk::DescriptorSetLayoutBinding> layouts;
+		// const buffer
+		//for (uint32_t nBindingIndex : m_sShaderModuleInfo.m_vecConstBufferBindingIndex) {
+			//layouts.emplace_back({
+			//		
+			//	});
+		//}
+
+
+		
+	}
+
+	void GraphicPass::AddShaderModule(const char* strShaderModule)
+	{
+		m_vecShaderModuleSrc.push_back(strShaderModule);
+	}
+
+	void GraphicPass::SetRenderPassFlag(RenderPassFlag nFlag)
+	{
+		m_nFlag = nFlag;
+	}
+
+	RenderPassFlag GraphicPass::GetRenderPassFlag() const
+	{
+		return m_nFlag;
 	}
 
 	void GraphicPass::GenVertexAttributeDesc(VertexChannelFlag nVertexChannelFlag, std::vector<vk::VertexInputBindingDescription>& vecInputBindDesc, std::vector<vk::VertexInputAttributeDescription>& vertDesc)

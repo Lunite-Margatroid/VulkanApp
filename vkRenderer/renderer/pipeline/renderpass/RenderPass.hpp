@@ -9,12 +9,17 @@ namespace LT {
 	// 0-10给顶点数据使用 enum VertexChannel
 
 	constexpr uint32_t PRIMITIVE_BIT_OFFSET = 13;
+	constexpr uint32_t POLYGONMODE_BIT_OFFSET = 17;
+	constexpr uint32_t LINE_WIDTH_BIT_OFFSET = 19;
 
 	using RenderPassFlag = uint64_t;
 	enum class RenderPassFlagBits : uint64_t {
 		eBackCull = (1ull << 11), // 11 背面剔除
 		eClockwise = (1ull << 12), // 12 顺时针为正面
 		ePrimitiveMask = (15ull << PRIMITIVE_BIT_OFFSET), // 13-16 记录图元类型
+		ePolygonModeMask = (7ull << POLYGONMODE_BIT_OFFSET), // 17-18记录填充类型
+		eLineWidthMask = (15ull << LINE_WIDTH_BIT_OFFSET), // 19-22 记录线宽
+		eBlendEnable = (1ull << 23), // 开启混合
 	};
 
 	static vk::PrimitiveTopology GetPrimitiveTopology(const RenderPassFlag& nFlag) {
@@ -33,12 +38,27 @@ namespace LT {
 		return static_cast<vk::PrimitiveTopology>((static_cast<uint64_t>(nFlag) >> PRIMITIVE_BIT_OFFSET) & static_cast<uint64_t>(RenderPassFlagBits::ePrimitiveMask));
 	}
 
+	static vk::PolygonMode GetPolygonMode(const RenderPassFlag& nFlag) {
+		static_assert(static_cast<int>(vk::PolygonMode::eFill) == 0);
+		static_assert(static_cast<int>(vk::PolygonMode::eLine) == 1);
+		static_assert(static_cast<int>(vk::PolygonMode::ePoint) == 2);
+		return static_cast<vk::PolygonMode>((static_cast<uint64_t>(nFlag) >> POLYGONMODE_BIT_OFFSET) & static_cast<uint64_t>(RenderPassFlagBits::ePolygonModeMask));
+	}
+
+	static float GetLineWidth(const RenderPassFlag& nFlag) {
+		return static_cast<float>((static_cast<uint64_t>(nFlag) >> LINE_WIDTH_BIT_OFFSET) & static_cast<uint64_t>(RenderPassFlagBits::eLineWidthMask));
+	}
+
 	static bool IsBackCull(const RenderPassFlag& nFlag) {
 		return static_cast<uint64_t>(nFlag)  & static_cast<uint64_t>(RenderPassFlagBits::eBackCull);
 	}
 
 	static bool IsClockwiseFront(const RenderPassFlag& nFlag) {
 		return static_cast<uint64_t>(nFlag) & static_cast<uint64_t>(RenderPassFlagBits::eClockwise);
+	}
+
+	static bool IsBlendEnabled(const RenderPassFlag& nFlag) {
+		return static_cast<uint64_t>(nFlag) & static_cast<uint64_t>(RenderPassFlagBits::eBlendEnable);
 	}
 
 	static bool HasVertexPos(const RenderPassFlag& nFlag) {

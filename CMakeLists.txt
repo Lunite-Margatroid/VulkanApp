@@ -68,6 +68,7 @@ include(cmake/checkvulkan.cmake)
 add_subdirectory(logger)
 add_subdirectory(SlangCompiler)
 add_subdirectory(vkRenderer)
+add_subdirectory(SlangTest)
 add_subdirectory(sandbox)
 
 # 拷贝dll

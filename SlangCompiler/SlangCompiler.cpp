@@ -6,6 +6,8 @@
 
 #include "logger.hpp"
 
+
+
 namespace LT {
 
 	inline std::string ReadText(const std::filesystem::path& filePath) {
@@ -113,7 +115,94 @@ namespace LT {
 		return vecOutCode;
 	}
 
-	std::vector<uint8_t> SlangCompiler::ComplieShader(const std::vector<std::string>& vecModules, const std::vector<std::pair<const char*, const char*>>& vecPPMacro)
+	std::vector<uint8_t> SlangCompiler::CompileShader(const std::vector<std::string>& vecModules, 
+		const std::vector<std::pair<const char*, const char*>>& vecPPMacro,
+		ShaderModuleInfo& sOutShaderModuleInfo)
+	{
+
+		Slang::ComPtr<slang::IComponentType> pLinked;
+		Slang::ComPtr<slang::ISession> pSession;
+		CompileShaderToProgram(vecModules, vecPPMacro, pSession.writeRef(), pLinked.writeRef());
+
+		// 反射 获取着色器信息
+		{
+			slang::ProgramLayout* pLayout = pLinked->getLayout();
+			if (pLayout)
+			{
+				uint32_t nParam = pLayout->getParameterCount();
+				for (uint32_t i = 0;i < nParam;i++)
+				{
+					slang::VariableLayoutReflection* pVar = pLayout->getParameterByIndex(i);
+					auto pType = pVar->getType();
+					if (pType->getKind() == slang::TypeReflection::Kind::Resource) {
+						SlangResourceShape nShape = pType->getResourceShape();
+
+						int nDomension = 0;
+						bool bIsArray = nShape & SlangResourceShape::SLANG_TEXTURE_ARRAY_FLAG;
+						uint32_t nBindingIndex = pVar->getBindingIndex();
+						uint32_t nSpace = pVar->getBindingSpace();
+
+						if (nShape & SlangResourceShape::SLANG_TEXTURE_1D)
+						{
+							nDomension = 1;
+						}
+						else if (nShape & SlangResourceShape::SLANG_TEXTURE_2D)
+						{
+							nDomension = 2;
+						}
+						else if (nShape & SlangResourceShape::SLANG_TEXTURE_3D)
+						{
+							nDomension = 3;
+						}
+						else if (nShape & SlangResourceShape::SLANG_TEXTURE_CUBE)
+						{
+							nDomension = 4;
+						}
+					
+						if (nDomension == 2)
+						{
+							sOutShaderModuleInfo.m_vecTexture2DBindingInfo.emplace_back(nBindingIndex ,static_cast<BindingSpace>(nSpace));
+						}
+					}
+					else if (pType->getKind() == slang::TypeReflection::Kind::ConstantBuffer)
+					{
+						sOutShaderModuleInfo.m_vecConstBufferBindingInfo.emplace_back(pVar->getBindingIndex(), pVar->getBindingSpace());
+					}
+
+				}
+			}
+		}
+
+
+
+
+		// 获取二进制程序
+		Slang::ComPtr<slang::IBlob> pSprivCode;
+		{
+			Slang::ComPtr<slang::IBlob> pDiagnoseBlob;
+			auto result = pLinked->getTargetCode(0, pSprivCode.writeRef(), pDiagnoseBlob.writeRef());
+			if (SLANG_FAILED(result))
+			{
+				LOG_ERROR_WITH_FILE("Slang Compiler: Get Code Failed.");
+				// TODO:
+			}
+		}
+
+		std::vector<uint8_t> vecOutCode;
+		pSprivCode->getBufferSize();
+		pSprivCode->getBufferPointer();
+
+		vecOutCode.resize(pSprivCode->getBufferSize());
+		memcpy(vecOutCode.data(), pSprivCode->getBufferPointer(), pSprivCode->getBufferSize());
+		return vecOutCode;
+	}
+
+	void SlangCompiler::CompileShaderToProgram(
+		const std::vector<std::string>& vecModules, 
+		const std::vector<std::pair<const char*, const char*>>& vecPPMacro,
+		slang::ISession** ppOutSesson,
+		slang::IComponentType** ppOutProgram
+		)
 	{
 		// TargetDesc
 		slang::TargetDesc td = {};
@@ -147,8 +236,7 @@ namespace LT {
 		sd.compilerOptionEntryCount = vecOptions.size();
 
 		// 创建
-		Slang::ComPtr<slang::ISession> pSession;
-		m_pGlobalSession->createSession(sd, pSession.writeRef());
+		m_pGlobalSession->createSession(sd, ppOutSesson);
 
 		// 加载Module
 		std::vector<Slang::ComPtr<slang::IModule>> vecPModules;
@@ -162,7 +250,7 @@ namespace LT {
 			std::filesystem::path pathModuleFile(strFilePath);
 
 			Slang::ComPtr<slang::IModule> pModule;
-			pModule = pSession->loadModuleFromSourceString(
+			pModule = (*ppOutSesson)->loadModuleFromSourceString(
 				strModule.c_str(),
 				strModulePath.c_str(),
 				ReadText(pathModuleFile).c_str(),
@@ -173,10 +261,10 @@ namespace LT {
 			{
 				vecPModules.push_back(pModule);
 			}
-			else
+			if (pDiagnosticsBlob)
 			{
 				// 查错
-				pDiagnosticsBlob;
+				LOG_INFO("Shader Compiler Log. Module %s :\n%s", strModule.c_str(), static_cast<const char*> (pDiagnosticsBlob->getBufferPointer()));
 			}
 		}
 		// 组合
@@ -189,43 +277,40 @@ namespace LT {
 		Slang::ComPtr<slang::IComponentType> pComposed;
 		{
 			Slang::ComPtr<slang::IBlob> pDiagnosticsBlob;
-			SlangResult result = pSession->createCompositeComponentType(
+			SlangResult result = (*ppOutSesson)->createCompositeComponentType(
 				vecComponents.data(),
 				vecComponents.size(),
 				pComposed.writeRef(),
 				pDiagnosticsBlob.writeRef()
 			);
-		}
+			if (pDiagnosticsBlob) {
+				LOG_INFO("Shader Compiler Log. Compose :\n%s", static_cast<const char*>(pDiagnosticsBlob->getBufferPointer()));
+			}
+			if (SLANG_FAILED(result)) {
+				// TODO:
 
-		// 链接
-		Slang::ComPtr<slang::IComponentType> pLinked;
-		{
-			Slang::ComPtr<slang::IBlob> pDiagnosticsBlob;
-			SlangResult result = pComposed->link(
-				pLinked.writeRef(),
-				pDiagnosticsBlob.writeRef()
-			);
-		}
-
-		// 获取二进制程序
-
-		Slang::ComPtr<slang::IBlob> pSprivCode;
-		{
-			Slang::ComPtr<slang::IBlob> pDiagnoseBlob;
-			auto result = pLinked->getTargetCode(0, pSprivCode.writeRef(), pDiagnoseBlob.writeRef());
-			if (SLANG_FAILED(result))
-			{
-				LOG_ERROR_WITH_FILE("Slang Compiler: Get Code Failed.");
 			}
 		}
 
-		std::vector<uint8_t> vecOutCode;
-		pSprivCode->getBufferSize();
-		pSprivCode->getBufferPointer();
+		// 链接
+		{
+			Slang::ComPtr<slang::IBlob> pDiagnosticsBlob;
+			SlangResult result = pComposed->link(
+				ppOutProgram,
+				pDiagnosticsBlob.writeRef()
+			);
+			if (pDiagnosticsBlob) {
+				LOG_INFO("Shader Compiler Log. Link :\n%s", static_cast<const char*>(pDiagnosticsBlob->getBufferPointer()));
+			}
+			if (SLANG_FAILED(result)) {
+				// TODO:
 
-		vecOutCode.resize(pSprivCode->getBufferSize());
-		memcpy(vecOutCode.data(), pSprivCode->getBufferPointer(), pSprivCode->getBufferSize());
-		return vecOutCode;
+			}
+		}
+
+
+			// 反射测试
+		slang::ProgramLayout* pLayout = (*ppOutProgram)->getLayout();
 	}
 
 	Slang::ComPtr<slang::IGlobalSession> SlangCompiler::GetGlobalSession() const

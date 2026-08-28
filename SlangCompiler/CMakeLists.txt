@@ -3,10 +3,12 @@
 # 源文件
 set(SOURCES
 	"SlangCompiler.cpp"
+	"ShaderModuleInfo.cpp"
 )
 
 set(PUBLIC_HEADERS
 	"SlangCompiler.hpp"
+	"ShaderModuleInfo.hpp"
 )
 
 add_library(
@@ -24,14 +26,14 @@ endif()
 if(WIN32)
 	target_link_libraries(
 		SlangCompiler
-			PRIVATE
+			PUBLIC
 				debug "${SLANG_INSTALLED_DIR}/lib/slangd.lib"
 				optimized "${SLANG_INSTALLED_DIR}/lib/slang.lib"
 	)
 elseif(UNIX)
 	target_link_libraries(
 		SlangCompiler
-			PRIVATE
+			PUBLIC
 				"${SLANG_INSTALLED_DIR}/lib/libslang.so"
 	)
 else()
@@ -46,6 +48,5 @@ target_include_directories(
 	SlangCompiler
 		PUBLIC
 			"${CMAKE_CURRENT_SOURCE_DIR}"
-		PRIVATE
 			"${SLANG_INSTALLED_DIR}/include"
 )

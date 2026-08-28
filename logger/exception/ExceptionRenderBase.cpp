@@ -1,7 +1,6 @@
-#include <string>
-#include <exception>
-#include "ExceptionRenderBase.hpp"
 #include "logger.hpp"
+#include "ExceptionRenderBase.hpp"
+
 
 namespace LT
 {

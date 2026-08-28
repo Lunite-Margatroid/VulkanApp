@@ -3,6 +3,8 @@
 #include <slang/slang-com-ptr.h>
 #include <slang/slang-com-helper.h>
 
+#include "ShaderModuleInfo.hpp"
+
 namespace LT {
 	class SlangCompiler final {
 	private:
@@ -21,7 +23,13 @@ namespace LT {
 	public:
 		std::vector<uint8_t> CompileFromFile(const std::filesystem::path &path, const std::vector<std::string>& vecEntryPoint);
 
-		std::vector<uint8_t> ComplieShader(const std::vector<std::string>& vecModules, const std::vector<std::pair<const char*, const char*>>& vecPPMacro);
+		std::vector<uint8_t> CompileShader(const std::vector<std::string>& vecModules, const std::vector<std::pair<const char*, const char*>>& vecPPMacro, ShaderModuleInfo& sOutShaderModuleInfo);
+		void CompileShaderToProgram(
+			const std::vector<std::string>& vecModules, 
+			const std::vector<std::pair<const char*, const char*>>& vecPPMacro,
+			slang::ISession** ppOutSesson,
+			slang::IComponentType** ppOutProgram);
+
 
 		Slang::ComPtr<slang::IGlobalSession> GetGlobalSession() const;
 	public:

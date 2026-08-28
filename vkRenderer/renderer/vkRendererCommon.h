@@ -25,25 +25,9 @@ using BYTE = uint8_t;
 
 #endif
 
-#include "ExceptionAssert.hpp"
-
 #define VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS
 
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 
 #include "logger.hpp"
-
-inline std::string ReadText(const std::filesystem::path& filePath) {
-    std::string strFilePath = filePath.generic_string();
-    std::ifstream file(strFilePath);
-    if (!file.is_open()) {
-        LOG_ERROR("Can not open file %s.", filePath.generic_string().c_str());
-    }
-
-    std::string content;
-    content.reserve(std::filesystem::file_size(filePath)); // 预分配空间
-    content.assign(std::istreambuf_iterator<char>(file),
-        std::istreambuf_iterator<char>());
-    return content;
-}
