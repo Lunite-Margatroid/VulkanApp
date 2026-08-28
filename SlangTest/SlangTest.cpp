@@ -69,7 +69,7 @@ int main(int argn, const char* const* argv) {
 
 
 				// print json
-				if (false)
+				if (true)
 				{
 					Slang::ComPtr<slang::IBlob> pLayoutJson;
 					pLayout->toJson(pLayoutJson.writeRef());

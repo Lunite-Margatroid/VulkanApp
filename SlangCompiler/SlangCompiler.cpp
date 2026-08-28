@@ -161,7 +161,7 @@ namespace LT {
 					
 						if (nDomension == 2)
 						{
-							sOutShaderModuleInfo.m_vecTexture2DBindingInfo.emplace_back(nBindingIndex ,static_cast<BindingSpace>(nSpace));
+							sOutShaderModuleInfo.m_vecTexture2DBindingInfo.emplace_back(nBindingIndex ,nSpace);
 						}
 					}
 					else if (pType->getKind() == slang::TypeReflection::Kind::ConstantBuffer)

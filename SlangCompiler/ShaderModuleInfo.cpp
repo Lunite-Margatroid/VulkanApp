@@ -4,8 +4,8 @@ namespace LT {
 
 
 	void ShaderModuleInfo::Clear() {
-		m_vecTexture2DBindingIndex.clear();
-		m_vecConstBufferBindingIndex.clear();
+		m_vecTexture2DBindingInfo.clear();
+		m_vecConstBufferBindingInfo.clear();
 	}
 
 
