@@ -2,6 +2,8 @@
 #pragma once
 
 #include "VertexBuffer.h"
+#include "DeviceImage.h"
+
 
 namespace LT {
 
@@ -95,11 +97,32 @@ namespace LT {
 
 	std::vector<std::pair<const char* , const char*>> GenGraphicPPMacroDesc(const RenderPassFlag& nFlag);
 
+
+	struct TransitionImageLayoutInfo {
+		ImageID nImageID;
+		vk::CommandBuffer vkCommandBuffer;
+		vk::ImageLayout eOldLayout;
+		vk::ImageLayout eNewLayout;
+		vk::PipelineStageFlags2 srcStageMask;
+		vk::PipelineStageFlags2 dstStageMask;
+		vk::AccessFlags2 srcAccessFlag;
+		vk::AccessFlags2 dstAccessFlag;
+		vk::ImageAspectFlags eImageAspect;
+		TransitionImageLayoutInfo()
+			:nImageID(INVALID_IMAGE_ID)		
+		{
+			
+		}
+	};
+
 	class RenderPass
 	{
 	public:
 		virtual ~RenderPass();
 		virtual void Execute() = 0;
+
+	public:
+		static void RecordTransitionImageLayout(const TransitionImageLayoutInfo& sInfo);
 	};
 
 

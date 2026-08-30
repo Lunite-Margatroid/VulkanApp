@@ -3,6 +3,10 @@
 namespace LT {
 
 	constexpr unsigned int RENDERER_DEFAULT_FLIGHT_FRAME_NUM = 2u;
+	static uint32_t GetLastFlightFrameIndex(uint32_t nIndex) {
+		return (nIndex + RENDERER_DEFAULT_FLIGHT_FRAME_NUM - 1) % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
+	}
+
 
 	class SwapChain;
 

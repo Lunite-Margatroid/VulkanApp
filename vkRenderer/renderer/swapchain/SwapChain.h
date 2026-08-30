@@ -15,6 +15,8 @@ namespace LT {
 
 		vk::SwapchainCreateInfoKHR m_vkSwapCreateInfo = {};
 
+		uint32_t m_nCurrentImageIndex = 0;
+
 		void InitSwapChain(uint32_t nWidth, uint32_t nHeight);
 		void CreateImageViews();
 
@@ -36,6 +38,9 @@ namespace LT {
 		vk::SwapchainKHR& NativeVKSwapChain() noexcept;
 
 		void Resize(uint32_t nWidth, uint32_t nHeight);
+
+		vk::Image GetCurrentTargetImage();
+		vk::ImageView GetCurrentTargetImageView();
 
 		SwapChain(uint32_t nWidth, uint32_t nHeight, vk::Device device, vk::PhysicalDevice vkPhyDeivce, vk::SurfaceKHR Surface, vk::SharingMode eImageShaderingMode = vk::SharingMode::eConcurrent);
 		~SwapChain();

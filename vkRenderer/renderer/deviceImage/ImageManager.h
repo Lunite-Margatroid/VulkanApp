@@ -36,5 +36,8 @@ namespace LT {
 		static void Release();
 
 		static ImageManager& GetInstance();
+
+		static vk::Image GetNativeDeviceImage(ImageID nImageID);
+		static vk::ImageView GetNativeDeviceImageView(ImageID nImageID);
 	};
 }

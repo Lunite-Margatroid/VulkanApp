@@ -3,6 +3,7 @@
 #include "ImageManager.h"
 #include "Image2DShaderRes.h"
 #include "Image2DDepthBuffer.h"
+#include "SwapChain.h"
 
 namespace LT {
 
@@ -106,4 +107,54 @@ namespace LT {
 		return m_nImageIDCounter++;
 	}
 
+	vk::Image ImageManager::GetNativeDeviceImage(ImageID nImageID) {
+		if(nImageID > INVALID_IMAGE_ID)
+		{
+			ImageManager& instance = ImageManager::GetInstance();
+			auto iter = instance.m_mapImage.find(nImageID);
+			if (iter != instance.m_mapImage.end())
+			{
+				return iter->second->GetNativeDeviceImage();
+			}
+		}
+		else
+		{
+			if(nImageID == SWAPCHAIN_IMAGE_ID)
+			{
+				// Handle swapchain image
+				vkContext::GetSwapChain().GetCurrentTargetImage();
+
+			}
+		}
+		return nullptr;
+	}
+
+	vk::ImageView ImageManager::GetNativeDeviceImageView(ImageID nImageID) {
+		if(nImageID > INVALID_IMAGE_ID)
+		{
+			ImageManager& instance = ImageManager::GetInstance();
+			auto iter = instance.m_mapImage.find(nImageID);
+			if (iter != instance.m_mapImage.end())
+			{
+				ImageViewable* pViewable = dynamic_cast<ImageViewable*>(iter->second);
+				if (pViewable)
+				{
+					return pViewable->GetNativeImageView();
+				}
+				else
+				{
+					return VK_NULL_HANDLE;
+				}
+			}
+		}
+		else
+		{
+			if(nImageID == SWAPCHAIN_IMAGE_ID)
+			{
+				// Handle swapchain image
+				return vkContext::GetSwapChain().GetCurrentTargetImageView();
+			}
+		}
+		return VK_NULL_HANDLE;
+	}
 }// namespace LT

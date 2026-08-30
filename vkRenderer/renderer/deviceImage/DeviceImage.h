@@ -6,7 +6,11 @@
 namespace LT {
 
 
-	using ImageID = uint64_t;
+	using ImageID = int64_t;
+
+	constexpr ImageID INVALID_IMAGE_ID = -1;
+
+	constexpr ImageID SWAPCHAIN_IMAGE_ID = -2;
 
 	class DeviceImage {
 

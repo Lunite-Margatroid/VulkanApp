@@ -7,6 +7,9 @@
 #include "VertexBuffer.h"
 #include "SwapChain.h"
 
+#include "ImageManager.h"
+#include "BufferManager.h"
+
 namespace LT {
 	GraphicPass::~GraphicPass()
 	{
@@ -16,6 +19,22 @@ namespace LT {
 		{
 			device.destroyShaderModule(m_vkShaderModule);
 		}
+
+		if (m_vkPipeline)
+		{
+			device.destroyPipeline(m_vkPipeline);
+		}
+
+		if(m_vkDescSetLayout)
+		{
+			device.destroyDescriptorSetLayout(m_vkDescSetLayout);
+		}
+
+		if(m_vkPipelineLayout)
+		{
+			device.destroyPipelineLayout(m_vkPipelineLayout);
+		}
+
 	}
 	void GraphicPass::Init() {
 
@@ -263,6 +282,169 @@ namespace LT {
 
 		uint32_t nStride = nOffset;
 		vecInputBindDesc.emplace_back(0, nStride, vk::VertexInputRate::eVertex);
+	}
+
+	void GraphicPass::RecordCommand(const RecordCommandInfo& sRecordInfo)
+	{
+		vk::CommandBuffer& cmdBuffer = vkContext::GetCmdBuffer(sRecordInfo.nFlightFrameIndex);
+		vk::Extent2D extent = { sRecordInfo.nWidth , sRecordInfo.nHeight};
+		uint32_t nFlightFrameIndex = sRecordInfo.nFlightFrameIndex;
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
+		vk::Viewport viewport(0.0f, 0.0f, static_cast<float>(extent.width), static_cast<float>(extent.height), 0.0f, 1.0f);
+		cmdBuffer.setViewport(0, viewport);
+		vk::Rect2D scissor({ 0, 0 }, extent);
+		cmdBuffer.setScissor(0, scissor);
+		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_vkPipelineLayout, 0, m_vecDescriptorSets[nFlightFrameIndex], nullptr);
+
+
+		vk::CommandBufferBeginInfo cbbi = {};
+		cmdBuffer.begin(cbbi);
+
+		// 转换颜色缓冲
+		TransitionImageLayoutInfo sColorTransitionInfo;
+		sColorTransitionInfo.vkCommandBuffer = cmdBuffer;
+		sColorTransitionInfo.nImageID = sRecordInfo.vecImageIDColor[0];
+		sColorTransitionInfo.srcAccessFlag = vk::AccessFlagBits2::eNone;
+		sColorTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
+		sColorTransitionInfo.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+		sColorTransitionInfo.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+		sColorTransitionInfo.eOldLayout = vk::ImageLayout::eUndefined;
+		sColorTransitionInfo.eNewLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		sColorTransitionInfo.eImageAspect = vk::ImageAspectFlagBits::eColor;
+		RenderPass::RecordTransitionImageLayout(sColorTransitionInfo);
+
+		// 深度缓冲
+		TransitionImageLayoutInfo sDepthTransitionInfo;
+		sDepthTransitionInfo.vkCommandBuffer = cmdBuffer;
+		sDepthTransitionInfo.nImageID = sRecordInfo.nDepthStencilID;
+		sDepthTransitionInfo.srcAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentWrite;
+		sDepthTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentRead;
+		sDepthTransitionInfo.srcStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
+		sDepthTransitionInfo.dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
+		sDepthTransitionInfo.eOldLayout = vk::ImageLayout::eUndefined;
+		sDepthTransitionInfo.eNewLayout = vk::ImageLayout::eDepthAttachmentOptimal;
+		sDepthTransitionInfo.eImageAspect = vk::ImageAspectFlagBits::eDepth;
+		RenderPass::RecordTransitionImageLayout(sDepthTransitionInfo);
+
+		// 绑定渲染目标
+
+		// 颜色
+		vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f);
+		vk::RenderingAttachmentInfo rai;
+		rai
+			.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sRecordInfo.vecImageIDColor[0]))
+			.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
+			.setLoadOp(vk::AttachmentLoadOp::eClear)
+			.setStoreOp(vk::AttachmentStoreOp::eStore)
+			.setClearValue(clearColor)
+			;
+
+		// 深度
+		vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
+		vk::RenderingAttachmentInfo raiDepth;
+		raiDepth
+			.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sRecordInfo.nDepthStencilID))
+			.setImageLayout(vk::ImageLayout::eDepthAttachmentOptimal)
+			.setLoadOp(vk::AttachmentLoadOp::eClear)
+			.setStoreOp(vk::AttachmentStoreOp::eDontCare)
+			.setClearValue(clearDepth)
+			;
+
+		// 录入渲染命令
+		vk::RenderingInfo ri;
+		
+		vk::Rect2D renderArea({ 0, 0 }, { sRecordInfo.nWidth, sRecordInfo.nHeight });
+		ri
+			.setRenderArea(renderArea)
+			.setLayerCount(1)
+			.setColorAttachmentCount(1)
+			.setPColorAttachments(&rai)
+			.setPDepthAttachment(&raiDepth)
+			;
+
+		cmdBuffer.beginRendering(ri);
+
+		// 绑定渲染管线
+		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
+
+		// 绑定顶点缓冲
+		std::vector<vk::Buffer> vecVertexBuffer;
+		std::vector<vk::DeviceSize> vecVertexBufferOffset;
+		vecVertexBuffer.reserve(sRecordInfo.vecVertexBufferID.size());
+		vecVertexBufferOffset.reserve(sRecordInfo.vecVertexBufferID.size());
+		for (BufferID nID : sRecordInfo.vecVertexBufferID)
+		{
+			vecVertexBuffer.push_back(BufferManager::GetNativeDeviceBuffer(nID));
+			vecVertexBufferOffset.push_back(0);
+		}
+		cmdBuffer.bindVertexBuffers(0, vecVertexBuffer, vecVertexBufferOffset);
+
+		// 绑定索引缓冲
+		cmdBuffer.bindIndexBuffer(BufferManager::GetNativeDeviceBuffer(sRecordInfo.nIndexBufferID), 0, vk::IndexType::eUint32);
+
+		// 绑定
+		// const buffer
+		// texture resource
+		cmdBuffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics,
+			m_vkPipelineLayout,
+			0,
+			m_vecDescriptorSets[nFlightFrameIndex],
+			VK_NULL_HANDLE
+		);
+
+		// 创建并绑定Viewport Scissor State
+		vk::Viewport viewport;
+		viewport
+			.setX(0)
+			.setY(0)
+			.setWidth(sRecordInfo.nWidth)
+			.setHeight(sRecordInfo.nHeight)
+			.setMinDepth(0.f)
+			.setMaxDepth(1.f)
+			;
+
+		// Scissor
+		vk::Rect2D scissor;
+		scissor
+			.setOffset(vk::Offset2D(0, 0))
+			.setExtent(vk::Extent2D(sRecordInfo.nWidth, sRecordInfo.nHeight))
+			;
+
+		cmdBuffer.setViewport(0, viewport);
+		cmdBuffer.setScissor(0, scissor);
+
+		
+		auto nIndexCount = BufferManager::GetIndexBuffer(sRecordInfo.nIndexBufferID)->GetIndexCount();
+		cmdBuffer.drawIndexed(nIndexCount, 1, 0, 0, 0);
+
+		cmdBuffer.endRendering();
+
+		// 颜色缓冲转为交换缓冲
+		if (sRecordInfo.vecImageIDColor[0] == SWAPCHAIN_IMAGE_ID)
+		{
+			TransitionImageLayoutInfo sTransInfoForPresent;
+			sTransInfoForPresent.vkCommandBuffer = cmdBuffer;
+			sTransInfoForPresent.nImageID = sRecordInfo.vecImageIDColor[0];
+			sTransInfoForPresent.eOldLayout = vk::ImageLayout::eColorAttachmentOptimal;
+			sTransInfoForPresent.eNewLayout = vk::ImageLayout::ePresentSrcKHR;
+			sTransInfoForPresent.srcAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
+			sTransInfoForPresent.dstAccessFlag = vk::AccessFlagBits2::eNone;
+			sTransInfoForPresent.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+			sTransInfoForPresent.dstStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
+			sTransInfoForPresent.eImageAspect = vk::ImageAspectFlagBits::eColor;
+		}
+
+		cmdBuffer.end();
+
+	}
+
+	void GraphicPass::Execute() {
+		vk::Device& device = vkContext::GetVkDevice();
+		vk::SwapchainKHR& swapchain = vkContext::GetNativeSwapChain();
+
+
+		device.acquireNextImageKHR(swapchain, UINT64_MAX);
 	}
 
 } // namespace LT

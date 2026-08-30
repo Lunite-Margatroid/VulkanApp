@@ -8,6 +8,20 @@
 namespace LT {
 
 	class SwapChain;
+
+
+	struct RecordCommandInfo {
+		std::vector<ImageID> vecImageIDColor;
+		ImageID nDepthStencilID;
+		std::vector<BufferID> vecVertexBufferID;
+		BufferID nIndexBufferID;
+
+		uint32_t nFlightFrameIndex;
+		uint32_t nWidth;
+		uint32_t nHeight;
+	};
+
+
 	class GraphicPass : public RenderPass
 	{
 	protected:
@@ -29,15 +43,8 @@ namespace LT {
 		void AddShaderModule(const char* strShaderModule);
 		void SetRenderPassFlag(RenderPassFlag nFlag);
 		RenderPassFlag GetRenderPassFlag() const;
-		
-		void SetDepthStencilBuffer(ImageID nDepthStencilID);
-		void SetDepthBuffer(ImageID nDepthID);
-		void SetRenderTarget(ImageID nColorAttachmentID, uint32_t nBindingIndex);
 
-		void SetVertexBuffer(BufferID nVertexBufferID);
-		void SetIndexBuffer(BufferID nIndexBufferID);
-
-		void SetSwapChain(SwapChain* pSwapChain);
+		void RecordCommand(const RecordCommandInfo& sRecordInfo);
 
 		void Execute() override;
 

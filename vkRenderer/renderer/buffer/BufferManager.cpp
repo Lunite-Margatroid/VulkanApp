@@ -99,4 +99,32 @@ namespace LT {
 	{
 		DeleteBuffer(pBuffer->GetBufferID());
 	}
+
+	vk::Buffer BufferManager::GetNativeDeviceBuffer(BufferID nID) {
+		Buffer* pBuffer = BufferManager::GetBuffer(nID);
+		if (pBuffer)
+		{
+			return pBuffer->GetNativeBuffer();
+		}
+		return VK_NULL_HANDLE;
+	}
+
+
+	Buffer* BufferManager::GetBuffer(BufferID nID) {
+		auto& mapBuffer = BufferManager::GetInstance().m_mapBuffers;
+		if (nID > INVALID_BUFFER_ID)
+		{
+			auto iter = mapBuffer.find(nID);
+			if (iter != mapBuffer.end())
+			{
+				iter->second;
+			}
+		}
+
+		return nullptr;
+	}
+	IndexBuffer* BufferManager::GetIndexBuffer(BufferID nID) {
+		Buffer* pBuffer = BufferManager::GetBuffer(nID);
+		return dynamic_cast<IndexBuffer*>(pBuffer);
+	}
 } // namespace LT

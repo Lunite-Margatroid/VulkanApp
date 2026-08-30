@@ -31,6 +31,12 @@ namespace LT {
 		static IndexBuffer* CreateIndexBuffer(size_t nSize, void* pData, uint64_t indexCount);
 		static ConstBuffer* CreateConstBuffer(size_t nSize, void* pData);
 
+		static vk::Buffer GetNativeDeviceBuffer(BufferID nID);
+
+
+		static Buffer* GetBuffer(BufferID nID);
+		static IndexBuffer* GetIndexBuffer(BufferID nID);
+
 		static void DeleteBuffer(BufferID nID );
 		static void DeleteBuffer(Buffer* pBuffer);
 	};

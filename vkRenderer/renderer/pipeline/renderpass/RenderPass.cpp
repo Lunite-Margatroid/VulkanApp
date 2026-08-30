@@ -1,6 +1,6 @@
 #include "vkRendererCommon.h"
 #include "RenderPass.hpp"
-
+#include "ImageManager.h"
 
 namespace LT {
 
@@ -52,4 +52,39 @@ namespace LT {
 		}
 		return vecPPMacro;
     }
+
+
+	void RenderPass::RecordTransitionImageLayout(const TransitionImageLayoutInfo& sInfo) {
+		vk::ImageMemoryBarrier2 barrier = {};
+		barrier
+			.setImage(ImageManager::GetNativeDeviceImage(sInfo.nImageID))
+			.setSrcAccessMask(sInfo.srcAccessFlag)
+			.setSrcStageMask(sInfo.srcStageMask)
+			.setOldLayout(sInfo.eOldLayout)
+			.setDstAccessMask(sInfo.dstAccessFlag)
+			.setDstStageMask(sInfo.dstStageMask)
+			.setNewLayout(sInfo.eNewLayout)
+			.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+			.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+			.setSubresourceRange(
+				vk::ImageSubresourceRange(
+					sInfo.eImageAspect,
+					0,	// base mipmap level
+					1,	// level count
+					0,	// base array layer
+					1	// layer count
+				)
+			)
+			;
+
+		vk::DependencyInfo di = {};
+		di
+			.setDependencyFlags({})
+			.setImageMemoryBarrierCount(1)
+			.setPImageMemoryBarriers(&barrier)
+			;
+
+		sInfo.vkCommandBuffer.pipelineBarrier2(di);
+
+	}
 } // namespace LT

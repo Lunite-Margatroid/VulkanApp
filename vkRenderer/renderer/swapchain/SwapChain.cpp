@@ -192,4 +192,12 @@ namespace LT {
 
 		CreateImageViews();
 	}
+
+	vk::Image SwapChain::GetCurrentTargetImage() {
+		return m_sSwapChainInfo.images[m_nCurrentImageIndex % m_sSwapChainInfo.nImageCount];
+	}
+
+	vk::ImageView SwapChain::GetCurrentTargetImageView() {
+		return m_imageViews[m_nCurrentImageIndex % m_sSwapChainInfo.nImageCount];
+	}
 }
