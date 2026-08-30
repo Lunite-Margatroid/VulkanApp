@@ -15,6 +15,10 @@ namespace LT {
 		RenderPassFlag m_nFlag;
 		vk::ShaderModule m_vkShaderModule;
 		ShaderModuleInfo m_sShaderModuleInfo;
+		vk::DescriptorSetLayout m_vkDescSetLayout;
+		vk::PipelineLayout m_vkPipelineLayout;
+		std::vector<vk::DescriptorSet> m_vecDescriptorSets;
+		vk::Pipeline m_vkPipeline;
 
 	public:
 		~GraphicPass();

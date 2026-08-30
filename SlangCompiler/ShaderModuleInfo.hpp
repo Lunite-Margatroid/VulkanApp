@@ -15,6 +15,21 @@ namespace LT {
 		BindingInfo(uint32_t index, uint32_t space) :
 			nIndex(index), eSpace(static_cast<BindingSpace>(space))
 		{}
+
+
+		vk::ShaderStageFlags GetShaderStageFlag() const {
+			switch (eSpace)
+			{
+			case BindingSpace::eVertexShader:
+				return vk::ShaderStageFlagBits::eVertex;
+			case BindingSpace::eFragmentShader:
+				return vk::ShaderStageFlagBits::eFragment;
+			case BindingSpace::eVertAndFragShader:
+				return (vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+			default:
+				return vk::ShaderStageFlagBits::eAll;
+			}
+		}
 	};
 
 	struct ShaderModuleInfo {
