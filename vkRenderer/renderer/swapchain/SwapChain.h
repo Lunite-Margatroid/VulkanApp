@@ -42,6 +42,8 @@ namespace LT {
 		vk::Image GetCurrentTargetImage();
 		vk::ImageView GetCurrentTargetImageView();
 
+		int32_t AcquireNextImage(uint64_t nTimeOut, vk::Semaphore sem, vk::Fence fence);
+
 		SwapChain(uint32_t nWidth, uint32_t nHeight, vk::Device device, vk::PhysicalDevice vkPhyDeivce, vk::SurfaceKHR Surface, vk::SharingMode eImageShaderingMode = vk::SharingMode::eConcurrent);
 		~SwapChain();
 

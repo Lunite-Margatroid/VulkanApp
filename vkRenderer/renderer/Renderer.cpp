@@ -23,36 +23,36 @@ namespace LT {
 
 		// vertex buffer
 		float vertBuffer[] = {
-			-0.5f, 0.5f,0.5f,	1.0f, 0.0f, 0.f,		0.f, 0.f,
-			0.5f, 0.5f,0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
-			0.5f, -0.5f,0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
-			-0.5f, -0.5f,0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+			-0.5f, 0.5f,0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,
+			0.5f, 0.5f,0.5f,		1.f, 0.f,		0.f, 1.f,0.f,
+			0.5f, -0.5f,0.5f,		1.f, 1.f,		0.f,0.f, 1.f,
+			-0.5f, -0.5f,0.5f,		0.f, 1.f,		1.f,1.f,1.f,
 
-			-0.5f, 0.5f,-0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
-			0.5f, 0.5f,-0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
-			0.5f, -0.5f,-0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
-			-0.5f, -0.5f,-0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+			-0.5f, 0.5f,-0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,
+			0.5f, 0.5f,-0.5f,		1.f, 0.f,		0.f, 1.f,0.f,	
+			0.5f, -0.5f,-0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,	
+			-0.5f, -0.5f,-0.5f,		0.f, 1.f,		1.f,1.f,1.f,	
 
-			0.5f, -0.5f, 0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
-			0.5f, 0.5f, 0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
-			0.5f, 0.5f, -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
-			0.5f, -0.5f, -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+			0.5f, -0.5f, 0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,	
+			0.5f, 0.5f, 0.5f,		1.f, 0.f,		0.f, 1.f,0.f,		
+			0.5f, 0.5f, -0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,		
+			0.5f, -0.5f, -0.5f,		0.f, 1.f,		1.f,1.f,1.f,		
 
-			-0.5f, -0.5f, 0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
-			-0.5f, 0.5f, 0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
-			-0.5f, 0.5f, -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
-			-0.5f, -0.5f, -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+			-0.5f, -0.5f, 0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,
+			-0.5f, 0.5f, 0.5f,		1.f, 0.f,		0.f, 1.f,0.f,	
+			-0.5f, 0.5f, -0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,	
+			-0.5f, -0.5f, -0.5f,	0.f, 1.f,		1.f,1.f,1.f,	
 
-			-0.5f,-0.5f,  0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
-			0.5f,-0.5f,  0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
-			0.5f,-0.5f,  -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
-			-0.5f,-0.5f,  -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+			-0.5f,-0.5f,  0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,	
+			0.5f,-0.5f,  0.5f,		1.f, 0.f,		0.f, 1.f,0.f,		
+			0.5f,-0.5f,  -0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,		
+			-0.5f,-0.5f,  -0.5f,	0.f, 1.f,		1.f,1.f,1.f,		
 
 
-			-0.5f,0.5f,  0.5f,		1.0f, 0.0f, 0.f,		0.f, 0.f,
-			0.5f,0.5f,  0.5f,		0.f, 1.f,0.f,			1.f, 0.f,
-			0.5f,0.5f,  -0.5f,		0.f, 0.f, 1.f,		1.f, 1.f,
-			-0.5f,0.5f,  -0.5f,		1.f,1.f,1.f,		0.f, 1.f,
+			-0.5f,0.5f,  0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,	
+			0.5f,0.5f,  0.5f,		1.f, 0.f,		0.f, 1.f,0.f,		
+			0.5f,0.5f,  -0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,		
+			-0.5f,0.5f,  -0.5f,		0.f, 1.f,		1.f,1.f,1.f,		
 		};
 
 		m_pDebugVertexBuffer = BufferManager::CreateVertexBuffer(sizeof(vertBuffer), vertBuffer, 24);
@@ -148,9 +148,26 @@ namespace LT {
 		memcpy(&m_MVPMatBuf.projectionMat, pProjectionMat, sizeof(glm::mat4));
 	}
 
+	void Renderer::SetCameraPos(const float* pCameraPos) {
+		memcpy(&m_MVPMatBuf.cameraPos, pCameraPos, sizeof(glm::vec4));
+	}
+
+	void Renderer::SetNormalMat(const float* pNormalMat) {
+		for (int col = 0; col < 3; ++col)
+		{
+			memcpy(&m_MVPMatBuf.normalMatCol[col],pNormalMat +  col * 4, sizeof(glm::vec4));
+		}
+	}
+
+	void Renderer::SetMVPMat(const float* pNormalMat)
+	{
+		memcpy(&m_MVPMatBuf.mvpMat, pNormalMat, sizeof(glm::mat4));
+	}
+
 	void Renderer::DrawFrame() {
 		m_pPipeline->DrawFrame();
 	}
+
 
 	void Renderer::Resize(uint32_t nWidth, uint32_t nHeight) {
 		m_pPipeline->Resize(nWidth, nHeight);

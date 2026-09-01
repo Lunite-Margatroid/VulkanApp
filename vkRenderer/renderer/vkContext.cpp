@@ -411,7 +411,7 @@ do{\
 		vk::DescriptorPoolCreateInfo dpci;
 		dpci
 			.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-			.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
+			.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * 3)
 			.setPoolSizeCount(dps.size())
 			.setPPoolSizes(&dps[0])
 			;

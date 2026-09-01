@@ -9,6 +9,7 @@ namespace LT {
 	class ImageSampler;
 	class Image2DShaderRes;
 	class Image2DDepthBuffer;
+	class GraphicPass;
 
 	class Pipeline {
 	protected:
@@ -44,6 +45,8 @@ namespace LT {
 		VertexBuffer* m_pVertexBuffer;
 		IndexBuffer* m_pIndexBuffer;
 
+		// 该实例由当前实例管理
+		GraphicPass* m_pGraphicPass;
 
 		void CreateSyncObjects();
 		void RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex);

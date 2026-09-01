@@ -15,7 +15,7 @@ struct MVPMatrix{
 // binding = 0
 // set = 0 : VertexShader
 [[vk::binding(0, 0)]]
-ConstantBuffer<MVPMatrix> u_MVPMatix;
+ConstantBuffer<MVPMatrix, Std140DataLayout> u_MVPMatix;
 
 [shader("vertex")]
 SVertexOutput VertMain(SVertexInput vertIn){
@@ -52,15 +52,15 @@ SVertexOutput VertMain(SVertexInput vertIn){
 
 // 法线和切线
 #ifdef VERT_NORMAL
-	output.fragNormal = mul(normalMat, vertIn.vertNormal);
+	output.fragNormal = mul(u_MVPMatix.normalMat, vertIn.vertNormal);
 #endif
 
 #ifdef VERT_TANGENT
-	output.fragTangent = mul(normalMat, vertIn.vertTangent);
+	output.fragTangent = mul(u_MVPMatix.normalMat, vertIn.vertTangent);
 #endif
 
 #ifdef VERT_BITANGENT
-	output.fragBitangent = mul(normalMat, vertIn.vertBitangent);
+	output.fragBitangent = mul(u_MVPMatix.normalMat, vertIn.vertBitangent);
 #endif
 	
 // 顶点颜色	

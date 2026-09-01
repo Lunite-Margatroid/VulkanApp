@@ -15,6 +15,9 @@ namespace LT {
 			glm::mat4 modelMat;
 			glm::mat4 viewMat;
 			glm::mat4 projectionMat;
+			glm::mat4 mvpMat;
+			glm::vec4 normalMatCol[3];
+			glm::vec4 cameraPos;
 		} m_MVPMatBuf;
 
 
@@ -29,6 +32,9 @@ namespace LT {
 		void SetModelMat(const float* pModelMat);
 		void SetViewMat(const float* pViewMat);
 		void SetProjectionMat(const float* pProjectionMat);
+		void SetCameraPos(const float* pCameraPos);
+		void SetNormalMat(const float* pNormalMat);
+		void SetMVPMat(const float* pNormalMat);
 
 		void Resize(uint32_t nWidth, uint32_t nHeight);
 

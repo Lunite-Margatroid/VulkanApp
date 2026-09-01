@@ -117,7 +117,7 @@ namespace LT {
 			auto iter = mapBuffer.find(nID);
 			if (iter != mapBuffer.end())
 			{
-				iter->second;
+				return iter->second;
 			}
 		}
 

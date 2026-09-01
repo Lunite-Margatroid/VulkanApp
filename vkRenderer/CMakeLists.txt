@@ -115,6 +115,7 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/buffer"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/deviceImage"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline/renderpass"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/sampler"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/mesh"	
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline/stage"

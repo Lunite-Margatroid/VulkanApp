@@ -13,6 +13,8 @@
 
 #include "ImageManager.h"
 
+#include "GraphicPass.hpp"
+
 namespace LT {
 	Pipeline::Pipeline()
 		:m_nWidth(vkContext::GetSwapChain().m_sSwapChainInfo.width)
@@ -23,6 +25,24 @@ namespace LT {
 
 		vk::Device& device = vkContext::GetVkDevice();
 
+		m_pGraphicPass = new GraphicPass();
+		RenderPassFlag nFlag = 0;
+		SetBackCull(nFlag, false);
+		SetClockwiseFront(nFlag, false);
+		SetBlendEnable(nFlag, true);
+		SetPolygonMode(nFlag, vk::PolygonMode::eFill);
+		SetLineWidth(nFlag, 1.f);
+		SetPrimitiveTopology(nFlag, vk::PrimitiveTopology::eTriangleList);
+		util::SetBit(nFlag, static_cast<uint32_t>(VertexChannel::Position) | static_cast<uint32_t>(VertexChannel::UV) | static_cast<uint32_t>(VertexChannel::Normal));
+
+		LOG_INFO("RenderPass Desc: \n%s", GetRenderPassDescString(nFlag).c_str());
+
+		m_pGraphicPass->SetRenderPassFlag(nFlag);
+		m_pGraphicPass->AddShaderModule("FragmentShaderMainTex");
+		m_pGraphicPass->AddShaderModule("CommonVertexShader");
+		m_pGraphicPass->Init();
+
+		/*
 		// 创建着色器
 		std::vector<std::string> vecEntryPoint = { "VertMain", "FragMain" };
 		std::filesystem::path shaderPath = "./slang/HelloTriangleShader.slang";
@@ -200,7 +220,7 @@ namespace LT {
 
 		m_vkPipeline = result.value;
 
-
+		*/
 
 		// 创建深度缓冲
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
@@ -214,12 +234,17 @@ namespace LT {
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
 			ImageManager::DeleteImage(m_vecDepthBuffer[i]);
 		}
-
+		/*
 		device.destroyDescriptorSetLayout(m_vkDescSetLayout);
 
 		device.destroyShaderModule(m_vkShaderMod);
 		device.destroyPipelineLayout(m_vkPipelineLayout);
 		device.destroyPipeline(m_vkPipeline);
+		*/
+
+		if (m_pGraphicPass) {
+			delete m_pGraphicPass;
+		}
 
 		for (int i = 0; i < m_vkSemPresentComplete.size(); i++)
 		{
@@ -267,6 +292,18 @@ namespace LT {
 		 __FUNCTION__, imageIndex, static_cast<unsigned int>(m_vecDepthBuffer.size()));
 
 		auto debugCommandBuffer = vkContext::GetCmdBuffer(nFrameIndex);
+
+		RecordCommandInfo cmdInfo;
+		cmdInfo.nFlightFrameIndex = nFrameIndex;
+		cmdInfo.nHeight = m_nHeight;
+		cmdInfo.nWidth = m_nWidth;
+		cmdInfo.nDepthStencilID = m_vecDepthBuffer[nFrameIndex]->GetImageID();
+		cmdInfo.vecImageIDColor.push_back(SWAPCHAIN_IMAGE_ID);
+		cmdInfo.vecVertexBufferID.push_back(m_pVertexBuffer->GetBufferID());
+		cmdInfo.nIndexBufferID = m_pIndexBuffer->GetBufferID();
+		m_pGraphicPass->RecordCommand(cmdInfo);
+
+		/*
 
 		// 开始录入
 		vk::CommandBufferBeginInfo cbbi;
@@ -399,6 +436,9 @@ namespace LT {
 		);
 
 		debugCommandBuffer.end();
+		*/
+
+
 	}
 
 	void Pipeline::TransitionImageLayout(
@@ -491,40 +531,44 @@ namespace LT {
 
 		// 获取渲染缓冲
 		// 等待交换链交换缓冲完成
-		auto imageIndex = device.acquireNextImageKHR(
-			nativeSwapChain,
-			UINT64_MAX,
-			m_vkSemPresentComplete[nFrameIndex] // 完成后发射信号
-		);
+		int32_t resultIndex = swapChain.AcquireNextImage(UINT64_MAX, m_vkSemPresentComplete[nFrameIndex], vk::Fence());
 
-		RENDERER_ASSERT(imageIndex.has_value(), "Acquire Image Failed.");
+		RENDERER_ASSERT(resultIndex >= 0, "Acquire Image Failed.");
 
-		unsigned int nImgIndex = imageIndex.value;
+		unsigned int nImgIndex = resultIndex;
 		// TODO: nImgIndex 可能大于2，暂时取模2
 		// 查一下原因
-		nImgIndex %= 2;
+		//nImgIndex %= 2;
 
 		// 录入渲染命令
-		RecordCommandBufferDebug(nImgIndex, nFrameIndex);
+		RecordCommandBufferDebug(nFrameIndex, nFrameIndex);
 
 		// 提交渲染命令
 		vk::PipelineStageFlags flagWaitDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
 
 		vk::Semaphore* pSemRenderFinish = nullptr;
-		if (nImgIndex == 0)
+		if (nFrameIndex == 0)
 		{
-			pSemRenderFinish = &m_vkSemRenderFinish[nImgIndex];
+			pSemRenderFinish = &m_vkSemRenderFinish[nFrameIndex];
 		}
-		else if (nImgIndex == 1)
+		else if (nFrameIndex == 1)
 		{
-			pSemRenderFinish = &m_vkSemRenderFinish[nImgIndex];
+			pSemRenderFinish = &m_vkSemRenderFinish[nFrameIndex];
 		}
 		else
 		{
 			pSemRenderFinish = &m_vkSemRenderFinish[0];
 		}
 
+		GraphicSubmitInfo submitInfo;
+		submitInfo.nFlightFrameIndex = nFrameIndex;
+		submitInfo.vkFenceToSet = m_vkFenceDraw[nFrameIndex];
+		submitInfo.vecSemToWait.push_back(m_vkSemPresentComplete[nFrameIndex]);
+		submitInfo.vecSwapDstMask.push_back(flagWaitDstStageMask);
+		submitInfo.vecSemToSignal.push_back(*pSemRenderFinish);
+		m_pGraphicPass->Submit(submitInfo);
 
+		/*
 		vk::SubmitInfo si;
 		si.setWaitSemaphoreCount(1)
 			.setPWaitSemaphores(&m_vkSemPresentComplete[nFrameIndex]) // 等待交换链交换完成
@@ -538,6 +582,7 @@ namespace LT {
 			si,
 			m_vkFenceDraw[nFrameIndex] // 渲染完成之前 禁止获取缓冲
 		);
+		*/
 
 		// 交换链命令
 		vk::PresentInfoKHR pi;
@@ -599,40 +644,43 @@ namespace LT {
 
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)
 		{
-			vk::DescriptorBufferInfo dbi;
-			dbi
-				.setBuffer(m_vecConstBufferMVPMat[i]->GetNativeBuffer())
-				.setOffset(0)
-				.setRange(m_vecConstBufferMVPMat[i]->Size())
-				;
+			m_pGraphicPass->BindConstBuffer(m_vecConstBufferMVPMat[i]->GetBufferID(), BindingSpace::eVertexShader, 0, i);
+			m_pGraphicPass->BindImage2D(m_pImage->GetImageID(), BindingSpace::eFragmentShader, 1, i);
 
-			vk::DescriptorImageInfo dii;
-			dii
-				.setImageView(m_pImage->GetNativeImageView())
-				.setSampler(m_pSampler->GetNativeSampler())
-				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-				;
+			//vk::DescriptorBufferInfo dbi;
+			//dbi
+			//	.setBuffer(m_vecConstBufferMVPMat[i]->GetNativeBuffer())
+			//	.setOffset(0)
+			//	.setRange(m_vecConstBufferMVPMat[i]->Size())
+			//	;
 
-			std::array<vk::WriteDescriptorSet, 2> wds;
-			wds[0]
-				.setDstSet(m_vecDescriptorSets[i])
-				.setDstBinding(0)
-				.setDstArrayElement(0)
-				.setDescriptorCount(1)
-				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-				.setPBufferInfo(&dbi)
-				;
+			//vk::DescriptorImageInfo dii;
+			//dii
+			//	.setImageView(m_pImage->GetNativeImageView())
+			//	.setSampler(m_pSampler->GetNativeSampler())
+			//	.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+			//	;
 
-			wds[1]
-				.setDstSet(m_vecDescriptorSets[i])
-				.setDstBinding(1)
-				.setDstArrayElement(0)
-				.setDescriptorCount(1)
-				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-				.setPImageInfo(&dii)
-				;
+			//std::array<vk::WriteDescriptorSet, 2> wds;
+			//wds[0]
+			//	.setDstSet(m_vecDescriptorSets[i])
+			//	.setDstBinding(0)
+			//	.setDstArrayElement(0)
+			//	.setDescriptorCount(1)
+			//	.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+			//	.setPBufferInfo(&dbi)
+			//	;
 
-			device.updateDescriptorSets(wds, {});
+			//wds[1]
+			//	.setDstSet(m_vecDescriptorSets[i])
+			//	.setDstBinding(1)
+			//	.setDstArrayElement(0)
+			//	.setDescriptorCount(1)
+			//	.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+			//	.setPImageInfo(&dii)
+			//	;
+
+			//device.updateDescriptorSets(wds, {});
 
 		}
 	}

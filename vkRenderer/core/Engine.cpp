@@ -105,6 +105,16 @@ namespace LT {
 
 		m_pDebugRenderer->SetViewMat(reinterpret_cast<float*>(glm::value_ptr(viewMat)));
 		m_pDebugRenderer->SetProjectionMat(reinterpret_cast<float*>(glm::value_ptr(projectionMat)));
+
+		glm::vec4 cameraPos = glm::vec4(m_persCamera.GetEye(), 1.0f);
+
+
+		m_pDebugRenderer->SetCameraPos(reinterpret_cast<float*>(&cameraPos));
+
+		glm::mat4 mvpMat = projectionMat * viewMat;
+
+		m_pDebugRenderer->SetMVPMat(reinterpret_cast<float*>(&mvpMat));
+
 		m_pDebugRenderer->UpdateConstBufer();
 
 		if (m_pDebugRenderer)
@@ -143,6 +153,16 @@ namespace LT {
 		m_pDebugRenderer->SetViewMat(reinterpret_cast<float*>(&viewMat));
 		m_pDebugRenderer->SetProjectionMat(reinterpret_cast<float*>(&projectionMat));
 		m_pDebugRenderer->SetModelMat(reinterpret_cast<float*>(&modelMat));
+		glm::vec4 cameraPos = glm::vec4(m_persCamera.GetEye(), 1.0f);
+
+		glm::mat4 normalMat = glm::transpose(glm::inverse(modelMat));
+
+		m_pDebugRenderer->SetCameraPos(reinterpret_cast<float*>(&cameraPos));
+		m_pDebugRenderer->SetNormalMat(reinterpret_cast<float*>(&normalMat));
+
+		glm::mat4 mvpMat = projectionMat * viewMat * modelMat;
+
+		m_pDebugRenderer->SetMVPMat(reinterpret_cast<float*>(&mvpMat));
 
 		m_pDebugRenderer->UpdateConstBufer();
 	}

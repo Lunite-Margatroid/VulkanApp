@@ -122,7 +122,7 @@ namespace LT {
 			if(nImageID == SWAPCHAIN_IMAGE_ID)
 			{
 				// Handle swapchain image
-				vkContext::GetSwapChain().GetCurrentTargetImage();
+				return vkContext::GetSwapChain().GetCurrentTargetImage();
 
 			}
 		}

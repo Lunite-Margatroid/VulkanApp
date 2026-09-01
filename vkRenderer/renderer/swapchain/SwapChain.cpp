@@ -200,4 +200,21 @@ namespace LT {
 	vk::ImageView SwapChain::GetCurrentTargetImageView() {
 		return m_imageViews[m_nCurrentImageIndex % m_sSwapChainInfo.nImageCount];
 	}
+	int32_t SwapChain::AcquireNextImage(uint64_t nTimeOut, vk::Semaphore sem, vk::Fence fence)
+	{
+		auto imageIndexValue = m_vkDevice.acquireNextImageKHR(
+			m_vkSwapChain,
+			nTimeOut,
+			sem,
+			fence
+		);
+
+		if (imageIndexValue.has_value())
+		{
+			m_nCurrentImageIndex = imageIndexValue.value;
+			return static_cast<int32_t>(imageIndexValue.value);
+		}
+		else
+			return -1;
+	}
 }
