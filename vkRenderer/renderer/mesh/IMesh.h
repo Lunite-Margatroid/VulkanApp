@@ -4,6 +4,9 @@
 
 
 namespace LT {
+
+	using MeshID = int64_t;
+
 	class IMesh {
 	public:
 		virtual ~IMesh() {}

@@ -15,6 +15,9 @@ file(GLOB SOURCES
 	"renderer/mesh/*.cpp"
 	"util/*.cpp"
 	"renderer/pipeline/renderpass/*.cpp"
+	"renderer/pipeline/stage/*.cpp"
+	"renderer/material/*.cpp"
+	"renderer/entity/*.cpp"
 )
 
 #set(HEADERS
@@ -40,6 +43,12 @@ file(GLOB PRIVATE_HEADERS
 	"renderer/mesh/*.hpp"
 	"renderer/pipeline/renderpass/*.h"
 	"renderer/pipeline/renderpass/*.hpp"
+	"renderer/pipeline/stage/*.h"
+	"renderer/pipeline/stage/*.hpp"
+	"renderer/material/*.h"
+	"renderer/material/*.hpp"
+	"renderer/entity/*.h"
+	"renderer/entity/*.hpp"
 )
 
 # 创建静态库
@@ -101,18 +110,22 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/core"
 		"${CMAKE_CURRENT_SOURCE_DIR}/util"
     PRIVATE 
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/swapchain"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/buffer"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/deviceImage"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/sampler"
-		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/mesh"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/mesh"	
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline/stage"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/material"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/entity"
         "${GLM_INSTALLED_DIR}/include"
 		"${SLANG_INSTALLED_DIR}/include"
-		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
 		"${Vulkan_INCLUDE_DIRS}"
 		"${OIIO_INSTALLED_DIR}/include"
 		"${VMA_INCLUDE_DIR}"
+
 )
 
 
