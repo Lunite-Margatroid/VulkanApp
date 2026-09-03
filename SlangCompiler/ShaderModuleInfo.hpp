@@ -16,6 +16,11 @@ namespace LT {
 		BindingInfo(uint32_t index, uint32_t space) :
 			nIndex(index), eSpace(static_cast<BindingSpace>(space))
 		{}
+
+		BindingInfo(uint32_t index, BindingSpace eSpace) :
+			nIndex(index), eSpace(eSpace)
+		{
+		}
 	};
 
 	struct ShaderModuleInfo {

@@ -33,6 +33,7 @@ namespace LT {
 		vk::Fence vkFenceToSet;
 
 		GraphicSubmitInfo()
+			:nFlightFrameIndex(0)
 		{}
 	};
 
@@ -56,9 +57,13 @@ namespace LT {
 		vk::Pipeline m_vkPipeline;
 
 	public:
-		GraphicPass() = default;
+		GraphicPass();
 		~GraphicPass();
 
+		GraphicPass& operator = (const GraphicPass&) = delete;
+		GraphicPass& operator = (GraphicPass&&) = delete;
+		GraphicPass(GraphicPass&&) = delete;
+		GraphicPass(const GraphicPass&) = delete;
 
 		void Init();
 

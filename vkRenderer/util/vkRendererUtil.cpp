@@ -40,6 +40,7 @@ namespace LT {
 
 			return vk::createInstance(instanceCreateInfo);
 		}
+
 	}
 }
 

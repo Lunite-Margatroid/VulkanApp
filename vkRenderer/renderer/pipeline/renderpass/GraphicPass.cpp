@@ -12,6 +12,11 @@
 #include "SamplerManager.h"
 
 namespace LT {
+	GraphicPass::GraphicPass()
+		:m_nFlag(0)
+	{
+
+	}
 	GraphicPass::~GraphicPass()
 	{
 		vk::Device& device = vkContext::GetVkDevice();

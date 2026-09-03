@@ -4,11 +4,12 @@
 #include "vkRendererCommon.h"
 #include "vkContext.h"
 
-#include "MeshStatic.h"
+#include "MeshStatic.hpp"
 
 namespace LT {
-	MeshStatic::MeshStatic() 
-		: m_pPosition(nullptr)
+	MeshStatic::MeshStatic(MeshID nID)
+		: IMesh(nID)
+		, m_pPosition(nullptr)
 		, m_pNormal(nullptr)
 		, m_pTangent(nullptr)
 		, m_pUV0(nullptr)

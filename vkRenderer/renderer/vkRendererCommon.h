@@ -31,3 +31,5 @@ using BYTE = uint8_t;
 #include "vulkan/vulkan_raii.hpp"
 
 #include "logger.hpp"
+
+constexpr int64_t INVALID_ITEM_ID = -1;
