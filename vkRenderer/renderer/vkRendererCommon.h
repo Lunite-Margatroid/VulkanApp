@@ -32,4 +32,7 @@ using BYTE = uint8_t;
 
 #include "logger.hpp"
 
-constexpr int64_t INVALID_ITEM_ID = -1;
+namespace LT {
+	constexpr int64_t INVALID_ITEM_ID = -1;
+	using RenderFlagType = uint64_t;
+} // namespace LT

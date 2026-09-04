@@ -5,10 +5,9 @@
 
 namespace LT {
 	class MeshStatic;
-
 	DECLEAR_SINGLETON_MANAGER_BEGIN(MeshManager, IMesh, MeshID, Mesh)
 public:
-		static MeshStatic* CreateStaticMesh();
+		static MeshRef CreateStaticMesh();
 	DECLEAR_SINGLETON_MANAGER_END(MeshManager, IMesh, MeshID, Mesh)
 
 } // namespace

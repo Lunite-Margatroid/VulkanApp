@@ -10,6 +10,22 @@ namespace LT {
 	class Image2DShaderRes;
 	class Image2DDepthBuffer;
 	class GraphicPass;
+	class EntityRender; 
+
+	struct FrameInfo {
+		// 从Swapchain AcquireNextImage得到的index
+		// -1表示不需要present
+		int m_nImageIndex;
+		// 只增的帧序列
+		uint64_t m_nFrameIndex;
+		// Flight Frame的索引
+		// 小于最大Flight Frame的数量
+		uint64_t m_nIndexInFlight;
+		// 渲染对象
+		std::vector<EntityRender*> m_vecEntityRender;
+
+	};
+
 
 	class Pipeline {
 	protected:

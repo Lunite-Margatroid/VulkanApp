@@ -6,27 +6,11 @@
 #include "IMaterial.hpp"
 
 namespace LT {
-	class MaterialManager {
-	private:
-		using MaterialPtr = util::PtrWithRefCount<IMaterial>;
 
-	private:
-		std::map<MaterialID, MaterialPtr> m_mapMaterial;
-		uint64_t m_nIDCounter;
+	DECLEAR_SINGLETON_MANAGER_BEGIN(MaterialManager, IMaterial, MaterialID, Material)
 
-	private:
-		MaterialManager();
-		~MaterialManager();
+public:
+	static MaterialRef CreateMaterial(MaterialType eType);
 
-	public:
-		unsigned int RefIncrease(MaterialID id;);
-		unsigned int RefDecrease();
-
-	public:
-		static void Init();
-		static void Release();
-		static MaterialManager& GetInstance();
-	private:
-		static MaterialManager* s_pInstance;
-	};
+	DECLEAR_SINGLETON_MANAGER_END(MaterialManager, IMaterial, MaterialID, Material)
 }

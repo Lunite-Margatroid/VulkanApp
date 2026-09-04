@@ -7,6 +7,9 @@
 #include "ImageManager.h"
 #include "image/ImgRes.h"
 #include "sampler/SamplerManager.h"
+#include "MaterialManager.hpp"
+#include "MeshManager.hpp"
+#include "MeshStatic.hpp"
 
 namespace LT {
 	Renderer::Renderer()
@@ -15,45 +18,116 @@ namespace LT {
 		BufferManager::Init();
 		ImageManager::Init();
 		SamplerManager::Init();
+		MaterialManager::Init();
+		MeshManager::Init();
+
 
 		SamplerManager::GetDefaultImageSampler();
 
 		m_pPipeline = std::make_unique<Pipeline>();
 
+		MeshRef refMesh = MeshManager::CreateStaticMesh();
+		float arrPosition[] = {
+		-0.5f, 0.5f,0.5f,
+		0.5f, 0.5f,0.5f,
+		0.5f, -0.5f,0.5f,
+		-0.5f, -0.5f,0.5f,
 
-		// vertex buffer
-		float vertBuffer[] = {
-			-0.5f, 0.5f,0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,
-			0.5f, 0.5f,0.5f,		1.f, 0.f,		0.f, 1.f,0.f,
-			0.5f, -0.5f,0.5f,		1.f, 1.f,		0.f,0.f, 1.f,
-			-0.5f, -0.5f,0.5f,		0.f, 1.f,		1.f,1.f,1.f,
+		-0.5f, 0.5f,-0.5f,
+		0.5f, 0.5f,-0.5f,
+		0.5f, -0.5f,-0.5f,
+		-0.5f, -0.5f,-0.5f,
 
-			-0.5f, 0.5f,-0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,
-			0.5f, 0.5f,-0.5f,		1.f, 0.f,		0.f, 1.f,0.f,	
-			0.5f, -0.5f,-0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,	
-			-0.5f, -0.5f,-0.5f,		0.f, 1.f,		1.f,1.f,1.f,	
+		0.5f, -0.5f, 0.5f,
+		0.5f, 0.5f, 0.5f,
+		0.5f, 0.5f, -0.5f,
+		0.5f, -0.5f, -0.5f,
 
-			0.5f, -0.5f, 0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,	
-			0.5f, 0.5f, 0.5f,		1.f, 0.f,		0.f, 1.f,0.f,		
-			0.5f, 0.5f, -0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,		
-			0.5f, -0.5f, -0.5f,		0.f, 1.f,		1.f,1.f,1.f,		
+		-0.5f, -0.5f, 0.5f,
+		-0.5f, 0.5f, 0.5f,
+		-0.5f, 0.5f, -0.5f,
+		-0.5f, -0.5f, -0.5f,
 
-			-0.5f, -0.5f, 0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,
-			-0.5f, 0.5f, 0.5f,		1.f, 0.f,		0.f, 1.f,0.f,	
-			-0.5f, 0.5f, -0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,	
-			-0.5f, -0.5f, -0.5f,	0.f, 1.f,		1.f,1.f,1.f,	
-
-			-0.5f,-0.5f,  0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,	
-			0.5f,-0.5f,  0.5f,		1.f, 0.f,		0.f, 1.f,0.f,		
-			0.5f,-0.5f,  -0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,		
-			-0.5f,-0.5f,  -0.5f,	0.f, 1.f,		1.f,1.f,1.f,		
+		-0.5f,-0.5f,  0.5f,
+		0.5f,-0.5f,  0.5f,
+		0.5f,-0.5f,  -0.5f,
+		-0.5f,-0.5f,  -0.5f,
 
 
-			-0.5f,0.5f,  0.5f,		0.f, 0.f,		1.0f, 0.0f, 0.f,	
-			0.5f,0.5f,  0.5f,		1.f, 0.f,		0.f, 1.f,0.f,		
-			0.5f,0.5f,  -0.5f,		1.f, 1.f,		0.f, 0.f, 1.f,		
-			-0.5f,0.5f,  -0.5f,		0.f, 1.f,		1.f,1.f,1.f,		
+		-0.5f,0.5f,  0.5f,
+		0.5f,0.5f,  0.5f,
+		0.5f,0.5f,  -0.5f,
+		-0.5f,0.5f,  -0.5f,
 		};
+
+		float arrUV[] = {
+		0.f, 0.f,
+		1.f, 0.f,
+		1.f, 1.f,
+		0.f, 1.f,
+
+		0.f, 0.f,
+		1.f, 0.f,
+		1.f, 1.f,
+		0.f, 1.f,
+
+		0.f, 0.f,
+		1.f, 0.f,
+		1.f, 1.f,
+		0.f, 1.f,
+
+		0.f, 0.f,
+		1.f, 0.f,
+		1.f, 1.f,
+		0.f, 1.f,
+
+		0.f, 0.f,
+		1.f, 0.f,
+		1.f, 1.f,
+		0.f, 1.f,
+
+
+		0.f, 0.f,
+		1.f, 0.f,
+		1.f, 1.f,
+		0.f, 1.f,
+		};
+
+		float arrColor[] = {
+			1.0f, 0.0f, 0.f,
+			0.f, 1.f,0.f,
+			0.f,0.f, 1.f,
+			1.f,1.f,1.f,
+
+			1.0f, 0.0f, 0.f,
+			0.f, 1.f,0.f,
+			0.f, 0.f, 1.f,
+			1.f,1.f,1.f,
+
+			1.0f, 0.0f, 0.f,
+			0.f, 1.f,0.f,
+			0.f, 0.f, 1.f,
+			1.f,1.f,1.f,
+
+			1.0f, 0.0f, 0.f,
+			0.f, 1.f,0.f,
+			0.f, 0.f, 1.f,
+			1.f,1.f,1.f,
+
+			1.0f, 0.0f, 0.f,
+			0.f, 1.f,0.f,
+			0.f, 0.f, 1.f,
+			1.f,1.f,1.f,
+
+
+			1.0f, 0.0f, 0.f,
+			0.f, 1.f,0.f,
+			0.f, 0.f, 1.f,
+			1.f,1.f,1.f,
+		};
+
+		refMesh->SetVertexPosition(reinterpret_cast<MeshStatic::SPosition*>(arrPosition), 24);
+		refMesh->SetUV(reinterpret_cast<MeshStatic::SUV*>(arrUV), 24, 0);
 
 		m_pDebugVertexBuffer = BufferManager::CreateVertexBuffer(sizeof(vertBuffer), vertBuffer, 24);
 
@@ -119,6 +193,8 @@ namespace LT {
 		m_pPipeline.reset();
 
 
+		MeshManager::Release();
+		MaterialManager::Release();
 		SamplerManager::Release();
 		ImageManager::Release();
 		BufferManager::Release();

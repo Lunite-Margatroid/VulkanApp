@@ -54,6 +54,12 @@ namespace LT {
 
 		return pVertexBuffer;
 	}
+
+	VertexBuffer* BufferManager::CreateVertexBuffer(MeshRef refMesh)
+	{
+		return nullptr;
+	}
+
 	StagingBuffer* BufferManager::CreateStagingBuffer(size_t nSize, const void* pData)
 	{
 

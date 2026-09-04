@@ -5,6 +5,8 @@
 
 namespace LT {
 	class MaterialMainTexture : public IMaterial {
+		friend class MaterialManager;
+
 	protected:
 		MaterialMainTexture(MaterialID nID);
 		~MaterialMainTexture() = default;

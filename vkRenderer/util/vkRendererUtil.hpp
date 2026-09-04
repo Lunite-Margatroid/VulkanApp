@@ -36,17 +36,20 @@ namespace LT
 			}
 
 			ResourceRef(const ResourceRef& other) {
+				TypeRefDecrease{}(m_nID);
 				m_nID = other.m_nID;
 				TypeRefIncrease{}(m_nID);
 			}
 
 			ResourceRef(ResourceRef&& other) {
+				TypeRefDecrease{}(m_nID);
 				m_nID = other.m_nID;
 				other.m_nID = INVALID_ITEM_ID;
 			}
 
 			ResourceRef& operator = (ResourceRef&& other) {
 				if (this != &other) {
+					TypeRefDecrease{}(m_nID);
 					m_nID = other.m_nID;
 					other.m_nID = INVALID_ITEM_ID;
 				}
@@ -55,6 +58,7 @@ namespace LT
 
 			ResourceRef& operator = (const ResourceRef& other) {
 				if (this != &other) {
+					TypeRefDecrease{}(m_nID);
 					m_nID = other.m_nID;
 					TypeRefIncrease{}(m_nID);
 				}
@@ -140,7 +144,6 @@ namespace LT
 				}
 				return iter->second.GetPtr();
 			}
-
 		public:
 			unsigned int RefIncrease(TypeID nID) {
 				auto iter = m_mapResources.find(nID);
@@ -156,13 +159,19 @@ namespace LT
 				{
 					return 0;
 				}
-				return iter->second.DecreaseRefCount();
+				unsigned int nRefCount = iter->second.DecreaseRefCount();
+				if (nRefCount == 0)
+				{
+					m_mapResources.erase(nID);
+				}
+				return nRefCount;
 			}
 		};
 	} // namespace util
 
 
 #define DECLEAR_SINGLETON_MANAGER_BEGIN(ManagerType, TargetType, IDType, TargetName) \
+	class TargetName##Ref;\
 	class ManagerType : public util::ManagerTemplate<IDType, TargetType>{\
 	private:\
 		using TargetName##Ptr = util::PtrWithRefCount<TargetType>;\
@@ -170,9 +179,10 @@ namespace LT
 \
 		ManagerType() = default;\
 		~ManagerType();\
+		TargetName##Ref Insert(IDType id, TargetType* pItem);\
 	private:\
 		static ManagerType* s_pInstance;\
-\
+		\
 	public:\
 		static void Init();\
 		static void Release();\
@@ -185,7 +195,7 @@ private:
 #define DECLEAR_SINGLETON_MANAGER_END(ManagerType, TargetType, IDType, TargetName) \
 };\
 	struct ManagerType##GetPtr {\
-	IMesh* operator ()(IDType nID)const {\
+	TargetType* operator ()(IDType nID)const {\
 		return ManagerType::Get##TargetName(nID);\
 	}\
 	};\
@@ -202,7 +212,7 @@ private:
 		}\
 	};\
 \
-	using TargetName##Ref = util::ResourceRef<MeshID, IMesh, ManagerType##GetPtr, ManagerType##RefIncrease, ManagerType##RefDecrease>;\
+	using TargetName##Ref = util::ResourceRef<IDType, TargetType, ManagerType##GetPtr, ManagerType##RefIncrease, ManagerType##RefDecrease>;\
 
 
 #define IMPLEMENT_SINGLETON_MANAGER(ManagerType, TargetType, IDType, TargetName)\
@@ -227,6 +237,17 @@ TargetType* ManagerType::Get##TargetName(IDType nID)\
 {\
 	ManagerType& mgr = GetInstance();\
 	return mgr.GetResourcePtr(nID); \
+}\
+TargetName##Ref ManagerType::Insert(IDType nID, TargetType* pItem){\
+	if (m_mapResources.find(nID) != m_mapResources.end())\
+	{\
+		RENDERER_ASSERT(false, "Manager Repeating Insert.");\
+		return TargetName##Ref(INVALID_ITEM_ID);\
+	}\
+	TargetName##Ptr ptrWarpper(pItem);\
+	m_mapResources[nID] = ptrWarpper;\
+	ptrWarpper.m_nRefCount = 0;\
+	return TargetName##Ref(nID); \
 }\
 
 }// namespace LT

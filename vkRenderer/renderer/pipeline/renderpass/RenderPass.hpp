@@ -17,7 +17,7 @@ namespace LT {
 	constexpr uint32_t LINE_WIDTH_BIT_OFFSET = 19;
 
 	using RenderPassFlag = uint64_t;
-	enum class RenderPassFlagBits : uint64_t {
+	enum class RenderPassFlagBits : RenderFlagType {
 		eBackCull = (1ull << 11), // 11 背面剔除
 		eClockwise = (1ull << 12), // 12 顺时针为正面
 		ePrimitiveMask = (15ull << PRIMITIVE_BIT_OFFSET), // 13-16 记录图元类型
