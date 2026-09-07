@@ -11,7 +11,7 @@ namespace LT {
 		, m_pMapped(nullptr)
 	{
 	}
-	ConstBuffer::ConstBuffer(BufferID id, size_t nSize, void* pBuffer)
+	ConstBuffer::ConstBuffer(BufferID id, size_t nSize, const void* pBuffer)
 		: Buffer(id, nSize, pBuffer)
 		, m_pMapped(nullptr)
 	{

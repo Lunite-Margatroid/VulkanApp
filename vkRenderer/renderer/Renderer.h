@@ -1,7 +1,8 @@
 #pragma once
 #include "Pipeline.h"
 #include "VertexBuffer.h"
-
+#include "EntityRenderMesh.hpp"
+#include "MaterialMainTexture.hpp"
 
 namespace LT {
 	class Renderer {
@@ -10,6 +11,8 @@ namespace LT {
 		VertexBuffer* m_pDebugVertexBuffer;
 		IndexBuffer* m_pDebugIndexBuffer;
 		Image2DShaderRes* m_pDebugImage;
+		std::unique_ptr<EntityRenderMesh> m_pEntity;
+		MaterialRef m_refMtl;
 
 		struct MVPMatrixBuffer {
 			glm::mat4 modelMat;

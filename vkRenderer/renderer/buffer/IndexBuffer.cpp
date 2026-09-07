@@ -11,7 +11,7 @@ namespace LT {
 		, m_nIndexCount(0)
 	{
 	}
-	IndexBuffer::IndexBuffer(BufferID id, size_t nSize, void* pData, uint64_t nIndexCount)
+	IndexBuffer::IndexBuffer(BufferID id, size_t nSize, const void* pData, uint64_t nIndexCount)
 		: BufferDst(id, nSize, pData)
 		, m_nIndexCount(nIndexCount)
 	{

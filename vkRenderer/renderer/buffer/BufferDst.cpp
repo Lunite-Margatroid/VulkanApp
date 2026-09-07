@@ -8,7 +8,7 @@ namespace LT {
 	{
 	}
 
-	BufferDst::BufferDst(BufferID id, size_t nSize, void* pData)
+	BufferDst::BufferDst(BufferID id, size_t nSize, const void* pData)
 		: Buffer(id, nSize, pData)
 	{
 	}

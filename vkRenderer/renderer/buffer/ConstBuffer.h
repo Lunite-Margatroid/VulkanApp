@@ -12,7 +12,7 @@ namespace LT {
 
 	protected:
 		ConstBuffer(BufferID id);
-		ConstBuffer(BufferID id, size_t nSize, void* pBuffer);
+		ConstBuffer(BufferID id, size_t nSize, const void* pBuffer);
 
 		ConstBuffer(const ConstBuffer&) = delete;
 		ConstBuffer(ConstBuffer&&) = delete;

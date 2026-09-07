@@ -40,7 +40,7 @@ namespace LT {
 
 	}
 
-	VertexBuffer::VertexBuffer(BufferID id, size_t nSize, void* pData, uint64_t vertexCount)
+	VertexBuffer::VertexBuffer(BufferID id, size_t nSize, const void* pData, uint64_t vertexCount)
 		:BufferDst(id, nSize, pData),
 		m_nVertexCount(vertexCount)
 	{

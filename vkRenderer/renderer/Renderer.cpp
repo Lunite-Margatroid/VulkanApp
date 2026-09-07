@@ -10,6 +10,7 @@
 #include "MaterialManager.hpp"
 #include "MeshManager.hpp"
 #include "MeshStatic.hpp"
+#include "MaterialManager.hpp"
 
 namespace LT {
 	Renderer::Renderer()
@@ -126,23 +127,6 @@ namespace LT {
 			1.f,1.f,1.f,
 		};
 
-		refMesh->SetVertexPosition(reinterpret_cast<MeshStatic::SPosition*>(arrPosition), 24);
-		refMesh->SetUV(reinterpret_cast<MeshStatic::SUV*>(arrUV), 24, 0);
-
-		m_pDebugVertexBuffer = BufferManager::CreateVertexBuffer(sizeof(vertBuffer), vertBuffer, 24);
-
-		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
-			VertexChannel::Position, BufferDataType::TypeFloat32, 3, 0
-		));
-		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
-			VertexChannel::Color, BufferDataType::TypeFloat32, 3, 12
-		));
-		m_pDebugVertexBuffer->AddVertexChannel(VertexChannelDesc(
-			VertexChannel::UV, BufferDataType::TypeFloat32, 2, 24
-		));
-
-		m_pPipeline->SetVertexBuffer(m_pDebugVertexBuffer);
-
 		// index buffer
 		uint32_t indices[36] = {
 			0,1,2,2,3,0
@@ -153,11 +137,22 @@ namespace LT {
 			indices[i] = indices[i - 6] + 4;
 		}
 
-		m_pDebugIndexBuffer = BufferManager::CreateIndexBuffer(sizeof(indices), indices, 36);
+		refMesh->SetVertexPosition(reinterpret_cast<MeshStatic::SPosition*>(arrPosition), 24);
+		refMesh->SetUV(reinterpret_cast<MeshStatic::SUV*>(arrUV), 24, 0);
+		refMesh->SetPrimitive(vk::PrimitiveTopology::eTriangleList);
 
-		m_pPipeline->SetIndexBuffer(m_pDebugIndexBuffer);
+		refMesh->SetIndexBuffer(indices, 36);
+
+		auto[pDebugVertexBuffer, pDebugIndexBuffer] = BufferManager::CreateVertexIndexBuffer(refMesh);
+		m_pDebugVertexBuffer = pDebugVertexBuffer;
+		m_pDebugIndexBuffer = pDebugIndexBuffer;
+		
+		m_refMtl = MaterialManager::CreateMaterial(MaterialType::eMainTexture);
 
 
+		m_pEntity.reset(new EntityRenderMesh(0));
+		m_pEntity->SetMaterial(m_refMtl);
+		m_pEntity->SetMesh(refMesh);
 		
 		// MVP mat
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)

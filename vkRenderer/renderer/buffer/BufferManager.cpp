@@ -42,7 +42,7 @@ namespace LT {
 		return static_cast<BufferID>(m_nBufferIDCount++);
 	}
 
-	VertexBuffer* BufferManager::CreateVertexBuffer(size_t nSize, void* pData, uint64_t vertexCount)
+	VertexBuffer* BufferManager::CreateVertexBuffer(size_t nSize,const void* pData, uint64_t vertexCount)
 	{
 		BufferManager& bufferManager = GetInstance();
 
@@ -55,9 +55,19 @@ namespace LT {
 		return pVertexBuffer;
 	}
 
-	VertexBuffer* BufferManager::CreateVertexBuffer(MeshRef refMesh)
+	std::pair<VertexBuffer*, IndexBuffer*> BufferManager::CreateVertexIndexBuffer(MeshRef refMesh, int nFlag)
 	{
-		return nullptr;
+		std::vector<float> vertice;
+		std::vector<uint32_t> indice;
+
+		RenderFlagType nOutFlag;
+		RenderFlagType nInFlag = static_cast<RenderFlagType>(VertexChannel::VertexChannelMask);
+		refMesh->GenVertexBuffer(vertice, indice, nOutFlag, nInFlag, nFlag);
+
+		return { 
+			CreateVertexBuffer(vertice.size() * sizeof(decltype(vertice)::value_type), vertice.data(), refMesh->GetVertexCount()),
+			CreateIndexBuffer(indice.size() * sizeof(decltype(indice)::value_type), indice.data(), refMesh->GetIndexCount()) 
+		};
 	}
 
 	StagingBuffer* BufferManager::CreateStagingBuffer(size_t nSize, const void* pData)
@@ -73,7 +83,7 @@ namespace LT {
 
 		return pStagingBuffer;
 	}
-	IndexBuffer* BufferManager::CreateIndexBuffer(size_t nSize, void* pData, uint64_t indexCount)
+	IndexBuffer* BufferManager::CreateIndexBuffer(size_t nSize, const void* pData, uint64_t indexCount)
 	{
 		BufferManager& bufferManager = GetInstance();
 		IndexBuffer* pIndexBuffer = new IndexBuffer(bufferManager.GenBufferID(), nSize, pData, indexCount);
@@ -81,7 +91,7 @@ namespace LT {
 		bufferManager.m_mapBuffers[pIndexBuffer->GetBufferID()] = pIndexBuffer;
 		return pIndexBuffer;
 	}
-	ConstBuffer* BufferManager::CreateConstBuffer(size_t nSize, void* pData)
+	ConstBuffer* BufferManager::CreateConstBuffer(size_t nSize, const void* pData)
 	{
 		BufferManager& bufferManager = GetInstance();
 		ConstBuffer* pConstBuffer = new ConstBuffer(bufferManager.GenBufferID(), nSize, pData);

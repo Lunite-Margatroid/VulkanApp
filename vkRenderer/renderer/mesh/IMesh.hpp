@@ -1,7 +1,7 @@
 // IMesh.h
 // 渲染器的Mesh的虚基类
 #pragma once
-
+#include "vkRendererUtil.hpp"
 
 namespace LT {
 
@@ -12,7 +12,7 @@ namespace LT {
 
 	class IMesh {
 		friend class MeshManager;
-
+		friend class util::PtrWithRefCount<IMesh>;
 	protected:
 		DECLEAR_CUSTOMED_EXCEPTION_DERIVE_FROM_RUNTIME_EXCEPT(MeshVertexCountError, "Vector Count is wrong with Vertex Count.");
 		DECLEAR_CUSTOMED_EXCEPTION_DERIVE_FROM_RUNTIME_EXCEPT(MeshFaceCountError, "Vector Count is wrong with Face Count.");
@@ -28,6 +28,10 @@ namespace LT {
 		};
 
 		struct STangent {
+			float x, y, z;
+		};
+
+		struct SBitangent {
 			float x, y, z;
 		};
 
@@ -53,6 +57,7 @@ namespace LT {
 		SPosition* m_pPosition;
 		SNormal* m_pNormal;
 		STangent* m_pTangent;
+		SBitangent* m_pBitangent;
 		SUV* m_pUV0;
 		SUV* m_pUV1;
 		SUVW* m_pUVW2;
@@ -63,6 +68,7 @@ namespace LT {
 		VertexIndex* m_pFaceIndex;
 		SNormal* m_pFaceNormal;
 		STangent* m_pFaceTangent;
+		SBitangent* m_pFaceBitangent;
 
 		SColor* m_pVertColor;
 		float* m_pVertAO;
@@ -91,8 +97,6 @@ namespace LT {
 		void CheckAndAsignFaceCount(uint32_t nCount);
 
 	public:
-		virtual ~IMesh() = default;
-
 		MeshID GetID() const;
 
 		uint32_t GetVertexCount()const { return m_nVertexCount; }
@@ -127,6 +131,11 @@ namespace LT {
 		void MoveTangent(STangent* pData, uint32_t nCount);
 		const STangent* GetTangent() const { return m_pTangent; }
 
+		void SetBitangent(const SBitangent* pData, uint32_t nCount);
+		// 移交内存所有权
+		void MoveBitangent(SBitangent* pData, uint32_t nCount);
+		const SBitangent* GetBitangent() const { return m_pBitangent; }
+
 
 		// face
 		// 0xffffffffu 图元重启动
@@ -149,6 +158,9 @@ namespace LT {
 		void MoveFaceTangent(STangent* pData, uint32_t nCount);
 		const STangent* GetFaceTangent() const { return m_pFaceTangent; }
 
+		void SetFaceBitangent(const SBitangent* pData, uint32_t nCount);
+		void MoveFaceBitangent(SBitangent* pData, uint32_t nCount);
+		const SBitangent* GetFaceBitangent() const { return m_pFaceBitangent; }
 
 		// 设置UV
 		// nUVIndex只能是{0,1}
@@ -175,6 +187,11 @@ namespace LT {
 		void MoveVertColor(SColor* pData, uint32_t nCount);
 		const SColor* GetVertColor() const { return m_pVertColor; }
 
-		void GenVertexBuffer(std::vector<float>& vecOutVertexBuffer, std::vector<uint32_t>& vecOutIndexBuffer, RenderFlagType& nOutFlag, const GenVertexBufferFlag& nInFlag) const;
+		// 生成交错排列的顶点buffer(各通道按bit位从小到大排列)和索引buffer
+		// nInFlag指定需要输出的顶点通道 实际输出的通道由nOutFlag返回
+		void GenVertexBuffer(std::vector<float>& vecOutVertexBuffer, std::vector<uint32_t>& vecOutIndexBuffer, RenderFlagType& nOutFlag, const GenVertexBufferFlag& nInFlag, int nInState = 0) const;
+		
+		RenderFlagType GetRenderPassFlag(int nFlag = 0) const;
+
 	};
 } // namespace LT

@@ -2,7 +2,6 @@
 #pragma once
 #include "IEntity.hpp"
 
-
 namespace LT {
 	class EntityRender :IEntity {
 	protected:

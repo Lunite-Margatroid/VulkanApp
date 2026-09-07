@@ -27,11 +27,11 @@ namespace LT {
 
 		static BufferManager& GetInstance();
 
-		static VertexBuffer* CreateVertexBuffer(size_t nSize, void *pData, uint64_t vertexCount);
-		static VertexBuffer* CreateVertexBuffer(MeshRef refMesh);
+		static VertexBuffer* CreateVertexBuffer(size_t nSize, const void *pData, uint64_t vertexCount);
+		static std::pair<VertexBuffer*, IndexBuffer*> CreateVertexIndexBuffer(MeshRef refMesh, int nFlag = 0);
 		static StagingBuffer* CreateStagingBuffer(size_t nSize, const void* pData);
-		static IndexBuffer* CreateIndexBuffer(size_t nSize, void* pData, uint64_t indexCount);
-		static ConstBuffer* CreateConstBuffer(size_t nSize, void* pData);
+		static IndexBuffer* CreateIndexBuffer(size_t nSize, const void* pData, uint64_t indexCount);
+		static ConstBuffer* CreateConstBuffer(size_t nSize, const void* pData);
 
 		static vk::Buffer GetNativeDeviceBuffer(BufferID nID);
 

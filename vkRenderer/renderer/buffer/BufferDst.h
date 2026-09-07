@@ -9,7 +9,7 @@ namespace LT {
 	/// </summary>
 	class BufferDst : public Buffer{
 	protected:
-		BufferDst(BufferID id, size_t nSize, void* pData);
+		BufferDst(BufferID id, size_t nSize,const void* pData);
 		BufferDst(BufferID id);
 
 	public:

@@ -4,11 +4,6 @@
 #include "RenderPass.hpp"
 
 namespace LT {
-	IMesh::IMesh(MeshID nID)
-		:m_nID(nID)
-	{
-	}
-
 	MeshID IMesh::GetID() const {
 		return m_nID;
 	}
@@ -19,6 +14,7 @@ namespace LT {
 		, m_pPosition(nullptr)
 		, m_pNormal(nullptr)
 		, m_pTangent(nullptr)
+		, m_pBitangent(nullptr)
 		, m_pUV0(nullptr)
 		, m_pUV1(nullptr)
 		, m_pUVW2(nullptr)
@@ -28,6 +24,7 @@ namespace LT {
 		, m_pFaceIndex(nullptr)
 		, m_pFaceNormal(nullptr)
 		, m_pFaceTangent(nullptr)
+		, m_pFaceBitangent(nullptr)
 		, m_pVertColor(nullptr)
 		, m_pVertAO(nullptr)
 		, m_nVertexCount(0u)
@@ -52,6 +49,7 @@ namespace LT {
 		DELETE_BUFFER(m_pPosition);
 		DELETE_BUFFER(m_pNormal);
 		DELETE_BUFFER(m_pTangent);
+		DELETE_BUFFER(m_pBitangent);
 		DELETE_BUFFER(m_pUV0);
 		DELETE_BUFFER(m_pUV1);
 		DELETE_BUFFER(m_pUVW2);
@@ -61,6 +59,7 @@ namespace LT {
 		DELETE_BUFFER(m_pFaceIndex);
 		DELETE_BUFFER(m_pFaceNormal);
 		DELETE_BUFFER(m_pFaceTangent);
+		DELETE_BUFFER(m_pFaceBitangent);
 
 	}
 
@@ -158,6 +157,21 @@ namespace LT {
 		}
 		m_pTangent = pData;
 	}
+
+	void IMesh::SetBitangent(const SBitangent* pData, uint32_t nCount) {
+		auto* pBitangent = new SBitangent[nCount];
+		memcpy(pBitangent, pData, sizeof(SBitangent) * nCount);
+		MoveBitangent(pBitangent, nCount);
+	}
+	void IMesh::MoveBitangent(SBitangent* pData, uint32_t nCount)
+	{
+		CheckAndAsignVertexCount(nCount);
+		if (m_pBitangent)
+		{
+			throw MeshRepeatSetMeshData();
+		}
+		m_pBitangent = pData;
+	}
 	void IMesh::SetFaces(const VertexIndex* pData, uint32_t nCount) {
 		auto* pFaceIndex = new VertexIndex[nCount];
 		memcpy(pFaceIndex, pData, nCount * sizeof(VertexIndex));
@@ -204,6 +218,21 @@ namespace LT {
 			throw MeshRepeatSetMeshData();
 		}
 		m_pFaceTangent = pData;
+	}
+	void IMesh::SetFaceBitangent(const SBitangent* pData, uint32_t nCount)
+	{
+		auto* pFaceBitangent = new SBitangent[nCount];
+		memcpy(pFaceBitangent, pData, sizeof(SBitangent) * nCount);
+		MoveFaceBitangent(pFaceBitangent, nCount);
+	}
+	void IMesh::MoveFaceBitangent(SBitangent* pData, uint32_t nCount)
+	{
+		CheckAndAsignFaceCount(nCount);
+		if (m_pFaceBitangent)
+		{
+			throw MeshRepeatSetMeshData();
+		}
+		m_pFaceBitangent = pData;
 	}
 	void IMesh::SetUV(const SUV* pData, uint32_t nCount, int32_t nUVIndex) {
 		if (nUVIndex != 0u && nUVIndex != 1u)
@@ -282,9 +311,115 @@ namespace LT {
 		}
 		m_pVertColor = pData;
 	}
-	void IMesh::GenVertexBuffer(std::vector<float>& vecOutVertexBuffer, std::vector<uint32_t>& vecOutIndexBuffer, RenderFlagType& nOutFlag, const GenVertexBufferFlag& nInFlag) const
+	void IMesh::GenVertexBuffer(std::vector<float>& vecOutVertexBuffer, std::vector<uint32_t>& vecOutIndexBuffer, RenderFlagType& nOutFlag, const GenVertexBufferFlag& nInFlag, int nInState) const
 	{
 		vecOutVertexBuffer.clear();
-		
+		vecOutIndexBuffer.clear();
+
+		// 各通道bit对应的数据源 数组索引和bit位一致
+		// 输出顺序与GraphicPass::GenVertexAttributeDesc保持一致 按bit位从小到大排列
+		const float* arrChannelData[VERTEX_CHANNEL_TOTAL_COUNT] = {
+			reinterpret_cast<const float*>(m_pPosition),	// VERT_POSITION
+			reinterpret_cast<const float*>(m_pUV0),		// VERT_UV0
+			reinterpret_cast<const float*>(m_pUV1),		// VERT_UV1
+			reinterpret_cast<const float*>(m_pUVW2),		// VERT_UV2
+			reinterpret_cast<const float*>(m_pUVW3),		// VERT_UV3
+			reinterpret_cast<const float*>(m_pUVW4),		// VERT_UV4
+			reinterpret_cast<const float*>(m_pNormal),		// VERT_NORMAL
+			reinterpret_cast<const float*>(m_pTangent),		// VERT_TANGENT
+			reinterpret_cast<const float*>(m_pBitangent),	// VERT_BITANGENT
+			reinterpret_cast<const float*>(m_pVertColor),	// VERT_COLOR
+			m_pVertAO,										// VERT_AO
+		};
+
+		// 实际写入的通道 决定输出vertex buffer的layout
+		std::vector<uint32_t> vecEmitChannelBit;
+		uint32_t nStride = 0;
+		RenderFlagType nVertexChannelFlag = 0;
+		for (uint32_t i = 0; i < VERTEX_CHANNEL_TOTAL_COUNT; i++)
+		{
+			if ((nInFlag & (1ull << i)) && arrChannelData[i])
+			{
+				vecEmitChannelBit.push_back(i);
+				nVertexChannelFlag |= (1ull << i);
+				nStride += VERTEX_DIMENSION[i];
+			}
+		}
+
+		// 交错排列 每个顶点的各通道按bit位从小到大排列
+		vecOutVertexBuffer.reserve(static_cast<size_t>(nStride) * m_nVertexCount);
+		for (uint32_t v = 0; v < m_nVertexCount; v++)
+		{
+			for (uint32_t nBit : vecEmitChannelBit)
+			{
+				const float* pData = arrChannelData[nBit] + static_cast<size_t>(v) * VERTEX_DIMENSION[nBit];
+				vecOutVertexBuffer.insert(vecOutVertexBuffer.end(), pData, pData + VERTEX_DIMENSION[nBit]);
+			}
+		}
+
+		// 索引buffer
+		if (m_pIndex)
+		{
+			vecOutIndexBuffer.assign(m_pIndex, m_pIndex + m_nIndexCount);
+		}
+
+		// 输出flag 保留顶点通道以外的bit 通道bit更新为实际写入的通道
+		nOutFlag = (nInFlag & ~(static_cast<RenderFlagType>(VertexChannel::VertexChannelMask))) | nVertexChannelFlag;
+	}
+	RenderFlagType IMesh::GetRenderPassFlag(int nFlag) const
+	{
+		// 形参nFlag暂时不使用
+		RenderFlagType nFlagOut = 0;
+
+		// 顶点通道 仅包含实际存在数据的通道
+		if (m_pPosition)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::Position);
+		}
+		if (m_pUV0)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::UV);
+		}
+		if (m_pUV1)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::UV) << 1;
+		}
+		if (m_pUVW2)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::UV) << 2;
+		}
+		if (m_pUVW3)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::UV) << 3;
+		}
+		if (m_pUVW4)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::UV) << 4;
+		}
+		if (m_pNormal)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::Normal);
+		}
+		if (m_pTangent)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::Tangent);
+		}
+		if (m_pBitangent)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::Bitangent);
+		}
+		if (m_pVertColor)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::Color);
+		}
+		if (m_pVertAO)
+		{
+			nFlagOut |= static_cast<RenderFlagType>(VertexChannel::AO);
+		}
+
+		// m_pIndex的图元类型
+		SetPrimitiveTopology(nFlagOut, m_ePrimitive);
+
+		return nFlagOut;
 	}
 } // namespace LT

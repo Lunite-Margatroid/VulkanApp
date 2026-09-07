@@ -61,7 +61,8 @@ constexpr uint32_t VERTEX_DIMENSION[] = {
 		Tangent = VERTEX_TANGENT_BIT_FLAG,
 		Bitangent = VERTEX_BITANGENT_BIT_FLAG,
 		Color = VERTEX_COLOR_BIT_FLAG,
-		AO = VERTEX_AO_BIT_FLAG
+		AO = VERTEX_AO_BIT_FLAG,
+		VertexChannelMask = (1 << VERTEX_CHANNEL_TOTAL_COUNT) - 1
 	};
 
 	using VertexChannelFlag = uint32_t;
@@ -112,7 +113,7 @@ constexpr uint32_t VERTEX_DIMENSION[] = {
 		uint64_t m_nVertexCount;
 
 		VertexBuffer(BufferID id);
-		VertexBuffer(BufferID id, size_t nSize, void* pData, uint64_t vertexCount);
+		VertexBuffer(BufferID id, size_t nSize, const void* pData, uint64_t vertexCount);
 
 		VertexBuffer(VertexBuffer&&) = delete;
 		VertexBuffer(const VertexBuffer&) = delete;

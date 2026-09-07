@@ -11,7 +11,7 @@ namespace LT {
 
 	protected:
 		IndexBuffer(BufferID id);
-		IndexBuffer(BufferID id, size_t nSize, void* pData, uint64_t nIndexCount);
+		IndexBuffer(BufferID id, size_t nSize, const void* pData, uint64_t nIndexCount);
 
 		IndexBuffer(const IndexBuffer&) = delete;
 		IndexBuffer(IndexBuffer&&) = delete;

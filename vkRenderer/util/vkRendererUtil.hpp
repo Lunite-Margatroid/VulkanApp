@@ -129,7 +129,7 @@ namespace LT
 			
 			ManagerTemplate() : m_nIDCounter (0){};
 			virtual ~ManagerTemplate() {
-				for (auto& resource) {
+				for (auto& resource : m_mapResources) {
 					resource.second.Release();
 				}
 				m_mapResources.clear();
