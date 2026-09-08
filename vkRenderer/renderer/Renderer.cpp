@@ -153,12 +153,13 @@ namespace LT {
 		m_pEntity.reset(new EntityRenderMesh(0));
 		m_pEntity->SetMaterial(m_refMtl);
 		m_pEntity->SetMesh(refMesh);
+		m_pEntity->SetIndexBuffer(m_pDebugIndexBuffer);
+		m_pEntity->SetVertexBuffer(m_pDebugVertexBuffer);
 		
-		// MVP mat
-		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)
-		{
-			m_vecConstBufferMVPMat.push_back(BufferManager::CreateConstBuffer(sizeof(m_MVPMatBuf), &m_MVPMatBuf));
-		}
+
+		m_pRenderView.reset(new RenderViewSingleCamera());
+
+		m_pPipeline->SetRenderView(m_pRenderView.get());
 
 		m_pPipeline->SetConstBufferMVPMat(m_vecConstBufferMVPMat);
 
@@ -173,6 +174,8 @@ namespace LT {
 	}
 	Renderer::~Renderer()
 	{
+
+		m_pRenderView.reset();
 
 		ImageManager::DeleteImage(m_pDebugImage);
 

@@ -10,6 +10,8 @@ namespace LT {
 		IRenderStage() = default;
 		virtual ~IRenderStage() = default;
 	
+
+		virtual RenderStageType GetRenderStageType() const = 0;
 	};
 
 } // namespace LT

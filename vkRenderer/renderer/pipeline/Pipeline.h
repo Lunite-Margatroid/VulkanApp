@@ -11,6 +11,7 @@ namespace LT {
 	class Image2DDepthBuffer;
 	class GraphicPass;
 	class EntityRender; 
+	class RenderViewSingleCamera;
 
 	struct FrameInfo {
 		// 从Swapchain AcquireNextImage得到的index
@@ -23,7 +24,8 @@ namespace LT {
 		uint64_t m_nIndexInFlight;
 		// 渲染对象
 		std::vector<EntityRender*> m_vecEntityRender;
-
+		// RenderView
+		RenderViewSingleCamera* m_pRenderView;
 	};
 
 
@@ -52,17 +54,8 @@ namespace LT {
 
 		uint64_t m_nFrameCount;
 
-		// Buffer的memory不由该pipeline实例管理
-		std::vector<ConstBuffer*> m_vecConstBufferMVPMat;
-		ImageSampler* m_pSampler;
-		Image2DShaderRes* m_pImage;
 
-		// 该实例不由Pipeline管理
-		VertexBuffer* m_pVertexBuffer;
-		IndexBuffer* m_pIndexBuffer;
 
-		// 该实例由当前实例管理
-		GraphicPass* m_pGraphicPass;
 
 		void CreateSyncObjects();
 		void RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex);
@@ -86,16 +79,15 @@ namespace LT {
 
 		vk::Pipeline& GetNativePipeline();
 
-		void SetVertexBuffer(VertexBuffer* vkVertexBuffer);
-		void SetIndexBuffer(IndexBuffer* pIndexBuffer);
-		void SetConstBufferMVPMat(const std::vector<ConstBuffer*>& vecConstBuffers);
-		void SetImage(Image2DShaderRes* pImage);
-		void SetImageSampler(ImageSampler* pSampler);
-
 		void UpdateConstBuffer();
 
 		void UpdateDescriptorSets();
 
 		void Resize(uint32_t nWidth, uint32_t nHeight);
+
+		void SetRenderView(RenderViewSingleCamera* pRenderView);
+
+		void Execute(FrameInfo& sFrameInfo);
+
 	};
 }// namespace LT

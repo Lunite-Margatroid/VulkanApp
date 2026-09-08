@@ -27,6 +27,9 @@ namespace LT
 		class ResourceRef {
 			TypeID m_nID;
 		public:
+			ResourceRef() : m_nID(INVALID_ITEM_ID) {
+			}
+
 			ResourceRef(TypeID id) : m_nID(id) {
 				TypeRefIncrease{}(id);
 			}
@@ -108,7 +111,7 @@ namespace LT
 				return m_nRefCount;
 			}
 
-			void Release() {
+			void Release() noexcept {
 				if (m_ptr)
 				{
 					delete m_ptr;

@@ -3,6 +3,7 @@
 #include "VertexBuffer.h"
 #include "EntityRenderMesh.hpp"
 #include "MaterialMainTexture.hpp"
+#include "renderView/RenderViewSingleCamera.hpp"
 
 namespace LT {
 	class Renderer {
@@ -26,7 +27,7 @@ namespace LT {
 
 		// 由当前实例管理
 		std::vector<ConstBuffer*> m_vecConstBufferMVPMat; // 数量与flight frame一致
-		
+		std::unique_ptr<RenderViewSingleCamera> m_pRenderView;
 
 	public:
 		Renderer();

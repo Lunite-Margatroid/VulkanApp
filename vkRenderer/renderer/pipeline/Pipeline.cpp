@@ -15,6 +15,8 @@
 
 #include "GraphicPass.hpp"
 
+#include "renderView/RenderViewSingleCamera.hpp"
+
 namespace LT {
 	Pipeline::Pipeline()
 		:m_nWidth(vkContext::GetSwapChain().m_sSwapChainInfo.width)
@@ -226,6 +228,9 @@ namespace LT {
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
 			m_vecDepthBuffer.push_back(ImageManager::CreateImage2DDepthBuffer(m_nWidth, m_nHeight));
 		}
+
+
+		m_pRenderView = nullptr;
 	}
 
 	Pipeline::~Pipeline() {
@@ -234,6 +239,12 @@ namespace LT {
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
 			ImageManager::DeleteImage(m_vecDepthBuffer[i]);
 		}
+
+		if (m_pRenderView) {
+			delete m_pRenderView;
+			m_pRenderView = nullptr;
+		}
+
 		/*
 		device.destroyDescriptorSetLayout(m_vkDescSetLayout);
 
@@ -610,29 +621,6 @@ namespace LT {
 		return m_vkPipeline;
 	}
 
-	void Pipeline::SetVertexBuffer(VertexBuffer* pVertexBuffer)
-	{
-		m_pVertexBuffer = pVertexBuffer;
-	}
-	void Pipeline::SetIndexBuffer(IndexBuffer* pIndexBuffer)
-	{
-		m_pIndexBuffer = pIndexBuffer;
-	}
-
-	void Pipeline::SetConstBufferMVPMat(const std::vector<ConstBuffer*>& vecConstBuffers)
-	{
-		m_vecConstBufferMVPMat = vecConstBuffers;
-	}
-
-	void Pipeline::SetImage(Image2DShaderRes* pImage)
-	{
-		m_pImage = pImage;
-	}
-
-	void Pipeline::SetImageSampler(ImageSampler* pSampler)
-	{
-		m_pSampler = pSampler;
-	}
 
 	void Pipeline::UpdateConstBuffer() {
 
@@ -644,6 +632,7 @@ namespace LT {
 
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)
 		{
+
 			m_pGraphicPass->BindConstBuffer(m_vecConstBufferMVPMat[i]->GetBufferID(), BindingSpace::eVertexShader, 0, i);
 			m_pGraphicPass->BindImage2D(m_pImage->GetImageID(), BindingSpace::eFragmentShader, 1, i);
 
@@ -713,6 +702,11 @@ namespace LT {
 		{
 			m_vecDepthBuffer[i] = ImageManager::CreateImage2DDepthBuffer(nWidth, nHeight);
 		}
+	}
+
+	void Pipeline::SetRenderView(RenderViewSingleCamera* pRenderView)
+	{
+		m_pRenderView = pRenderView;
 	}
 
 } //namespace LT

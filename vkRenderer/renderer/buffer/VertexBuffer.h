@@ -42,6 +42,8 @@ constexpr uint32_t VERTEX_DIMENSION[] = {
 	1  // AO
 };
 
+constexpr RenderFlagType VERTEX_CHANNEL_FLAG_MASK = (1 << VERTEX_CHANNEL_TOTAL_COUNT) - 1;
+
 // Position float3	VERT_POSITION
 // UV0 float2	VERT_UV0
 // UV1 float2	VERT_UV1
@@ -62,7 +64,7 @@ constexpr uint32_t VERTEX_DIMENSION[] = {
 		Bitangent = VERTEX_BITANGENT_BIT_FLAG,
 		Color = VERTEX_COLOR_BIT_FLAG,
 		AO = VERTEX_AO_BIT_FLAG,
-		VertexChannelMask = (1 << VERTEX_CHANNEL_TOTAL_COUNT) - 1
+		VertexChannelMask = VERTEX_CHANNEL_FLAG_MASK
 	};
 
 	using VertexChannelFlag = uint32_t;

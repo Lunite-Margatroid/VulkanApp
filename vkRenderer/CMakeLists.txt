@@ -18,6 +18,7 @@ file(GLOB SOURCES
 	"renderer/pipeline/stage/*.cpp"
 	"renderer/material/*.cpp"
 	"renderer/entity/*.cpp"
+	"renderer/renderView/*.cpp"
 )
 
 #set(HEADERS
@@ -33,12 +34,19 @@ file(GLOB PUBLIC_HEADERS
 
 file(GLOB PRIVATE_HEADERS
     "renderer/*.h"
+	"renderer/*.hpp"
 	"renderer/swapchain/*.h"
+	"renderer/swapchain/*.hpp"
 	"renderer/pipeline/*.h"
+	"renderer/pipeline/*.hpp"
 	"renderer/buffer/*.h"
+	"renderer/buffer/*.hpp"
 	"core/image/*.h"
+	"core/image/*.hpp"
 	"renderer/deviceImage/*.h"
+	"renderer/deviceImage/*.hpp"
 	"renderer/sampler/*.h"
+	"renderer/sampler/*.hpp"
 	"renderer/mesh/*.h"
 	"renderer/mesh/*.hpp"
 	"renderer/pipeline/renderpass/*.h"
@@ -49,6 +57,8 @@ file(GLOB PRIVATE_HEADERS
 	"renderer/material/*.hpp"
 	"renderer/entity/*.h"
 	"renderer/entity/*.hpp"
+	"renderer/renderView/*.h"
+	"renderer/renderView/*.hpp"
 )
 
 # 创建静态库
