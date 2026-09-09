@@ -1,7 +1,6 @@
 // 不透明物体前向渲染
 #pragma once
 #include "IRenderStage.hpp"
-#include "DeviceImage.h"
 
 namespace LT {
 	class RenderStageOpaqueForward : public IRenderStage

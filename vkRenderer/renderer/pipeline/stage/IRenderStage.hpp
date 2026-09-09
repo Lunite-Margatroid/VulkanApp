@@ -1,10 +1,11 @@
 // Stage基类
 #pragma once
 #include "DeviceImage.h"
-#include "EntityRender.hpp"
 #include "renderView/RenderView.hpp"
 
 namespace LT {
+	class EntityRender;
+
 	struct StageExecuteInfo {
 		uint32_t nWidth;
 		uint32_t nHeight;

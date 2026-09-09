@@ -1,22 +1,17 @@
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "vkContext.h"
 #include "SwapChain.h"
 #include "Pipeline.h"
 #include "SlangCompiler.hpp"
 #include "IBindable.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
-#include "ConstBuffer.h"
-#include "Image2DShaderRes.h"
+
 #include "ImageSampler.h"
-#include "Image2DDepthBuffer.h"
 
-#include "ImageManager.h"
 
-#include "GraphicPass.hpp"
 
-#include "renderView/RenderViewSingleCamera.hpp"
-#include "RenderStageOpaqueForward.hpp"
+
+
 
 namespace LT {
 	Pipeline::Pipeline()
@@ -444,21 +439,6 @@ namespace LT {
 	//		;
 
 	//	vkContext::GetCmdBuffer(nFrameIndex).pipelineBarrier2(di);
-	//}
-
-	//void vkContext::WaitIdel()
-	//{
-	//	vk::Queue& queueGraphics = GetInstance().GetCmdQueue();
-	//	vk::Queue& queueSurface = GetInstance().GetCmdQueueForSurface();
-
-	//	if (queueGraphics)
-	//	{
-	//		queueGraphics.waitIdle();
-	//	}
-	//	if (queueSurface)
-	//	{
-	//		queueSurface.waitIdle();
-	//	}
 	//}
 
 

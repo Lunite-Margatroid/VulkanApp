@@ -1,7 +1,6 @@
 // IMesh.h
 // 渲染器的Mesh的虚基类
 #pragma once
-#include "vkRendererUtil.hpp"
 
 namespace LT {
 
@@ -12,7 +11,6 @@ namespace LT {
 
 	class IMesh {
 		friend class MeshManager;
-		friend class util::PtrWithRefCount<IMesh>;
 	protected:
 		DECLEAR_CUSTOMED_EXCEPTION_DERIVE_FROM_RUNTIME_EXCEPT(MeshVertexCountError, "Vector Count is wrong with Vertex Count.");
 		DECLEAR_CUSTOMED_EXCEPTION_DERIVE_FROM_RUNTIME_EXCEPT(MeshFaceCountError, "Vector Count is wrong with Face Count.");

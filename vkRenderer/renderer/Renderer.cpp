@@ -1,16 +1,13 @@
 #include "vkRendererCommon.h"
-#include "vkContext.h"
 #include "EngineCommon.h"
+#include "vkContext.h"
+
 #include "Renderer.h"
-#include "BufferManager.h"
 #include "DeviceMemoryManager.h"
 #include "ImageManager.h"
 #include "image/ImgRes.h"
 #include "sampler/SamplerManager.h"
-#include "MaterialManager.hpp"
-#include "MeshManager.hpp"
 #include "MeshStatic.hpp"
-#include "MaterialManager.hpp"
 
 #include "SwapChain.h"
 
@@ -239,15 +236,15 @@ namespace LT {
 
 		FlightFrameIndex nFlightFrameIndex = m_nFrameIndex % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
 
-		// µÈ´ıÍ¬Ò»Flight FrameÉÏÒ»Ö¡»æÖÆ
+		// ç­‰å¾…åŒä¸€Flight Frameä¸Šä¸€å¸§ç»˜åˆ¶
 		vk::Result waitResult = device.waitForFences(m_vecFenceDrawing[nFlightFrameIndex], vk::True, std::_Max_limit<uint64_t>());
 		RENDERER_ASSERT(waitResult == vk::Result::eSuccess, "Wait for Draing Failed.");
-		// ÖØÖÃ
+		// é‡ç½®
 		device.resetFences(m_vecFenceDrawing[nFlightFrameIndex]);
 
-		// »ñÈ¡Swapchain image
+		// è·å–Swapchain image
 		int32_t imageIndex = vkContext::GetSwapChain().AcquireNextImage(std::_Max_limit<uint64_t>(), m_vecSemAcquiring[nFlightFrameIndex], vk::Fence());
-		RENDERER_ASSERT(imageIndex > 0, "Acquire Swapchain Image Failed.");
+		RENDERER_ASSERT(imageIndex >= 0, "Acquire Swapchain Image Failed.");
 		uint32_t nImageIndex = static_cast<uint32_t>(imageIndex);
 		
 		FrameInfo sFrameInfo;
@@ -264,15 +261,15 @@ namespace LT {
 
 		
 
-		// ½»»»Á´ÃüÁî
+		// äº¤æ¢é“¾å‘½ä»¤
 		vk::PresentInfoKHR pi;
 		pi.setWaitSemaphoreCount(1)
-			.setPWaitSemaphores(&m_vecSemDrawing[nFlightFrameIndex])	// µÈ´ıäÖÈ¾Íê³É
+			.setPWaitSemaphores(&m_vecSemDrawing[nFlightFrameIndex])	// ç­‰å¾…æ¸²æŸ“å®Œæˆ
 			.setSwapchainCount(1)
 			.setPSwapchains(&swapchain)
 			.setPImageIndices(&nImageIndex)
 			;
-		// Ìá½»½»»»Á´ÃüÁî
+		// æäº¤äº¤æ¢é“¾å‘½ä»¤
 		vk::Result resultPresent = vkContext::GetCmdQueueForSurface().presentKHR(pi);
 
 		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)

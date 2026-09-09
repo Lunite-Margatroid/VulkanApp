@@ -453,7 +453,20 @@ do{\
 		vkContext::GetInstance().m_pSwapChain->Resize(width, height);
 	}
 
+	void vkContext::WaitIdel()
+	{
+		vk::Queue& queueGraphics = GetInstance().GetCmdQueue();
+		vk::Queue& queueSurface = GetInstance().GetCmdQueueForSurface();
 
+		if (queueGraphics)
+		{
+			queueGraphics.waitIdle();
+		}
+		if (queueSurface)
+		{
+			queueSurface.waitIdle();
+		}
+	}
 
 	vk::Queue& vkContext::GetCmdQueue() {
 		return GetInstance().m_vkQueue;
@@ -588,5 +601,6 @@ do{\
 	{
 		return GetInstance().m_bIsAnisotropySampleSupported;
 	}
+
 
 } // namespace LT

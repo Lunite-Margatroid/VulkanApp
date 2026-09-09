@@ -1,5 +1,6 @@
 // Stage基类
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "IRenderStage.hpp"
 
 namespace LT {

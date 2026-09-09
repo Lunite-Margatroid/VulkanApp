@@ -1,9 +1,9 @@
 #pragma once
+
 #include "Pipeline.h"
-#include "VertexBuffer.h"
-#include "EntityRenderMesh.hpp"
-#include "MaterialMainTexture.hpp"
-#include "renderView/RenderViewSingleCamera.hpp"
+
+
+
 
 namespace LT {
 	class Renderer {

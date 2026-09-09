@@ -21,6 +21,8 @@ namespace LT {
 			nIndex(index), eSpace(eSpace)
 		{
 		}
+
+		bool operator==(const BindingInfo& rhs) const = default;
 	};
 
 	struct BindingInfoHash {
@@ -30,9 +32,6 @@ namespace LT {
 		}
 	};
 
-	bool operator == (const BindingInfo& a, const BindingInfo& b) {
-		return a.nIndex == b.nIndex && a.eSpace == b.eSpace;
-	}
 
 	struct ShaderModuleInfo {
 		std::vector<BindingInfo> m_vecTexture2DBindingInfo;

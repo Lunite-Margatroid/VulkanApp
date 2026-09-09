@@ -4,7 +4,9 @@
 #include "MeshStatic.hpp"
 
 namespace LT {
+	//IMPLEMENT_SINGLETON_MANAGER(MeshManager, IMesh, MeshID, Mesh)
 	IMPLEMENT_SINGLETON_MANAGER(MeshManager, IMesh, MeshID, Mesh)
+
 
 	MeshRef MeshManager::CreateStaticMesh() {
 		MeshManager& mgr = GetInstance();

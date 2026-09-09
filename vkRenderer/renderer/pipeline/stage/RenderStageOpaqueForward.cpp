@@ -1,6 +1,9 @@
 // 不透明物体前向渲染
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "RenderStageOpaqueForward.hpp"
+
+#include "EntityRender.hpp"
 
 namespace LT {
 	void RenderStageOpaqueForward::Execute(const StageExecuteInfo& sExecuteInfo)

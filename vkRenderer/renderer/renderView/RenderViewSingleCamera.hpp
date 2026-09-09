@@ -1,6 +1,7 @@
 // 渲染视图 单相机
 #pragma once
 #include "RenderView.hpp"
+#include "EngineCommon.h" 
 
 namespace LT {
 

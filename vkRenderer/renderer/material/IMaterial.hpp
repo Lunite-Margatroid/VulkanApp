@@ -20,6 +20,7 @@ namespace LT {
 
 
 	class IMaterial {
+		friend class MaterialManager;
 	protected:
 		using RenderPassMap = std::map<RenderPassFlag, RenderPass*>;
 	protected:
@@ -29,10 +30,11 @@ namespace LT {
 
 	protected:
 		IMaterial(MaterialID nID);
-		~IMaterial();
 
 		void RegisterStage(RenderStageType eStage);
 	public:
+		~IMaterial();
+
 		virtual RenderPass* GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag) = 0;
 		virtual void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex) = 0;
 
