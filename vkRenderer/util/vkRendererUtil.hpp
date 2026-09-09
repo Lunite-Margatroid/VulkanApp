@@ -169,12 +169,31 @@ namespace LT
 				}
 				return nRefCount;
 			}
+
+		public:
+			struct _GetPtr{ 
+				T* operator ()(TypeID nID)const {
+					return GetResourcePtr(nID);
+					}
+				};
+
+				struct _RefIncrease {
+					unsigned int operator ()(TypeID nID) const {
+						return RefIncrease(nID);
+					}
+				};
+
+				struct _RefDecrease {
+					unsigned int operator ()(TypeID nID) const {
+						return RefIncrease(nID);
+					}
+				};
 		};
 	} // namespace util
 
 
 #define DECLEAR_SINGLETON_MANAGER_BEGIN(ManagerType, TargetType, IDType, TargetName) \
-	class TargetName##Ref;\
+	using TargetName##Ref = util::ResourceRef<IDType, TargetType, util::ManagerTemplate<IDType, TargetType>::_GetPtr, util::ManagerTemplate<IDType, TargetType>::_RefIncrease, util::ManagerTemplate<IDType, TargetType>::_RefDecrease>;\
 	class ManagerType : public util::ManagerTemplate<IDType, TargetType>{\
 	private:\
 		using TargetName##Ptr = util::PtrWithRefCount<TargetType>;\
@@ -192,30 +211,12 @@ namespace LT
 		static ManagerType& GetInstance();\
 \
 		static TargetType* Get##TargetName(IDType nID);\
+	\
 \
 private:
 
 #define DECLEAR_SINGLETON_MANAGER_END(ManagerType, TargetType, IDType, TargetName) \
-};\
-	struct ManagerType##GetPtr {\
-	TargetType* operator ()(IDType nID)const {\
-		return ManagerType::Get##TargetName(nID);\
-	}\
-	};\
-\
-	struct ManagerType##RefIncrease {\
-		unsigned int operator ()(IDType nID) const {\
-			return ManagerType::GetInstance().RefIncrease(nID);\
-		}\
-	};\
-\
-	struct ManagerType##RefDecrease {\
-		unsigned int operator ()(IDType nID) const {\
-			return ManagerType::GetInstance().RefDecrease(nID);\
-		}\
-	};\
-\
-	using TargetName##Ref = util::ResourceRef<IDType, TargetType, ManagerType##GetPtr, ManagerType##RefIncrease, ManagerType##RefDecrease>;\
+};
 
 
 #define IMPLEMENT_SINGLETON_MANAGER(ManagerType, TargetType, IDType, TargetName)\

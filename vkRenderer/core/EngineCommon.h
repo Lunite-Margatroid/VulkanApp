@@ -6,7 +6,7 @@
 #include "glm/glm.hpp"
 #include "glm/matrix.hpp"
 #include "glm/gtc/quaternion.hpp"
-#include <glm/gtc/type_ptr.hpp>
+#include "glm/gtc/type_ptr.hpp"
 
 #include <string>
 #include <filesystem>
@@ -35,3 +35,33 @@ struct RGB_8 {
 struct RGB_32 {
 	float r, g, b;
 };
+
+namespace LT
+{
+
+	// std130
+	struct MVPMatrixBuffer {
+		glm::mat4 modelMat;
+		glm::mat4 viewMat;
+		glm::mat4 projectionMat;
+		glm::mat4 mvpMat;
+		// 列主序
+		// 第四行无用 内存对齐 std130
+		// 实际是一个3x3矩阵
+		glm::vec4 normalMatCol[3];
+		// cameraPos.w 无用 内存对齐
+		glm::vec4 cameraPos;
+
+		MVPMatrixBuffer()
+			: modelMat(glm::identity<glm::mat4>())
+			, viewMat(glm::identity<glm::mat4>())
+			, projectionMat(glm::identity<glm::mat4>())
+			, mvpMat(glm::identity<glm::mat4>())
+			, cameraPos(0.f, 0.f, 0.f, 0.f)
+		{
+			normalMatCol[0] = glm::vec4(1.f, 0.f, 0.f, 0.f);
+			normalMatCol[1] = glm::vec4(0.f, 1.f, 0.f, 0.f);
+			normalMatCol[2] = glm::vec4(0.f, 0.f, 1.f, 0.f);
+		}
+	};
+}

@@ -26,23 +26,24 @@ namespace LT {
 
 
 		// 由当前实例管理
-		std::vector<ConstBuffer*> m_vecConstBufferMVPMat; // 数量与flight frame一致
 		std::unique_ptr<RenderViewSingleCamera> m_pRenderView;
+
+		std::vector<vk::Semaphore> m_vecSemDrawing;
+		std::vector<vk::Semaphore> m_vecSemAcquiring;
+		std::vector<vk::Fence> m_vecFenceDrawing;
+
+		FrameIndex m_nFrameIndex;
 
 	public:
 		Renderer();
 		~Renderer();
 
-		void SetModelMat(const float* pModelMat);
-		void SetViewMat(const float* pViewMat);
-		void SetProjectionMat(const float* pProjectionMat);
-		void SetCameraPos(const float* pCameraPos);
-		void SetNormalMat(const float* pNormalMat);
-		void SetMVPMat(const float* pNormalMat);
+		void SetModelMat(const glm::mat4& matModel);
+		void SetViewMat(const glm::mat4& matView);
+		void SetProjectionMat(const glm::mat4& matProjection);
+		void SetCameraPos(const glm::vec4& vec4CameraPos);
 
 		void Resize(uint32_t nWidth, uint32_t nHeight);
-
-		void UpdateConstBufer();
 
 		void DrawFrame();
 	};

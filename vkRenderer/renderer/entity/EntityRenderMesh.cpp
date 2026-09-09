@@ -1,7 +1,10 @@
 // 渲染实体Mesh
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "EntityRenderMesh.hpp"
 #include "GraphicPass.hpp"
+#include "BufferManager.h"
+#include "RenderViewSingleCamera.hpp"
 
 namespace LT {
 	EntityRenderMesh::EntityRenderMesh(EntityID nID)
@@ -11,12 +14,29 @@ namespace LT {
 		,m_pVertexBuffer(nullptr)
 		,m_pIndexBuffer(nullptr)
 		,m_eRenderPassFlag(0)
+		,m_matModel(glm::identity<glm::mat4>())
 	{
 		SetBackCull(m_eRenderPassFlag, false);
 		SetClockwiseFront(m_eRenderPassFlag, false);
 		SetLineWidth(m_eRenderPassFlag, 1.f);
 		SetBlendEnable(m_eRenderPassFlag, true);
 		SetPolygonMode(m_eRenderPassFlag, vk::PolygonMode::eFill);
+
+		MVPMatrixBuffer tMVPBuf;
+
+		for (auto& idBuffer : m_arrConstBufferVertTrans)
+		{
+			idBuffer = BufferManager::CreateConstBuffer(sizeof(tMVPBuf), &tMVPBuf)->GetBufferID();
+		}
+
+	}
+	EntityRenderMesh::~EntityRenderMesh()
+	{
+		for (auto& idBuffer : m_arrConstBufferVertTrans)
+		{
+			BufferManager::DeleteBuffer(idBuffer);
+			idBuffer = INVALID_BUFFER_ID;
+		}
 	}
 	void EntityRenderMesh::SetMesh(const MeshRef& refMesh)
 	{
@@ -38,10 +58,52 @@ namespace LT {
 	}
 	void EntityRenderMesh::Draw(const EntityDrawInfo& sDrawInfo)
 	{
-		GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(m_refMaterial->GetRenderPass(sDrawInfo.m_eRenderStage, m_eRenderPassFlag));
+		GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(m_refMaterial->GetRenderPass(sDrawInfo.eRenderStage, m_eRenderPassFlag));
+		m_refMaterial->UpdateMtlResource(sDrawInfo.eRenderStage, m_eRenderPassFlag, sDrawInfo.nFlightFrameIndex);
 		if (pRenderPass)
 		{
-			
+			ConstBuffer* pConstBuffer = dynamic_cast<ConstBuffer*>(BufferManager::GetBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex]));
+			if (pConstBuffer)
+			{
+				RenderViewSingleCamera* pRenderView = dynamic_cast<RenderViewSingleCamera*>(sDrawInfo.pRenderView);
+				pRenderView->SetModelMat(m_matModel);
+				pConstBuffer->UpdateConstBuffer(pRenderView->GetTransBuffer());
+			}
+
+			m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex];
+
+			pRenderPass->BindConstBuffer(0, BindingSpace::eVertexShader, m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex], sDrawInfo.nFlightFrameIndex);
+
+			RecordCommandInfo sRecordInfo;
+			sRecordInfo.nWidth = sDrawInfo.nWidth;
+			sRecordInfo.nHeight = sDrawInfo.nHeight;
+			sRecordInfo.nDepthStencilID = sDrawInfo.nDepthBuffer;
+			sRecordInfo.vecImageIDColor = sDrawInfo.vecRenderTargets;
+			sRecordInfo.vecVertexBufferID.push_back(m_pVertexBuffer->GetBufferID());
+			sRecordInfo.nIndexBufferID = m_pIndexBuffer->GetBufferID();
+
+			pRenderPass->RecordCommand(sRecordInfo);
+
+			GraphicSubmitInfo sSubmitInfo;
+			sSubmitInfo.nFlightFrameIndex = sDrawInfo.nFlightFrameIndex;
+
+			if (!sDrawInfo.vecSemWait.empty())
+			{
+				sSubmitInfo.vecSemToWait = sDrawInfo.vecSemWait;
+				sSubmitInfo.vecSemWaitMasks = sDrawInfo.vecSemWaitMasks;
+			}
+
+			if (!sDrawInfo.vecSemSignal.empty())
+			{
+				sSubmitInfo.vecSemToSignal = sDrawInfo.vecSemSignal;
+			}
+
+			if (!sDrawInfo.vkFenceSet)
+			{
+				sSubmitInfo.vkFenceToSet = sDrawInfo.vkFenceSet;
+			}
+
+			pRenderPass->Submit(sSubmitInfo);
 		}
 	}
 }

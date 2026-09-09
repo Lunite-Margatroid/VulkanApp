@@ -17,9 +17,12 @@ namespace LT {
 
 		RenderPassFlag m_eRenderPassFlag;
 
+		glm::mat4 m_matModel;
+		std::array<BufferID, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrConstBufferVertTrans;
+
 	public:
 		EntityRenderMesh(EntityID nID);
-		~EntityRenderMesh() = default;
+		~EntityRenderMesh();
 
 		EntityRenderMesh(EntityRenderMesh&&) = delete;
 		EntityRenderMesh(const EntityRenderMesh&) = delete;

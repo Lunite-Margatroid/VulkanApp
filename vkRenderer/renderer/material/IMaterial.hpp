@@ -14,10 +14,10 @@ namespace LT {
 
 
 	struct MaterialSlot {
-		BindingInfo sBindingInfo;
 		vk::DescriptorType eDescType;
 		int64_t nSrcID;
 	};
+
 
 	class IMaterial {
 	protected:
@@ -25,15 +25,17 @@ namespace LT {
 	protected:
 		MaterialID m_nID;
 		std::map<RenderStageType, RenderPassMap> m_mapRenderPasses;
-		std::vector<MaterialSlot> m_vecSlots;
+		std::unordered_map<BindingInfo, MaterialSlot, BindingInfoHash> m_mapSlots;
 
 	protected:
 		IMaterial(MaterialID nID);
 		~IMaterial();
 
 		void RegisterStage(RenderStageType eStage);
-
 	public:
 		virtual RenderPass* GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag) = 0;
+		virtual void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex) = 0;
+
+		ResultSetter SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID);
 	};
 } // namespace LT

@@ -7,8 +7,8 @@ namespace LT {
 	MaterialMainTexture::MaterialMainTexture(MaterialID nID)
 		:IMaterial(nID)
 	{
-		m_vecSlots.push_back(MaterialSlot({ {0u, BindingSpace::eVertexShader} , vk::DescriptorType::eUniformBuffer, -1 }));
-		m_vecSlots.push_back(MaterialSlot({ {1u, BindingSpace::eFragmentShader} , vk::DescriptorType::eCombinedImageSampler, -1 }));
+		m_mapSlots[BindingInfo(0u, BindingSpace::eVertexShader)] = MaterialSlot({ vk::DescriptorType::eUniformBuffer, -1 });
+		m_mapSlots[BindingInfo(1u, BindingSpace::eFragmentShader)] = MaterialSlot({ vk::DescriptorType::eCombinedImageSampler, -1 });
 
 		RegisterStage(RenderStageType::eOpaqueForward);
 	}
@@ -36,5 +36,30 @@ namespace LT {
 		}
 
 		return iterPass->second;
+	}
+	void MaterialMainTexture::UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex)
+	{
+		GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(GetRenderPass(eStage, nFlag));
+		if (pRenderPass) {
+			for (const auto& [bindingInfo, mtlSlot] : m_mapSlots)
+			{
+				switch (mtlSlot.eDescType)
+				{
+				case vk::DescriptorType::eUniformBuffer:
+					pRenderPass->BindConstBuffer(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex, nFlightFrameIndex);
+					break;
+				case vk::DescriptorType::eCombinedImageSampler:
+					pRenderPass->BindImage2D(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex, nFlightFrameIndex);
+					break;
+				default:
+					break;
+				};
+			}
+		}
+	}
+
+	void MaterialMainTexture::SetMainTexture(ImageID nMainTex)
+	{
+		SetSlotSrc(BindingInfo(1u, BindingSpace::eFragmentShader), nMainTex);
 	}
 } // namespace

@@ -9,24 +9,8 @@ namespace LT {
 	class RenderViewSingleCamera : public RenderView
 	{
 	private:
-
 		// std130
-		struct MVPMatrixBuffer {
-			glm::mat4 modelMat;
-			glm::mat4 viewMat;
-			glm::mat4 projectionMat;
-			glm::mat4 mvpMat;
-			// 列主序
-			// 第四行无用 内存对齐 std130
-			// 实际是一个3x3矩阵
-			glm::vec4 normalMatCol[3];
-			// cameraPos.w 无用 内存对齐
-			glm::vec4 cameraPos;
-		} m_MVPMatBuf;
-
-		ConstBuffer* m_pConstBuffer;
-		
-
+		MVPMatrixBuffer m_MVPMatBuf;
 	public:
 		RenderViewSingleCamera();
 		~RenderViewSingleCamera();
@@ -41,5 +25,7 @@ namespace LT {
 		void SetProjectionMat(const glm::mat4& matProjection);
 		void SetViewMat(const glm::mat4& matView);
 		void SetCameraPos(const glm::vec3& vec3CameraPos);
+
+		const MVPMatrixBuffer* GetTransBuffer();
 	};
 } // namespace LT

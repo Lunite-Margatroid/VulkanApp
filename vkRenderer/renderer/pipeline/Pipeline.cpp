@@ -16,6 +16,7 @@
 #include "GraphicPass.hpp"
 
 #include "renderView/RenderViewSingleCamera.hpp"
+#include "RenderStageOpaqueForward.hpp"
 
 namespace LT {
 	Pipeline::Pipeline()
@@ -23,26 +24,24 @@ namespace LT {
 		,m_nHeight(vkContext::GetSwapChain().m_sSwapChainInfo.height)
 	{
 
-		CreateSyncObjects();
-
 		vk::Device& device = vkContext::GetVkDevice();
 
-		m_pGraphicPass = new GraphicPass();
-		RenderPassFlag nFlag = 0;
-		SetBackCull(nFlag, false);
-		SetClockwiseFront(nFlag, false);
-		SetBlendEnable(nFlag, true);
-		SetPolygonMode(nFlag, vk::PolygonMode::eFill);
-		SetLineWidth(nFlag, 1.f);
-		SetPrimitiveTopology(nFlag, vk::PrimitiveTopology::eTriangleList);
-		util::SetBit(nFlag, static_cast<uint32_t>(VertexChannel::Position) | static_cast<uint32_t>(VertexChannel::UV) | static_cast<uint32_t>(VertexChannel::Normal));
+		//m_pGraphicPass = new GraphicPass();
+		//RenderPassFlag nFlag = 0;
+		//SetBackCull(nFlag, false);
+		//SetClockwiseFront(nFlag, false);
+		//SetBlendEnable(nFlag, true);
+		//SetPolygonMode(nFlag, vk::PolygonMode::eFill);
+		//SetLineWidth(nFlag, 1.f);
+		//SetPrimitiveTopology(nFlag, vk::PrimitiveTopology::eTriangleList);
+		//util::SetBit(nFlag, static_cast<uint32_t>(VertexChannel::Position) | static_cast<uint32_t>(VertexChannel::UV) | static_cast<uint32_t>(VertexChannel::Normal));
 
-		LOG_INFO("RenderPass Desc: \n%s", GetRenderPassDescString(nFlag).c_str());
+		//LOG_INFO("RenderPass Desc: \n%s", GetRenderPassDescString(nFlag).c_str());
 
-		m_pGraphicPass->SetRenderPassFlag(nFlag);
-		m_pGraphicPass->AddShaderModule("FragmentShaderMainTex");
-		m_pGraphicPass->AddShaderModule("CommonVertexShader");
-		m_pGraphicPass->Init();
+		//m_pGraphicPass->SetRenderPassFlag(nFlag);
+		//m_pGraphicPass->AddShaderModule("FragmentShaderMainTex");
+		//m_pGraphicPass->AddShaderModule("CommonVertexShader");
+		//m_pGraphicPass->Init();
 
 		/*
 		// 创建着色器
@@ -228,9 +227,6 @@ namespace LT {
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
 			m_vecDepthBuffer.push_back(ImageManager::CreateImage2DDepthBuffer(m_nWidth, m_nHeight));
 		}
-
-
-		m_pRenderView = nullptr;
 	}
 
 	Pipeline::~Pipeline() {
@@ -240,439 +236,331 @@ namespace LT {
 			ImageManager::DeleteImage(m_vecDepthBuffer[i]);
 		}
 
-		if (m_pRenderView) {
-			delete m_pRenderView;
-			m_pRenderView = nullptr;
-		}
-
-		/*
-		device.destroyDescriptorSetLayout(m_vkDescSetLayout);
-
-		device.destroyShaderModule(m_vkShaderMod);
-		device.destroyPipelineLayout(m_vkPipelineLayout);
-		device.destroyPipeline(m_vkPipeline);
-		*/
-
-		if (m_pGraphicPass) {
-			delete m_pGraphicPass;
-		}
-
-		for (int i = 0; i < m_vkSemPresentComplete.size(); i++)
-		{
-			device.destroySemaphore(m_vkSemPresentComplete[i]);
-		}
-		m_vkSemPresentComplete.clear();
-
-		for (int i = 0; i < m_vkSemRenderFinish.size(); i++)
-		{
-			device.destroySemaphore(m_vkSemRenderFinish[i]);
-		}
-		m_vkSemRenderFinish.clear();
-		for (int i = 0; i < m_vkFenceDraw.size(); i++)
-		{
-			device.destroyFence(m_vkFenceDraw[i]);
-		}
-		m_vkFenceDraw.clear();
-	}
-
-	void Pipeline::CreateSyncObjects() {
-		m_vkSemRenderFinish.resize(SWAPCHAIN_DEFAULT_IMAGE_NUM);
-		m_vkSemPresentComplete.resize(RENDERER_DEFAULT_FLIGHT_FRAME_NUM);
-		m_vkFenceDraw.resize(RENDERER_DEFAULT_FLIGHT_FRAME_NUM);
-
-		for (int i = 0; i < m_vkSemRenderFinish.size(); i++)
-		{
-			m_vkSemRenderFinish[i] = vkContext::GetVkDevice().createSemaphore(vk::SemaphoreCreateInfo());
-		}
-
-		for (int i = 0; i < m_vkSemPresentComplete.size(); i++)
-		{
-			m_vkSemPresentComplete[i] = vkContext::GetVkDevice().createSemaphore(vk::SemaphoreCreateInfo());
-		}
-
-		for (int i = 0; i < m_vkFenceDraw.size(); i++)
-		{
-			m_vkFenceDraw[i] = vkContext::GetVkDevice().createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
-		}
-	}
-
-
-	void Pipeline::RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex)
-	{
-		RENDERER_ASSERT(imageIndex < m_vecDepthBuffer.size(), "func: %s. Depth Buffer Index Error. Image Index: %u. Depth Buffer Count: %u",
-		 __FUNCTION__, imageIndex, static_cast<unsigned int>(m_vecDepthBuffer.size()));
-
-		auto debugCommandBuffer = vkContext::GetCmdBuffer(nFrameIndex);
-
-		RecordCommandInfo cmdInfo;
-		cmdInfo.nFlightFrameIndex = nFrameIndex;
-		cmdInfo.nHeight = m_nHeight;
-		cmdInfo.nWidth = m_nWidth;
-		cmdInfo.nDepthStencilID = m_vecDepthBuffer[nFrameIndex]->GetImageID();
-		cmdInfo.vecImageIDColor.push_back(SWAPCHAIN_IMAGE_ID);
-		cmdInfo.vecVertexBufferID.push_back(m_pVertexBuffer->GetBufferID());
-		cmdInfo.nIndexBufferID = m_pIndexBuffer->GetBufferID();
-		m_pGraphicPass->RecordCommand(cmdInfo);
-
-		/*
-
-		// 开始录入
-		vk::CommandBufferBeginInfo cbbi;
-		debugCommandBuffer.begin(cbbi);
-		// 录入图像转换
-		// 转换颜色缓冲
-		TransitionImageLayout(
-			imageIndex,
-			nFrameIndex,
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eColorAttachmentOptimal,
-			{},
-			vk::AccessFlagBits2::eColorAttachmentWrite,
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-			vk::ImageAspectFlagBits::eColor
-		);
-		// 转换深度缓冲
-		TransitionImageLayout(
-			imageIndex,
-			nFrameIndex,
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eDepthAttachmentOptimal,
-			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-			vk::ImageAspectFlagBits::eDepth
-		);
-
-		vk::ClearValue clearValue = vk::ClearColorValue(0.f, 0.f, 0.f, 1.f);
-
-		// 录入读写渲染目标操作
-		vk::RenderingAttachmentInfo rai;
-		rai
-			.setImageView(vkContext::GetSwapChain().m_imageViews[imageIndex])
-			.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
-			.setLoadOp(vk::AttachmentLoadOp::eClear)
-			.setStoreOp(vk::AttachmentStoreOp::eStore)
-			.setClearValue(clearValue)
-			;
-
-		// clear Depth Buffer
-		vk::ClearValue clearValueDepth = vk::ClearDepthStencilValue(1.f, 0);
-		vk::RenderingAttachmentInfo raiDepth;
-		raiDepth
-			.setImageView(m_vecDepthBuffer[imageIndex]->GetNativeImageView())
-			.setImageLayout(vk::ImageLayout::eDepthAttachmentOptimal)
-			.setLoadOp(vk::AttachmentLoadOp::eClear)
-			.setStoreOp(vk::AttachmentStoreOp::eDontCare)
-			.setClearValue(clearValueDepth);
-		;
-
-
-		// 录入渲染操作
-		vk::RenderingInfo ri;
-		ri
-			.setRenderArea(
-				{
-					{ 0,0 },
-					{static_cast<unsigned int>(vkContext::GetSwapChain().m_sSwapChainInfo.width), static_cast<unsigned int>(vkContext::GetSwapChain().m_sSwapChainInfo.height)}
-				})
-			.setLayerCount(1)
-			.setColorAttachmentCount(1)
-			.setPColorAttachments(&rai)
-			.setPDepthAttachment(&raiDepth)
-			;
-
-		debugCommandBuffer.beginRendering(ri);
-
-
-		// 绑定图形管线
-		debugCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
-
-		// 绑定顶点缓冲
-		std::array<vk::Buffer, 1> vertexBuffers{ m_pVertexBuffer->GetNativeBuffer() };
-		std::array<vk::DeviceSize, 1> offsets{ 0 };
-		debugCommandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
-
-		// 绑定顶点缓冲
-		debugCommandBuffer.bindIndexBuffer(m_pIndexBuffer->GetNativeBuffer(), 0, vk::IndexType::eUint32);
-
-		// 绑定Const buffer
-		debugCommandBuffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics,
-			m_vkPipelineLayout,
-			0,
-			m_vecDescriptorSets[nFrameIndex],
-			nullptr
-		);
-
-
-		// Viewport 和 Scissor 被指定为动态状态
-		// 创建并绑定
-
-		// Viewport
-		vk::Viewport viewport;
-		viewport
-			.setX(0)
-			.setY(0)
-			.setWidth(static_cast<float>(vkContext::GetSwapChain().m_sSwapChainInfo.width))
-			.setHeight(static_cast<float>(vkContext::GetSwapChain().m_sSwapChainInfo.height))
-			.setMinDepth(0.f)
-			.setMaxDepth(1.0f);
-
-		// scissor
-		vk::Rect2D scissor;
-		scissor.setOffset(vk::Offset2D(0, 0));
-		scissor.setExtent(vk::Extent2D(vkContext::GetSwapChain().m_sSwapChainInfo.width, vkContext::GetSwapChain().m_sSwapChainInfo.height));
-
-		debugCommandBuffer.setViewport(0, viewport);
-		debugCommandBuffer.setScissor(0, scissor);
-
-		// debugCommandBuffer.draw(m_pVertexBuffer->GetVertexCount(), 1, 0, 0);
-		debugCommandBuffer.drawIndexed(m_pIndexBuffer->GetIndexCount(), 1, 0, 0, 0);
-
-		debugCommandBuffer.endRendering();
-
-
-		TransitionImageLayout(
-			imageIndex,
-			nFrameIndex,
-			vk::ImageLayout::eColorAttachmentOptimal,
-			vk::ImageLayout::ePresentSrcKHR,
-			vk::AccessFlagBits2::eColorAttachmentWrite,
-			{},
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-			vk::PipelineStageFlagBits2::eBottomOfPipe,
-			vk::ImageAspectFlagBits::eColor
-		);
-
-		debugCommandBuffer.end();
-		*/
-
 
 	}
 
-	void Pipeline::TransitionImageLayout(
-		uint32_t nImageIndex,
-		uint32_t nFrameIndex,
-		vk::ImageLayout oldLayout,
-		vk::ImageLayout newLayout,
-		vk::AccessFlags2 srcAccessFlag,
-		vk::AccessFlags2 dstAccessFlag,
-		vk::PipelineStageFlags2 srcStageFlag,
-		vk::PipelineStageFlags2 dstStageFlag,
-		vk::ImageAspectFlags eImageAspect
-	)
-	{
-		vk::ImageMemoryBarrier2 imageBarrier;
-		imageBarrier
-			.setSrcAccessMask(srcAccessFlag)
-			.setSrcStageMask(srcStageFlag)
-			.setDstAccessMask(dstAccessFlag)
-			.setDstStageMask(dstStageFlag)
-			.setOldLayout(oldLayout)
-			.setNewLayout(newLayout)
-			.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-			.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
-			.setSubresourceRange(
-				vk::ImageSubresourceRange(
-					eImageAspect,
-					0,	// base mipmap level
-					1,	// level count
-					0,	// base array layer
-					1	// layer count
-				)
-			)
-			;
-		
-		RENDERER_ASSERT(nImageIndex < m_vecDepthBuffer.size(), "func: %s. Depth Buffer Index Error.", __FUNCTION__);
-		if ((eImageAspect & vk::ImageAspectFlagBits::eColor) == vk::ImageAspectFlagBits::eColor)
-		{
-			imageBarrier.setImage(vkContext::GetSwapChain().m_sSwapChainInfo.images[nImageIndex]);
-		}
-		else if ((eImageAspect & vk::ImageAspectFlagBits::eDepth) == vk::ImageAspectFlagBits::eDepth) {
-			imageBarrier.setImage(m_vecDepthBuffer[nImageIndex]->GetNativeDeviceImage());
-		}
 
-		vk::DependencyInfo di;
-		di.setDependencyFlags({})
-			.setImageMemoryBarrierCount(1)
-			.setPImageMemoryBarriers(&imageBarrier)
-			;
+	//void Pipeline::RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex)
+	//{
+	//	RENDERER_ASSERT(imageIndex < m_vecDepthBuffer.size(), "func: %s. Depth Buffer Index Error. Image Index: %u. Depth Buffer Count: %u",
+	//	 __FUNCTION__, imageIndex, static_cast<unsigned int>(m_vecDepthBuffer.size()));
 
-		vkContext::GetCmdBuffer(nFrameIndex).pipelineBarrier2(di);
-	}
+	//	auto debugCommandBuffer = vkContext::GetCmdBuffer(nFrameIndex);
 
-	void vkContext::WaitIdel()
-	{
-		vk::Queue& queueGraphics = GetInstance().GetCmdQueue();
-		vk::Queue& queueSurface = GetInstance().GetCmdQueueForSurface();
+	//	RecordCommandInfo cmdInfo;
+	//	cmdInfo.nFlightFrameIndex = nFrameIndex;
+	//	cmdInfo.nHeight = m_nHeight;
+	//	cmdInfo.nWidth = m_nWidth;
+	//	cmdInfo.nDepthStencilID = m_vecDepthBuffer[nFrameIndex]->GetImageID();
+	//	cmdInfo.vecImageIDColor.push_back(SWAPCHAIN_IMAGE_ID);
+	//	cmdInfo.vecVertexBufferID.push_back(m_pVertexBuffer->GetBufferID());
+	//	cmdInfo.nIndexBufferID = m_pIndexBuffer->GetBufferID();
+	//	m_pGraphicPass->RecordCommand(cmdInfo);
 
-		if (queueGraphics)
-		{
-			queueGraphics.waitIdle();
-		}
-		if (queueSurface)
-		{
-			queueSurface.waitIdle();
-		}
-	}
+	//	/*
 
+	//	// 开始录入
+	//	vk::CommandBufferBeginInfo cbbi;
+	//	debugCommandBuffer.begin(cbbi);
+	//	// 录入图像转换
+	//	// 转换颜色缓冲
+	//	TransitionImageLayout(
+	//		imageIndex,
+	//		nFrameIndex,
+	//		vk::ImageLayout::eUndefined,
+	//		vk::ImageLayout::eColorAttachmentOptimal,
+	//		{},
+	//		vk::AccessFlagBits2::eColorAttachmentWrite,
+	//		vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+	//		vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+	//		vk::ImageAspectFlagBits::eColor
+	//	);
+	//	// 转换深度缓冲
+	//	TransitionImageLayout(
+	//		imageIndex,
+	//		nFrameIndex,
+	//		vk::ImageLayout::eUndefined,
+	//		vk::ImageLayout::eDepthAttachmentOptimal,
+	//		vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+	//		vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+	//		vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+	//		vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+	//		vk::ImageAspectFlagBits::eDepth
+	//	);
 
-	void Pipeline::DrawFrame() {
-		SwapChain& swapChain = vkContext::GetSwapChain();
+	//	vk::ClearValue clearValue = vk::ClearColorValue(0.f, 0.f, 0.f, 1.f);
 
+	//	// 录入读写渲染目标操作
+	//	vk::RenderingAttachmentInfo rai;
+	//	rai
+	//		.setImageView(vkContext::GetSwapChain().m_imageViews[imageIndex])
+	//		.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
+	//		.setLoadOp(vk::AttachmentLoadOp::eClear)
+	//		.setStoreOp(vk::AttachmentStoreOp::eStore)
+	//		.setClearValue(clearValue)
+	//		;
 
-		if (swapChain.m_sSwapChainInfo.width <= 0 || swapChain.m_sSwapChainInfo.height <= 0)
-			return;
-
-		vk::Device& device = vkContext::GetVkDevice();
-		vk::SwapchainKHR& nativeSwapChain = swapChain.NativeVKSwapChain();
-
-		m_nFrameCount++;
-
-		uint64_t nFrameIndex = m_nFrameCount % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
-		uint64_t nLastFrameIndex = (m_nFrameCount - 1) % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
-		// 等待上一帧绘制完成
-		vk::Result result = device.waitForFences(m_vkFenceDraw[nFrameIndex], vk::True, UINT64_MAX);
-
-		RENDERER_ASSERT(result == vk::Result::eSuccess, "Failed to wait fence.");
-
-		device.resetFences(m_vkFenceDraw[nFrameIndex]);
-
-		// 获取渲染缓冲
-		// 等待交换链交换缓冲完成
-		int32_t resultIndex = swapChain.AcquireNextImage(UINT64_MAX, m_vkSemPresentComplete[nFrameIndex], vk::Fence());
-
-		RENDERER_ASSERT(resultIndex >= 0, "Acquire Image Failed.");
-
-		unsigned int nImgIndex = resultIndex;
-		// TODO: nImgIndex 可能大于2，暂时取模2
-		// 查一下原因
-		//nImgIndex %= 2;
-
-		// 录入渲染命令
-		RecordCommandBufferDebug(nFrameIndex, nFrameIndex);
-
-		// 提交渲染命令
-		vk::PipelineStageFlags flagWaitDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
-
-		vk::Semaphore* pSemRenderFinish = nullptr;
-		if (nFrameIndex == 0)
-		{
-			pSemRenderFinish = &m_vkSemRenderFinish[nFrameIndex];
-		}
-		else if (nFrameIndex == 1)
-		{
-			pSemRenderFinish = &m_vkSemRenderFinish[nFrameIndex];
-		}
-		else
-		{
-			pSemRenderFinish = &m_vkSemRenderFinish[0];
-		}
-
-		GraphicSubmitInfo submitInfo;
-		submitInfo.nFlightFrameIndex = nFrameIndex;
-		submitInfo.vkFenceToSet = m_vkFenceDraw[nFrameIndex];
-		submitInfo.vecSemToWait.push_back(m_vkSemPresentComplete[nFrameIndex]);
-		submitInfo.vecSwapDstMask.push_back(flagWaitDstStageMask);
-		submitInfo.vecSemToSignal.push_back(*pSemRenderFinish);
-		m_pGraphicPass->Submit(submitInfo);
-
-		/*
-		vk::SubmitInfo si;
-		si.setWaitSemaphoreCount(1)
-			.setPWaitSemaphores(&m_vkSemPresentComplete[nFrameIndex]) // 等待交换链交换完成
-			.setPWaitDstStageMask(&flagWaitDstStageMask)
-			.setCommandBufferCount(1)
-			.setPCommandBuffers(&vkContext::GetCmdBuffer(nFrameIndex))
-			.setSignalSemaphoreCount(1)
-			.setPSignalSemaphores(pSemRenderFinish)	// 完成后发出信号
-			;
-		vkContext::GetCmdQueue().submit(
-			si,
-			m_vkFenceDraw[nFrameIndex] // 渲染完成之前 禁止获取缓冲
-		);
-		*/
-
-		// 交换链命令
-		vk::PresentInfoKHR pi;
-		pi.setWaitSemaphoreCount(1)
-			.setPWaitSemaphores(pSemRenderFinish)	// 等待渲染完成
-			.setSwapchainCount(1)
-			.setPSwapchains(&nativeSwapChain)
-			.setPImageIndices(&nImgIndex)
-			;
-		// 提交交换链命令
-		vk::Result resultPresent = vkContext::GetCmdQueueForSurface().presentKHR(pi);
-
-		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)
-		{
-			vkContext::WaitIdel();
-			vkContext::GetInstance().ResizeSwapChain(m_nWidth, m_nHeight);
-		}
-		else
-		{
-			RENDERER_ASSERT(resultPresent == vk::Result::eSuccess, "Present Failed.");
-		}
-	}
-	vk::Pipeline& Pipeline::GetNativePipeline()
-	{
-		return m_vkPipeline;
-	}
+	//	// clear Depth Buffer
+	//	vk::ClearValue clearValueDepth = vk::ClearDepthStencilValue(1.f, 0);
+	//	vk::RenderingAttachmentInfo raiDepth;
+	//	raiDepth
+	//		.setImageView(m_vecDepthBuffer[imageIndex]->GetNativeImageView())
+	//		.setImageLayout(vk::ImageLayout::eDepthAttachmentOptimal)
+	//		.setLoadOp(vk::AttachmentLoadOp::eClear)
+	//		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
+	//		.setClearValue(clearValueDepth);
+	//	;
 
 
-	void Pipeline::UpdateConstBuffer() {
+	//	// 录入渲染操作
+	//	vk::RenderingInfo ri;
+	//	ri
+	//		.setRenderArea(
+	//			{
+	//				{ 0,0 },
+	//				{static_cast<unsigned int>(vkContext::GetSwapChain().m_sSwapChainInfo.width), static_cast<unsigned int>(vkContext::GetSwapChain().m_sSwapChainInfo.height)}
+	//			})
+	//		.setLayerCount(1)
+	//		.setColorAttachmentCount(1)
+	//		.setPColorAttachments(&rai)
+	//		.setPDepthAttachment(&raiDepth)
+	//		;
 
-	}
+	//	debugCommandBuffer.beginRendering(ri);
 
-	void Pipeline::UpdateDescriptorSets()
-	{
-		vk::Device& device = vkContext::GetVkDevice();
 
-		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)
-		{
+	//	// 绑定图形管线
+	//	debugCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
 
-			m_pGraphicPass->BindConstBuffer(m_vecConstBufferMVPMat[i]->GetBufferID(), BindingSpace::eVertexShader, 0, i);
-			m_pGraphicPass->BindImage2D(m_pImage->GetImageID(), BindingSpace::eFragmentShader, 1, i);
+	//	// 绑定顶点缓冲
+	//	std::array<vk::Buffer, 1> vertexBuffers{ m_pVertexBuffer->GetNativeBuffer() };
+	//	std::array<vk::DeviceSize, 1> offsets{ 0 };
+	//	debugCommandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
 
-			//vk::DescriptorBufferInfo dbi;
-			//dbi
-			//	.setBuffer(m_vecConstBufferMVPMat[i]->GetNativeBuffer())
-			//	.setOffset(0)
-			//	.setRange(m_vecConstBufferMVPMat[i]->Size())
-			//	;
+	//	// 绑定顶点缓冲
+	//	debugCommandBuffer.bindIndexBuffer(m_pIndexBuffer->GetNativeBuffer(), 0, vk::IndexType::eUint32);
 
-			//vk::DescriptorImageInfo dii;
-			//dii
-			//	.setImageView(m_pImage->GetNativeImageView())
-			//	.setSampler(m_pSampler->GetNativeSampler())
-			//	.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-			//	;
+	//	// 绑定Const buffer
+	//	debugCommandBuffer.bindDescriptorSets(
+	//		vk::PipelineBindPoint::eGraphics,
+	//		m_vkPipelineLayout,
+	//		0,
+	//		m_vecDescriptorSets[nFrameIndex],
+	//		nullptr
+	//	);
 
-			//std::array<vk::WriteDescriptorSet, 2> wds;
-			//wds[0]
-			//	.setDstSet(m_vecDescriptorSets[i])
-			//	.setDstBinding(0)
-			//	.setDstArrayElement(0)
-			//	.setDescriptorCount(1)
-			//	.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-			//	.setPBufferInfo(&dbi)
-			//	;
 
-			//wds[1]
-			//	.setDstSet(m_vecDescriptorSets[i])
-			//	.setDstBinding(1)
-			//	.setDstArrayElement(0)
-			//	.setDescriptorCount(1)
-			//	.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			//	.setPImageInfo(&dii)
-			//	;
+	//	// Viewport 和 Scissor 被指定为动态状态
+	//	// 创建并绑定
 
-			//device.updateDescriptorSets(wds, {});
+	//	// Viewport
+	//	vk::Viewport viewport;
+	//	viewport
+	//		.setX(0)
+	//		.setY(0)
+	//		.setWidth(static_cast<float>(vkContext::GetSwapChain().m_sSwapChainInfo.width))
+	//		.setHeight(static_cast<float>(vkContext::GetSwapChain().m_sSwapChainInfo.height))
+	//		.setMinDepth(0.f)
+	//		.setMaxDepth(1.0f);
 
-		}
-	}
+	//	// scissor
+	//	vk::Rect2D scissor;
+	//	scissor.setOffset(vk::Offset2D(0, 0));
+	//	scissor.setExtent(vk::Extent2D(vkContext::GetSwapChain().m_sSwapChainInfo.width, vkContext::GetSwapChain().m_sSwapChainInfo.height));
+
+	//	debugCommandBuffer.setViewport(0, viewport);
+	//	debugCommandBuffer.setScissor(0, scissor);
+
+	//	// debugCommandBuffer.draw(m_pVertexBuffer->GetVertexCount(), 1, 0, 0);
+	//	debugCommandBuffer.drawIndexed(m_pIndexBuffer->GetIndexCount(), 1, 0, 0, 0);
+
+	//	debugCommandBuffer.endRendering();
+
+
+	//	TransitionImageLayout(
+	//		imageIndex,
+	//		nFrameIndex,
+	//		vk::ImageLayout::eColorAttachmentOptimal,
+	//		vk::ImageLayout::ePresentSrcKHR,
+	//		vk::AccessFlagBits2::eColorAttachmentWrite,
+	//		{},
+	//		vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+	//		vk::PipelineStageFlagBits2::eBottomOfPipe,
+	//		vk::ImageAspectFlagBits::eColor
+	//	);
+
+	//	debugCommandBuffer.end();
+	//	*/
+
+
+	//}
+
+	//void Pipeline::TransitionImageLayout(
+	//	uint32_t nImageIndex,
+	//	uint32_t nFrameIndex,
+	//	vk::ImageLayout oldLayout,
+	//	vk::ImageLayout newLayout,
+	//	vk::AccessFlags2 srcAccessFlag,
+	//	vk::AccessFlags2 dstAccessFlag,
+	//	vk::PipelineStageFlags2 srcStageFlag,
+	//	vk::PipelineStageFlags2 dstStageFlag,
+	//	vk::ImageAspectFlags eImageAspect
+	//)
+	//{
+	//	vk::ImageMemoryBarrier2 imageBarrier;
+	//	imageBarrier
+	//		.setSrcAccessMask(srcAccessFlag)
+	//		.setSrcStageMask(srcStageFlag)
+	//		.setDstAccessMask(dstAccessFlag)
+	//		.setDstStageMask(dstStageFlag)
+	//		.setOldLayout(oldLayout)
+	//		.setNewLayout(newLayout)
+	//		.setSrcQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+	//		.setDstQueueFamilyIndex(VK_QUEUE_FAMILY_IGNORED)
+	//		.setSubresourceRange(
+	//			vk::ImageSubresourceRange(
+	//				eImageAspect,
+	//				0,	// base mipmap level
+	//				1,	// level count
+	//				0,	// base array layer
+	//				1	// layer count
+	//			)
+	//		)
+	//		;
+	//	
+	//	RENDERER_ASSERT(nImageIndex < m_vecDepthBuffer.size(), "func: %s. Depth Buffer Index Error.", __FUNCTION__);
+	//	if ((eImageAspect & vk::ImageAspectFlagBits::eColor) == vk::ImageAspectFlagBits::eColor)
+	//	{
+	//		imageBarrier.setImage(vkContext::GetSwapChain().m_sSwapChainInfo.images[nImageIndex]);
+	//	}
+	//	else if ((eImageAspect & vk::ImageAspectFlagBits::eDepth) == vk::ImageAspectFlagBits::eDepth) {
+	//		imageBarrier.setImage(m_vecDepthBuffer[nImageIndex]->GetNativeDeviceImage());
+	//	}
+
+	//	vk::DependencyInfo di;
+	//	di.setDependencyFlags({})
+	//		.setImageMemoryBarrierCount(1)
+	//		.setPImageMemoryBarriers(&imageBarrier)
+	//		;
+
+	//	vkContext::GetCmdBuffer(nFrameIndex).pipelineBarrier2(di);
+	//}
+
+	//void vkContext::WaitIdel()
+	//{
+	//	vk::Queue& queueGraphics = GetInstance().GetCmdQueue();
+	//	vk::Queue& queueSurface = GetInstance().GetCmdQueueForSurface();
+
+	//	if (queueGraphics)
+	//	{
+	//		queueGraphics.waitIdle();
+	//	}
+	//	if (queueSurface)
+	//	{
+	//		queueSurface.waitIdle();
+	//	}
+	//}
+
+
+	//void Pipeline::DrawFrame() {
+	//	SwapChain& swapChain = vkContext::GetSwapChain();
+
+
+	//	if (swapChain.m_sSwapChainInfo.width <= 0 || swapChain.m_sSwapChainInfo.height <= 0)
+	//		return;
+
+	//	vk::Device& device = vkContext::GetVkDevice();
+	//	vk::SwapchainKHR& nativeSwapChain = swapChain.NativeVKSwapChain();
+
+	//	m_nFrameCount++;
+
+	//	uint64_t nFrameIndex = m_nFrameCount % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
+	//	uint64_t nLastFrameIndex = (m_nFrameCount - 1) % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
+	//	// 等待上一帧绘制完成
+	//	vk::Result result = device.waitForFences(m_vkFenceDraw[nFrameIndex], vk::True, UINT64_MAX);
+
+	//	RENDERER_ASSERT(result == vk::Result::eSuccess, "Failed to wait fence.");
+
+	//	device.resetFences(m_vkFenceDraw[nFrameIndex]);
+
+	//	// 获取渲染缓冲
+	//	// 等待交换链交换缓冲完成
+	//	int32_t resultIndex = swapChain.AcquireNextImage(UINT64_MAX, m_vkSemPresentComplete[nFrameIndex], vk::Fence());
+
+	//	RENDERER_ASSERT(resultIndex >= 0, "Acquire Image Failed.");
+
+	//	unsigned int nImgIndex = resultIndex;
+	//	// TODO: nImgIndex 可能大于2，暂时取模2
+	//	// 查一下原因
+	//	//nImgIndex %= 2;
+
+	//	// 录入渲染命令
+	//	RecordCommandBufferDebug(nFrameIndex, nFrameIndex);
+
+	//	// 提交渲染命令
+	//	vk::PipelineStageFlags flagWaitDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+
+	//	vk::Semaphore* pSemRenderFinish = nullptr;
+	//	if (nFrameIndex == 0)
+	//	{
+	//		pSemRenderFinish = &m_vkSemRenderFinish[nFrameIndex];
+	//	}
+	//	else if (nFrameIndex == 1)
+	//	{
+	//		pSemRenderFinish = &m_vkSemRenderFinish[nFrameIndex];
+	//	}
+	//	else
+	//	{
+	//		pSemRenderFinish = &m_vkSemRenderFinish[0];
+	//	}
+
+	//	GraphicSubmitInfo submitInfo;
+	//	submitInfo.nFlightFrameIndex = nFrameIndex;
+	//	submitInfo.vkFenceToSet = m_vkFenceDraw[nFrameIndex];
+	//	submitInfo.vecSemToWait.push_back(m_vkSemPresentComplete[nFrameIndex]);
+	//	submitInfo.vecSwapDstMask.push_back(flagWaitDstStageMask);
+	//	submitInfo.vecSemToSignal.push_back(*pSemRenderFinish);
+	//	m_pGraphicPass->Submit(submitInfo);
+
+	//	/*
+	//	vk::SubmitInfo si;
+	//	si.setWaitSemaphoreCount(1)
+	//		.setPWaitSemaphores(&m_vkSemPresentComplete[nFrameIndex]) // 等待交换链交换完成
+	//		.setPWaitDstStageMask(&flagWaitDstStageMask)
+	//		.setCommandBufferCount(1)
+	//		.setPCommandBuffers(&vkContext::GetCmdBuffer(nFrameIndex))
+	//		.setSignalSemaphoreCount(1)
+	//		.setPSignalSemaphores(pSemRenderFinish)	// 完成后发出信号
+	//		;
+	//	vkContext::GetCmdQueue().submit(
+	//		si,
+	//		m_vkFenceDraw[nFrameIndex] // 渲染完成之前 禁止获取缓冲
+	//	);
+	//	*/
+
+	//	// 交换链命令
+	//	vk::PresentInfoKHR pi;
+	//	pi.setWaitSemaphoreCount(1)
+	//		.setPWaitSemaphores(pSemRenderFinish)	// 等待渲染完成
+	//		.setSwapchainCount(1)
+	//		.setPSwapchains(&nativeSwapChain)
+	//		.setPImageIndices(&nImgIndex)
+	//		;
+	//	// 提交交换链命令
+	//	vk::Result resultPresent = vkContext::GetCmdQueueForSurface().presentKHR(pi);
+
+	//	if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)
+	//	{
+	//		vkContext::WaitIdel();
+	//		vkContext::GetInstance().ResizeSwapChain(m_nWidth, m_nHeight);
+	//	}
+	//	else
+	//	{
+	//		RENDERER_ASSERT(resultPresent == vk::Result::eSuccess, "Present Failed.");
+	//	}
+	//}
+
+
 
 	void Pipeline::Resize(uint32_t nWidth, uint32_t nHeight)
 	{
@@ -704,9 +592,36 @@ namespace LT {
 		}
 	}
 
-	void Pipeline::SetRenderView(RenderViewSingleCamera* pRenderView)
+	void Pipeline::Execute(const FrameInfo& sFrameInfo)
 	{
-		m_pRenderView = pRenderView;
+		RenderStageOpaqueForward stage;
+
+		StageExecuteInfo sStageInfo;
+		sStageInfo.vecRenderTarget = sFrameInfo.vecRenderTargets;
+		sStageInfo.nDepthBufferID = m_vecDepthBuffer[sFrameInfo.nFightFrameIndex]->GetImageID();
+		sStageInfo.vecRenderEntity = sFrameInfo.vecEntityRender;
+		sStageInfo.pRenderView = sFrameInfo.pRenderView;
+		sStageInfo.nFlightFrameIndex = sFrameInfo.nFightFrameIndex;
+		sStageInfo.nWidth = m_nWidth;
+		sStageInfo.nHeight = m_nHeight;
+
+		if (sFrameInfo.semAcquiring)
+		{
+			sStageInfo.vecSemWait.push_back(sFrameInfo.semAcquiring);
+			sStageInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllGraphics);
+		}
+
+		if (sFrameInfo.semDrawing)
+		{
+			sStageInfo.vecSemSignal.push_back(sFrameInfo.semDrawing);
+		}
+
+		if (sFrameInfo.fenceDrawing)
+		{
+			sStageInfo.fenceSet = sFrameInfo.fenceDrawing;
+		}
+		
+		stage.Execute(sStageInfo);
 	}
 
 } //namespace LT

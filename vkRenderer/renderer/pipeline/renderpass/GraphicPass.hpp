@@ -11,7 +11,7 @@ namespace LT {
 
 
 	struct RecordCommandInfo {
-		uint32_t nFlightFrameIndex;
+		FlightFrameIndex nFlightFrameIndex;
 		uint32_t nWidth;
 		uint32_t nHeight;
 
@@ -25,10 +25,12 @@ namespace LT {
 
 	struct GraphicSubmitInfo {
 	
-		uint32_t nFlightFrameIndex;
+		FlightFrameIndex nFlightFrameIndex;
 
 		std::vector<vk::Semaphore> vecSemToWait;
-		std::vector<vk::PipelineStageFlags> vecSwapDstMask;
+		// 等待信号量的Mask
+		// size和vecSemToWait一致
+		std::vector<vk::PipelineStageFlags> vecSemWaitMasks;
 		std::vector<vk::Semaphore> vecSemToSignal;
 		vk::Fence vkFenceToSet;
 
@@ -75,8 +77,8 @@ namespace LT {
 
 		void Submit(const GraphicSubmitInfo& sSubmitInfo);
 
-		void BindConstBuffer(BufferID id, BindingSpace eSpace, uint32_t nBindingIndex, uint32_t nFrameIndex);
-		void BindImage2D(ImageID id, BindingSpace eSpace, uint32_t eBindingIndex, uint32_t nFrameIndex);
+		void BindConstBuffer(BufferID id, BindingSpace eSpace, uint32_t nBindingIndex, FlightFrameIndex nFlightFrameIndex);
+		void BindImage2D(ImageID id, BindingSpace eSpace, uint32_t eBindingIndex, FlightFrameIndex nFlightFrameIndex);
 
 	public:
 		static void GenVertexAttributeDesc(VertexChannelFlag nVertexChannelFlag, std::vector<vk::VertexInputBindingDescription>& vecInputBindDesc, std::vector<vk::VertexInputAttributeDescription>& vertDesc);

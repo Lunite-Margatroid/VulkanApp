@@ -49,9 +49,7 @@ namespace LT {
 
 		using VertexIndex = uint32_t;
 
-	protected:
-		IMesh(MeshID nID);
-		virtual ~IMesh();
+
 	protected:
 		MeshID m_nID;
 		SPosition* m_pPosition;
@@ -96,7 +94,13 @@ namespace LT {
 		void CheckAndAsignVertexCount(uint32_t nCount);
 		void CheckAndAsignFaceCount(uint32_t nCount);
 
+	protected:
+		IMesh(MeshID nID);
 	public:
+
+
+		virtual ~IMesh();
+
 		MeshID GetID() const;
 
 		uint32_t GetVertexCount()const { return m_nVertexCount; }

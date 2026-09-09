@@ -491,7 +491,7 @@ namespace LT {
 		if (sSubmitInfo.vecSemToWait.size() > 0)
 		{
 			si.setWaitSemaphores(sSubmitInfo.vecSemToWait);
-			si.setWaitDstStageMask(sSubmitInfo.vecSwapDstMask);
+			si.setWaitDstStageMask(sSubmitInfo.vecSemWaitMasks);
 		}
 		// 需要发射的信号量
 		if (sSubmitInfo.vecSemToSignal.size() > 0)
@@ -512,7 +512,7 @@ namespace LT {
 		}
 	}
 
-	void GraphicPass::BindConstBuffer(BufferID id, BindingSpace eSpace, uint32_t nBindingIndex, uint32_t nFrameIndex)
+	void GraphicPass::BindConstBuffer(BufferID id, BindingSpace eSpace, uint32_t nBindingIndex, FlightFrameIndex nFlightFrameIndex)
 	{
 		Buffer* pBuffer = BufferManager::GetBuffer(id);
 
@@ -534,7 +534,7 @@ namespace LT {
 			.setPBufferInfo(&dbi)
 			;
 
-		std::vector<vk::DescriptorSet>* pVecDescSets = (nFrameIndex == 0 ? &m_vecDescriptorSets0 : &m_vecDescriptorSets1);
+		std::vector<vk::DescriptorSet>* pVecDescSets = (nFlightFrameIndex == 0 ? &m_vecDescriptorSets0 : &m_vecDescriptorSets1);
 		
 		wds[0].setDstSet((*pVecDescSets)[static_cast<size_t>(eSpace)]);
 
@@ -543,7 +543,7 @@ namespace LT {
 
 	}
 
-	void GraphicPass::BindImage2D(ImageID id, BindingSpace eSpace, uint32_t nBindingIndex, uint32_t nFrameIndex)
+	void GraphicPass::BindImage2D(ImageID id, BindingSpace eSpace, uint32_t nBindingIndex, FlightFrameIndex nFlightFrameIndex)
 	{
 		vk::DescriptorImageInfo ddi = {};
 
@@ -562,7 +562,7 @@ namespace LT {
 			.setPImageInfo(&ddi)
 			;
 
-		std::vector<vk::DescriptorSet>* pVecDescSets = (nFrameIndex == 0 ? &m_vecDescriptorSets0 : &m_vecDescriptorSets1);
+		std::vector<vk::DescriptorSet>* pVecDescSets = (nFlightFrameIndex == 0 ? &m_vecDescriptorSets0 : &m_vecDescriptorSets1);
 
 		wds[0].setDstSet((*pVecDescSets)[static_cast<size_t>(eSpace)]);
 		vkContext::GetVkDevice().updateDescriptorSets(wds, {});

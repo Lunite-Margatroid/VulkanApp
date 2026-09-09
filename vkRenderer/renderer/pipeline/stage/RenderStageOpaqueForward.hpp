@@ -10,8 +10,7 @@ namespace LT {
 		RenderStageOpaqueForward() = default;
 		~RenderStageOpaqueForward() = default;
 
-		void SetRenderTarget(const std::vector<ImageID>& vecRenderTargets);
-
+		void Execute(const StageExecuteInfo& sExecuteInfo) override;
 
 		RenderStageType GetRenderStageType() const override { return RenderStageType::eOpaqueForward; }
 	};

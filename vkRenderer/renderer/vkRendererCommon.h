@@ -35,4 +35,14 @@ using BYTE = uint8_t;
 namespace LT {
 	constexpr int64_t INVALID_ITEM_ID = -1;
 	using RenderFlagType = uint64_t;
+	using FrameIndex = int64_t;
+	using FlightFrameIndex = int64_t;
+
+	using ResultSetter = int32_t;
+
+	enum class RenderStageType : int {
+		eUnknown = -1,
+		eOpaqueForward,
+	};
+
 } // namespace LT

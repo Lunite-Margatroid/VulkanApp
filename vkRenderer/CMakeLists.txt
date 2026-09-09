@@ -131,6 +131,7 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/pipeline/stage"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/material"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/entity"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/renderView"
         "${GLM_INSTALLED_DIR}/include"
 		"${SLANG_INSTALLED_DIR}/include"
 		"${Vulkan_INCLUDE_DIRS}"

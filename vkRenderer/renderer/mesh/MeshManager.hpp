@@ -1,4 +1,5 @@
 // Mesh管理器
+#pragma once
 #include "IMesh.hpp"
 #include "vkRendererUtil.hpp"
 

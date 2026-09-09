@@ -12,8 +12,11 @@
 #include "MeshStatic.hpp"
 #include "MaterialManager.hpp"
 
+#include "SwapChain.h"
+
 namespace LT {
 	Renderer::Renderer()
+		:m_nFrameIndex(0)
 	{
 		DeviceMemoryManager::Init();
 		BufferManager::Init();
@@ -159,31 +162,42 @@ namespace LT {
 
 		m_pRenderView.reset(new RenderViewSingleCamera());
 
-		m_pPipeline->SetRenderView(m_pRenderView.get());
-
-		m_pPipeline->SetConstBufferMVPMat(m_vecConstBufferMVPMat);
-
 		
 		ImgRes img("./TestAsset/UVTest.png", 8);
 		m_pDebugImage = ImageManager::CreateImage2DShaderResource(vk::Format::eR8G8B8A8Srgb, img.GetWidth(), img.GetHeight());
 		m_pDebugImage->AssignMemory(img.GetDataPtr(), img.GetDepth() / 8 * img.GetHeight() * img.GetWidth() * img.GetChannal());
 
-		m_pPipeline->SetImage(m_pDebugImage);
-		m_pPipeline->SetImageSampler(SamplerManager::GetDefaultImageSampler());
-		m_pPipeline->UpdateDescriptorSets();
+		MaterialMainTexture* pMtl = dynamic_cast<MaterialMainTexture*>(m_refMtl.GetPtr());
+		if (pMtl)
+		{
+			pMtl->SetMainTexture(m_pDebugImage->GetImageID());
+		}
+
+		vk::Device& device = vkContext::GetVkDevice();
+
+		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)
+		{
+			m_vecSemAcquiring.emplace_back(device.createSemaphore(vk::SemaphoreCreateInfo{}));
+			m_vecSemDrawing.emplace_back(device.createSemaphore(vk::SemaphoreCreateInfo{}));
+			m_vecFenceDrawing.emplace_back(device.createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled)));
+		}
 	}
 	Renderer::~Renderer()
 	{
+		vk::Device& device = vkContext::GetVkDevice();
+
+		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; ++i)
+		{
+			device.destroySemaphore(m_vecSemAcquiring[i]);
+			device.destroySemaphore(m_vecSemDrawing[i]);
+			device.destroyFence(m_vecFenceDrawing[i]);
+		}
+
 
 		m_pRenderView.reset();
 
 		ImageManager::DeleteImage(m_pDebugImage);
 
-		for (ConstBuffer* pConstBufer : m_vecConstBufferMVPMat)
-		{
-			BufferManager::DeleteBuffer(reinterpret_cast<Buffer*>(pConstBufer));
-		}
-		m_vecConstBufferMVPMat.clear();
 
 		BufferManager::DeleteBuffer(reinterpret_cast<Buffer*>(m_pDebugVertexBuffer));
 		BufferManager::DeleteBuffer(reinterpret_cast<Buffer*>(m_pDebugIndexBuffer));
@@ -199,47 +213,77 @@ namespace LT {
 		DeviceMemoryManager::Release();
 	}
 
-	void Renderer::UpdateConstBufer()
+	void Renderer::SetModelMat(const glm::mat4& matModel)
 	{
-		for (ConstBuffer* pConstBuffer : m_vecConstBufferMVPMat)
-		{
-			pConstBuffer->UpdateConstBuffer(&m_MVPMatBuf);
-		}
+		m_pRenderView->SetModelMat(matModel);
 	}
 
-	void Renderer::SetModelMat(const float* pModelMat)
+	void Renderer::SetViewMat(const glm::mat4& matView)
 	{
-		memcpy(&m_MVPMatBuf.modelMat, pModelMat, sizeof(glm::mat4));
+		m_pRenderView->SetViewMat(matView);
 	}
 
-	void Renderer::SetViewMat(const float* pViewMat)
+	void Renderer::SetProjectionMat(const glm::mat4&  matProjection)
 	{
-		memcpy(&m_MVPMatBuf.viewMat, pViewMat, sizeof(glm::mat4));
+		m_pRenderView->SetProjectionMat(matProjection);
 	}
 
-	void Renderer::SetProjectionMat(const float* pProjectionMat)
-	{
-		memcpy(&m_MVPMatBuf.projectionMat, pProjectionMat, sizeof(glm::mat4));
-	}
-
-	void Renderer::SetCameraPos(const float* pCameraPos) {
-		memcpy(&m_MVPMatBuf.cameraPos, pCameraPos, sizeof(glm::vec4));
-	}
-
-	void Renderer::SetNormalMat(const float* pNormalMat) {
-		for (int col = 0; col < 3; ++col)
-		{
-			memcpy(&m_MVPMatBuf.normalMatCol[col],pNormalMat +  col * 4, sizeof(glm::vec4));
-		}
-	}
-
-	void Renderer::SetMVPMat(const float* pNormalMat)
-	{
-		memcpy(&m_MVPMatBuf.mvpMat, pNormalMat, sizeof(glm::mat4));
+	void Renderer::SetCameraPos(const glm::vec4& vec4CameraPos) {
+		m_pRenderView->SetCameraPos(vec4CameraPos);
 	}
 
 	void Renderer::DrawFrame() {
-		m_pPipeline->DrawFrame();
+		vk::Device& device = vkContext::GetVkDevice();
+		vk::SwapchainKHR swapchain = vkContext::GetNativeSwapChain();
+		m_nFrameIndex += 1;
+
+		FlightFrameIndex nFlightFrameIndex = m_nFrameIndex % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
+
+		// 等待同一Flight Frame上一帧绘制
+		vk::Result waitResult = device.waitForFences(m_vecFenceDrawing[nFlightFrameIndex], vk::True, std::_Max_limit<uint64_t>());
+		RENDERER_ASSERT(waitResult == vk::Result::eSuccess, "Wait for Draing Failed.");
+		// 重置
+		device.resetFences(m_vecFenceDrawing[nFlightFrameIndex]);
+
+		// 获取Swapchain image
+		int32_t imageIndex = vkContext::GetSwapChain().AcquireNextImage(std::_Max_limit<uint64_t>(), m_vecSemAcquiring[nFlightFrameIndex], vk::Fence());
+		RENDERER_ASSERT(imageIndex > 0, "Acquire Swapchain Image Failed.");
+		uint32_t nImageIndex = static_cast<uint32_t>(imageIndex);
+		
+		FrameInfo sFrameInfo;
+		sFrameInfo.nFrameIndex = m_nFrameIndex;
+		sFrameInfo.nFightFrameIndex = nFlightFrameIndex;
+		sFrameInfo.vecRenderTargets.push_back(SWAPCHAIN_IMAGE_ID);
+		sFrameInfo.fenceDrawing = m_vecFenceDrawing[nFlightFrameIndex];
+		sFrameInfo.semAcquiring = m_vecSemAcquiring[nFlightFrameIndex];
+		sFrameInfo.semDrawing = m_vecSemDrawing[nFlightFrameIndex];
+		sFrameInfo.vecEntityRender.push_back(m_pEntity.get());
+		sFrameInfo.pRenderView = m_pRenderView.get();
+
+		m_pPipeline->Execute(sFrameInfo);
+
+		
+
+		// 交换链命令
+		vk::PresentInfoKHR pi;
+		pi.setWaitSemaphoreCount(1)
+			.setPWaitSemaphores(&m_vecSemDrawing[nFlightFrameIndex])	// 等待渲染完成
+			.setSwapchainCount(1)
+			.setPSwapchains(&swapchain)
+			.setPImageIndices(&nImageIndex)
+			;
+		// 提交交换链命令
+		vk::Result resultPresent = vkContext::GetCmdQueueForSurface().presentKHR(pi);
+
+		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)
+		{
+			vkContext::WaitIdel();
+			vkContext::GetInstance().ResizeSwapChain(m_pPipeline->GetWidth(), m_pPipeline->GetHeight());
+		}
+		else
+		{
+			RENDERER_ASSERT(resultPresent == vk::Result::eSuccess, "Present Failed.");
+		}
 	}
 
 

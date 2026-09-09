@@ -1,14 +1,38 @@
 // 渲染器实体
 #pragma once
 #include "IEntity.hpp"
-
 #include "IRenderStage.hpp"
+#include "RenderView.hpp"
 
 namespace LT {
 
 	struct EntityDrawInfo {
-		RenderStageType m_eRenderStage;
-		std::vector<ImageID> m_vecRenderTargets;
+		uint32_t nWidth;
+		uint32_t nHeight;
+		FlightFrameIndex nFlightFrameIndex;
+		RenderStageType eRenderStage;
+		ImageID nDepthBuffer;
+		RenderView* pRenderView;
+		std::vector<ImageID> vecRenderTargets;
+		
+		std::vector<vk::Semaphore> vecSemWait;
+		std::vector<vk::PipelineStageFlags> vecSemWaitMasks;
+
+		std::vector<vk::Semaphore> vecSemSignal;
+
+		vk::Fence vkFenceSet;
+
+		EntityDrawInfo() 
+			: nWidth(0)
+			, nHeight(0)
+			, nFlightFrameIndex(-1)
+			, eRenderStage(RenderStageType::eUnknown)
+			, nDepthBuffer(INVALID_IMAGE_ID)
+			, pRenderView(nullptr)
+		{
+			
+		}
+
 	};
 
 	class EntityRender :IEntity {

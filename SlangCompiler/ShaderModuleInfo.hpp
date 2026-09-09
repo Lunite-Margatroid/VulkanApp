@@ -23,6 +23,17 @@ namespace LT {
 		}
 	};
 
+	struct BindingInfoHash {
+		size_t operator()(const BindingInfo& bindingInfo)const {
+			uint64_t n = (static_cast<uint64_t>(bindingInfo.eSpace) << 32) | static_cast<uint64_t>(bindingInfo.nIndex);
+			return std::hash<uint64_t>{}(n);
+		}
+	};
+
+	bool operator == (const BindingInfo& a, const BindingInfo& b) {
+		return a.nIndex == b.nIndex && a.eSpace == b.eSpace;
+	}
+
 	struct ShaderModuleInfo {
 		std::vector<BindingInfo> m_vecTexture2DBindingInfo;
 		std::vector<BindingInfo> m_vecConstBufferBindingInfo;

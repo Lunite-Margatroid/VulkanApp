@@ -1,4 +1,5 @@
 #pragma once
+#include "IRenderStage.hpp"
 
 
 namespace LT {
@@ -14,18 +15,26 @@ namespace LT {
 	class RenderViewSingleCamera;
 
 	struct FrameInfo {
-		// 从Swapchain AcquireNextImage得到的index
-		// -1表示不需要present
-		int m_nImageIndex;
 		// 只增的帧序列
-		uint64_t m_nFrameIndex;
+		FrameIndex nFrameIndex;
 		// Flight Frame的索引
 		// 小于最大Flight Frame的数量
-		uint64_t m_nIndexInFlight;
+		FlightFrameIndex nFightFrameIndex;
 		// 渲染对象
-		std::vector<EntityRender*> m_vecEntityRender;
+		std::vector<EntityRender*> vecEntityRender;
 		// RenderView
-		RenderViewSingleCamera* m_pRenderView;
+		RenderViewSingleCamera* pRenderView;
+
+		std::vector<ImageID> vecRenderTargets;
+
+
+		// acquire发出的信号
+		vk::Semaphore semAcquiring;
+
+		// 渲染完成
+		vk::Semaphore semDrawing;
+		vk::Fence fenceDrawing;
+
 	};
 
 
@@ -35,59 +44,22 @@ namespace LT {
 		uint32_t m_nWidth;
 		uint32_t m_nHeight;
 
-		// debug shader
-		vk::ShaderModule m_vkShaderMod;
-
-		vk::PipelineLayout m_vkPipelineLayout;
-		vk::Pipeline m_vkPipeline;
-
-		vk::DescriptorSetLayout m_vkDescSetLayout;
-
-		std::vector<vk::DescriptorSet> m_vecDescriptorSets;
-
-		std::vector<vk::Semaphore> m_vkSemRenderFinish;	// 数量与swapchain的image一致
-		std::vector<vk::Semaphore> m_vkSemPresentComplete;	// 数量与flight frame一致
-
-		std::vector<vk::Fence> m_vkFenceDraw;	// 数量与flight frame一致
-
 		std::vector<Image2DDepthBuffer*> m_vecDepthBuffer; // 深度缓冲
-
-		uint64_t m_nFrameCount;
-
-
-
-
-		void CreateSyncObjects();
-		void RecordCommandBufferDebug(unsigned int imageIndex, unsigned int nFrameIndex);
-
-		void TransitionImageLayout(
-			uint32_t nImageIndex,
-			uint32_t nFrameIndex,
-			vk::ImageLayout oldLayout,
-			vk::ImageLayout newLayout,
-			vk::AccessFlags2 srcAccessFlag,
-			vk::AccessFlags2 dstAccessFlag,
-			vk::PipelineStageFlags2 srcStageFlag,
-			vk::PipelineStageFlags2 dstStageFlag,
-			vk::ImageAspectFlags eImageAspect
-		);
 
 	public:
 		Pipeline();
 		~Pipeline();
 		void DrawFrame();
 
-		vk::Pipeline& GetNativePipeline();
 
 		void UpdateConstBuffer();
 
-		void UpdateDescriptorSets();
-
 		void Resize(uint32_t nWidth, uint32_t nHeight);
 
-		void SetRenderView(RenderViewSingleCamera* pRenderView);
+		void Execute(const FrameInfo& sFrameInfo);
 
-		void Execute(FrameInfo& sFrameInfo);
 
+		uint32_t GetWidth() const { return m_nWidth; }
+		uint32_t GetHeight() const { return m_nHeight; }
 	};
 }// namespace LT

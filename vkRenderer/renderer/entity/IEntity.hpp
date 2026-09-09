@@ -14,7 +14,7 @@ namespace LT {
 		{}
 		virtual ~IEntity() = default;
 
-		EntityID GetID const{ return m_nID; }
+		EntityID GetID() const{ return m_nID; }
 
 	};
 
