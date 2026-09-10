@@ -15,6 +15,7 @@ namespace LT {
 		sDrawInfo.nDepthBuffer = sExecuteInfo.nDepthBufferID;
 		sDrawInfo.vecRenderTargets = sExecuteInfo.vecRenderTarget;
 		sDrawInfo.pRenderView = sExecuteInfo.pRenderView;
+		sDrawInfo.eRenderStage = GetRenderStageType();
 
 		if (!sExecuteInfo.vecSemSignal.empty())
 		{

@@ -70,9 +70,7 @@ namespace LT {
 				pConstBuffer->UpdateConstBuffer(pRenderView->GetTransBuffer());
 			}
 
-			m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex];
-
-			pRenderPass->BindConstBuffer(0, BindingSpace::eVertexShader, m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex], sDrawInfo.nFlightFrameIndex);
+			pRenderPass->BindConstBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex], BindingSpace::eVertexShader, 0, sDrawInfo.nFlightFrameIndex);
 
 			RecordCommandInfo sRecordInfo;
 			sRecordInfo.nWidth = sDrawInfo.nWidth;
@@ -81,6 +79,7 @@ namespace LT {
 			sRecordInfo.vecImageIDColor = sDrawInfo.vecRenderTargets;
 			sRecordInfo.vecVertexBufferID.push_back(m_pVertexBuffer->GetBufferID());
 			sRecordInfo.nIndexBufferID = m_pIndexBuffer->GetBufferID();
+			sRecordInfo.nFlightFrameIndex = sDrawInfo.nFlightFrameIndex;
 
 			pRenderPass->RecordCommand(sRecordInfo);
 
@@ -98,7 +97,7 @@ namespace LT {
 				sSubmitInfo.vecSemToSignal = sDrawInfo.vecSemSignal;
 			}
 
-			if (!sDrawInfo.vkFenceSet)
+			if (sDrawInfo.vkFenceSet)
 			{
 				sSubmitInfo.vkFenceToSet = sDrawInfo.vkFenceSet;
 			}

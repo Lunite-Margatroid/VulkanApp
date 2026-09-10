@@ -43,17 +43,20 @@ namespace LT {
 		if (pRenderPass) {
 			for (const auto& [bindingInfo, mtlSlot] : m_mapSlots)
 			{
-				switch (mtlSlot.eDescType)
+				if (mtlSlot.nSrcID >= 0)
 				{
-				case vk::DescriptorType::eUniformBuffer:
-					pRenderPass->BindConstBuffer(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex, nFlightFrameIndex);
-					break;
-				case vk::DescriptorType::eCombinedImageSampler:
-					pRenderPass->BindImage2D(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex, nFlightFrameIndex);
-					break;
-				default:
-					break;
-				};
+					switch (mtlSlot.eDescType)
+					{
+						case vk::DescriptorType::eUniformBuffer:
+							pRenderPass->BindConstBuffer(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex, nFlightFrameIndex);
+							break;
+						case vk::DescriptorType::eCombinedImageSampler:
+							pRenderPass->BindImage2D(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex, nFlightFrameIndex);
+							break;
+						default:
+							break;
+					};
+				}
 			}
 		}
 	}

@@ -8,7 +8,7 @@ namespace LT {
 	public:
 		ResourceRef() : m_nID(INVALID_ITEM_ID) {}
 
-		ResourceRef(TypeID id) : m_nID(id) {
+		explicit ResourceRef(TypeID id) : m_nID(id) {
 			TypeRefIncrease{}(id);
 		}
 
@@ -55,6 +55,11 @@ namespace LT {
 		T* operator->() {
 			return GetPtr();
 		}
+
+		void Release() {
+			TypeRefDecrease{}(m_nID);
+			m_nID = INVALID_ITEM_ID;
+		}
 	};
 
 	template<typename T>
@@ -83,7 +88,11 @@ namespace LT {
 			return m_nRefCount;
 		}
 		unsigned int IncreaseRefCount() {
-			return ++m_nRefCount;
+			if (m_ptr)
+			{
+				++m_nRefCount;
+			}
+			return m_nRefCount;
 		}
 
 		unsigned int GetRefCount() const {
@@ -133,6 +142,7 @@ namespace LT {
 			{
 				return 0;
 			}
+			LOG_TRACING("Manager: %p. Object RefIncrease. ID: %lld, refCount: %u", this, nID, iter->second.GetRefCount() + 1);
 			return iter->second.IncreaseRefCount();
 		}
 		unsigned int RefDecrease(TypeID nID) {
@@ -146,27 +156,9 @@ namespace LT {
 			{
 				m_mapResources.erase(nID);
 			}
+			LOG_TRACING("Manager: %p. Object RefDecrease. ID: %lld, refCount: %u", this, nID, nRefCount);
 			return nRefCount;
 		}
-
-	public:
-		struct _GetPtr {
-			T* operator ()(TypeID nID)const {
-				return GetResourcePtr(nID);
-			}
-		};
-
-		struct _RefIncrease {
-			unsigned int operator ()(TypeID nID) const {
-				return RefIncrease(nID);
-			}
-		};
-
-		struct _RefDecrease {
-			unsigned int operator ()(TypeID nID) const {
-				return RefIncrease(nID);
-			}
-		};
 	};
 
 
@@ -228,6 +220,10 @@ ManagerType* ManagerType::s_pInstance = nullptr;\
 ManagerType::~ManagerType(){\
 	if(m_mapResources.size() > 0){\
 		LOG_WARNING(#ManagerType": There are "#TargetName" unreleased.");\
+	for(auto & [id, ptr] : m_mapResources)\
+	{\
+		LOG_WARNING("unreleased object id: %lld, refcount: %u", id, ptr.m_nRefCount);\
+	}\
 	}\
 }\
 void ManagerType::Init(){\
@@ -252,8 +248,8 @@ TargetName##Ref ManagerType::Insert(IDType nID, TargetType* pItem){\
 		return TargetName##Ref(INVALID_ITEM_ID);\
 	}\
 	TargetName##Ptr ptrWarpper(pItem);\
+	ptrWarpper.m_nRefCount = 0; \
 	m_mapResources[nID] = ptrWarpper;\
-	ptrWarpper.m_nRefCount = 0;\
 	return TargetName##Ref(nID);\
 }\
 

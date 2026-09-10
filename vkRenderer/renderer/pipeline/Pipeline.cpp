@@ -588,7 +588,7 @@ namespace LT {
 		if (sFrameInfo.semAcquiring)
 		{
 			sStageInfo.vecSemWait.push_back(sFrameInfo.semAcquiring);
-			sStageInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllGraphics);
+			sStageInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eColorAttachmentOutput);
 		}
 
 		if (sFrameInfo.semDrawing)

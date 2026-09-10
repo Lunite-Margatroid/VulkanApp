@@ -181,6 +181,9 @@ namespace LT {
 	}
 	Renderer::~Renderer()
 	{
+		m_refMtl.Release();
+		m_pEntity.reset();
+
 		vk::Device& device = vkContext::GetVkDevice();
 
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; ++i)

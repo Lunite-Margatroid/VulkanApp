@@ -73,7 +73,7 @@ namespace LT {
 		if (m_bRenderingPaused)
 			return;
 
-		if (m_nWidth == 0 || m_nWidth == 0)
+		if (m_nWidth == 0 || m_nHeight == 0)
 			return;
 
 		m_nFrameIndex++;

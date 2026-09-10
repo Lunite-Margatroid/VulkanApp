@@ -69,49 +69,11 @@ constexpr RenderFlagType VERTEX_CHANNEL_FLAG_MASK = (1 << VERTEX_CHANNEL_TOTAL_C
 
 	using VertexChannelFlag = uint32_t;
 
-	struct VertexChannelDesc {
-		VertexChannel m_eChannelType;
-		BufferDataType m_eDataType;
-		uint32_t m_nDimension;
-		uint32_t m_nOffset;
-		// 暂时没用到
-		uint32_t m_nStride;
-		VertexChannelDesc(
-			VertexChannel eChannelType,
-			BufferDataType eDataType,
-			uint32_t nDimension,
-			uint32_t nOffset
-		)
-			:m_eChannelType(eChannelType),
-			m_eDataType(eDataType),
-			m_nDimension(nDimension),
-			m_nOffset(nOffset)
-		{
-			m_nStride = nDimension * BufferDataType2Size(eDataType);
-		}
-
-		VertexChannelDesc(
-			VertexChannel eChannelType,
-			BufferDataType eDataType,
-			uint32_t nDimension,
-			uint32_t nOffset,
-			uint32_t nStride
-		)
-			:m_eChannelType(eChannelType),
-			m_eDataType(eDataType),
-			m_nDimension(nDimension),
-			m_nOffset(nOffset),
-			m_nStride(nStride)
-		{
-		}
-	};
-
 	class StagingBuffer;
 
 	class VertexBuffer : public BufferDst, public IBindable{
 		friend class BufferManager;
 	protected:
-		std::vector<VertexChannelDesc> m_vecVertexChannelDesc;
 		uint64_t m_nVertexCount;
 
 		VertexBuffer(BufferID id);
@@ -135,10 +97,6 @@ constexpr RenderFlagType VERTEX_CHANNEL_FLAG_MASK = (1 << VERTEX_CHANNEL_TOTAL_C
 		/// <param name="nTarget"> 目前没有任何含义 </param>
 		void Bind(BindTarget nTarget) override;
 		void Unbind() override;
-
-		bool AddVertexChannel(const VertexChannelDesc& channelDesc);
-
-		void GetVertexDesc(std::vector< vk::VertexInputBindingDescription>&bindingDesc ,std::vector<vk::VertexInputAttributeDescription>& vertexDesc);
 
 		void UpdateDataToGPU() override;
 
