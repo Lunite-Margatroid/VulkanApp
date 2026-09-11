@@ -8,8 +8,6 @@
 # 3. 分别安装到 vendor/dist_debug、vendor/dist_release, 再合并拷贝到 vendor/dist
 #
 # 可选参数(通过 -D 传入):
-#   OIIO_GENERATOR   生成器, 默认 "Visual Studio 17 2022"
-#   OIIO_ARCH        平台, 默认 x64(仅 VS 生成器生效)
 #   OIIO_GIT_TAG     分支/标签, 默认 dev-3.2
 #   OIIO_CONFIGS     要构建的配置列表, 默认 "Debug;Release"
 #   OIIO_BUILD_JOBS  并行编译数, 默认不指定(使用全部核心)
@@ -23,12 +21,6 @@ set(OIIO_SOURCE_DIR  "${PROJECT_ROOT}/vendor/OpenImageIO")
 set(OIIO_INSTALL_DIR "${PROJECT_ROOT}/vendor/dist")
 
 # ---- 可覆盖参数 ----
-if(NOT DEFINED OIIO_GENERATOR)
-    set(OIIO_GENERATOR "Visual Studio 17 2022")
-endif()
-if(NOT DEFINED OIIO_ARCH)
-    set(OIIO_ARCH "x64")
-endif()
 if(NOT DEFINED OIIO_GIT_URL)
     set(OIIO_GIT_URL "https://github.com/AcademySoftwareFoundation/OpenImageIO.git")
 endif()
@@ -52,17 +44,6 @@ set(OIIO_CMAKE_ARGS
 )
 if(DEFINED OIIO_EXTRA_ARGS)
     list(APPEND OIIO_CMAKE_ARGS ${OIIO_EXTRA_ARGS})
-endif()
-
-# ---- 多配置生成器(如 VS)用 --config 指定; 单配置生成器(如 Ninja)用 CMAKE_BUILD_TYPE ----
-set(_is_multi_config FALSE)
-#if(OIIO_GENERATOR MATCHES "Visual Studio|Xcode|Ninja Multi-Config")
-#    set(_is_multi_config TRUE)
-#endif()
-
-set(_arch_args)
-if(OIIO_GENERATOR MATCHES "Visual Studio")
-    list(APPEND _arch_args -A "${OIIO_ARCH}")
 endif()
 
 # ---- 拉取源码并切换到目标分支 ----
@@ -109,11 +90,8 @@ foreach(_config IN LISTS OIIO_CONFIGS)
 
     set(_build_args)
     set(_cfg_cache_args)
-#    if(_is_multi_config)
-        list(APPEND _build_args --config "${_config}")
-#    else()
-        list(APPEND _cfg_cache_args -DCMAKE_BUILD_TYPE=${_config})
-#    endif()
+    list(APPEND _build_args --config "${_config}")
+    list(APPEND _cfg_cache_args -DCMAKE_BUILD_TYPE=${_config})
 
 	# 安装目录
 	# release安装到dist_release
@@ -128,8 +106,6 @@ foreach(_config IN LISTS OIIO_CONFIGS)
         COMMAND ${CMAKE_COMMAND}
             -S "${OIIO_SOURCE_DIR}"
             -B "${_build_dir}"
-            -G "${OIIO_GENERATOR}"
-            ${_arch_args}
             ${_cfg_cache_args}
             ${_oiio_cmake_args}
         RESULT_VARIABLE _res

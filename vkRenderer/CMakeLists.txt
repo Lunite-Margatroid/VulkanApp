@@ -61,6 +61,11 @@ file(GLOB PRIVATE_HEADERS
 	"renderer/renderView/*.hpp"
 )
 
+# 添加筛选器
+# 根据目录自动分组
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}"
+             FILES ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${SOURCES})
+
 # 创建静态库
 add_library(vkRenderer STATIC ${SOURCES} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
 # 链接vulkan
