@@ -5,7 +5,7 @@
 #
 # 1. 将 OpenImageIO 源码拉取到 vendor/OpenImageIO, 并切换到 dev-3.2 分支
 # 2. 分别构建 Debug/Release 到 vendor/OpenImageIO/build_debug、vendor/OpenImageIO/build_release
-# 3. 安装到 vendor/dist
+# 3. 分别安装到 vendor/dist_debug、vendor/dist_release, 再合并拷贝到 vendor/dist
 #
 # 可选参数(通过 -D 传入):
 #   OIIO_GENERATOR   生成器, 默认 "Visual Studio 17 2022"
@@ -49,7 +49,6 @@ set(OIIO_CMAKE_ARGS
     -DUSE_PYTHON=0
     -DOpenImageIO_BUILD_MISSING_DEPS=all
     -DOIIO_BUILD_TESTS=0
-    -DCMAKE_INSTALL_PREFIX=${OIIO_INSTALL_DIR}
 )
 if(DEFINED OIIO_EXTRA_ARGS)
     list(APPEND OIIO_CMAKE_ARGS ${OIIO_EXTRA_ARGS})
@@ -57,9 +56,9 @@ endif()
 
 # ---- 多配置生成器(如 VS)用 --config 指定; 单配置生成器(如 Ninja)用 CMAKE_BUILD_TYPE ----
 set(_is_multi_config FALSE)
-if(OIIO_GENERATOR MATCHES "Visual Studio|Xcode|Ninja Multi-Config")
-    set(_is_multi_config TRUE)
-endif()
+#if(OIIO_GENERATOR MATCHES "Visual Studio|Xcode|Ninja Multi-Config")
+#    set(_is_multi_config TRUE)
+#endif()
 
 set(_arch_args)
 if(OIIO_GENERATOR MATCHES "Visual Studio")
@@ -110,11 +109,18 @@ foreach(_config IN LISTS OIIO_CONFIGS)
 
     set(_build_args)
     set(_cfg_cache_args)
-    if(_is_multi_config)
+#    if(_is_multi_config)
         list(APPEND _build_args --config "${_config}")
-    else()
+#    else()
         list(APPEND _cfg_cache_args -DCMAKE_BUILD_TYPE=${_config})
-    endif()
+#    endif()
+
+	# 安装目录
+	# release安装到dist_release
+	# debug安装到dist_debug
+	set(OIIO_INSTALL_DIR_CONFIG "${OIIO_INSTALL_DIR}_${_config_lc}")
+	set(_oiio_cmake_args ${OIIO_CMAKE_ARGS})
+	list(APPEND _oiio_cmake_args -DCMAKE_INSTALL_PREFIX=${OIIO_INSTALL_DIR_CONFIG})
 
     # 配置
     message(STATUS "[OIIO] 配置 ${_config} -> ${_build_dir}")
@@ -125,7 +131,7 @@ foreach(_config IN LISTS OIIO_CONFIGS)
             -G "${OIIO_GENERATOR}"
             ${_arch_args}
             ${_cfg_cache_args}
-            ${OIIO_CMAKE_ARGS}
+            ${_oiio_cmake_args}
         RESULT_VARIABLE _res
     )
     if(_res)
@@ -146,7 +152,7 @@ foreach(_config IN LISTS OIIO_CONFIGS)
     endif()
 
     # 安装到 vendor/dist
-    message(STATUS "[OIIO] 安装 ${_config} -> ${OIIO_INSTALL_DIR}")
+    message(STATUS "[OIIO] 安装 ${_config} -> ${_oiio_cmake_args}")
     execute_process(
         COMMAND ${CMAKE_COMMAND}
             --install "${_build_dir}"
@@ -155,6 +161,37 @@ foreach(_config IN LISTS OIIO_CONFIGS)
     )
     if(_res)
         message(FATAL_ERROR "OIIO ${_config} 安装失败")
+    endif()
+
+    # 补拷依赖暂存目录(deps/dist): OIIO 的 install 规则只在"构建该依赖的当次配置"里
+    # 注册(dependency_utils.cmake 的 checked_find_package 后续会 find 到已装好的
+    # deps/dist 并跳过本地构建分支), 中途中断后重跑会漏装已构建依赖的 dll/lib。
+    # 这里直接把 deps/dist 的产物补进安装目录, 代价小且幂等
+    set(_deps_dist "${_build_dir}/deps/dist")
+    if(EXISTS "${_deps_dist}")
+        if(EXISTS "${_deps_dist}/bin")
+            message(STATUS "[OIIO] 补拷依赖 dll: ${_deps_dist}/bin -> ${OIIO_INSTALL_DIR_CONFIG}/bin")
+            file(COPY "${_deps_dist}/bin/" DESTINATION "${OIIO_INSTALL_DIR_CONFIG}/bin"
+                 FILES_MATCHING PATTERN "*.dll")
+        endif()
+        if(EXISTS "${_deps_dist}/lib")
+            message(STATUS "[OIIO] 补拷依赖 lib: ${_deps_dist}/lib -> ${OIIO_INSTALL_DIR_CONFIG}/lib")
+            file(COPY "${_deps_dist}/lib/" DESTINATION "${OIIO_INSTALL_DIR_CONFIG}/lib"
+                 FILES_MATCHING PATTERN "*.lib")
+        endif()
+    endif()
+endforeach()
+
+# ---- 合并 dist_debug 与 dist_release 到 dist ----
+# 先拷 debug 再拷 release: 同名文件(exe、第三方 dll/lib)以 release 为准,
+# debug 独有的 *_d.dll / *_d.lib 不被覆盖, 两个配置的产物共存于同一目录树
+file(REMOVE_RECURSE "${OIIO_INSTALL_DIR}")
+file(MAKE_DIRECTORY "${OIIO_INSTALL_DIR}")
+foreach(_src IN ITEMS dist_debug dist_release)
+    set(_src_dir "${PROJECT_ROOT}/vendor/${_src}")
+    if(EXISTS "${_src_dir}")
+        message(STATUS "[OIIO] 合并拷贝 ${_src} -> ${OIIO_INSTALL_DIR}")
+        file(COPY "${_src_dir}/" DESTINATION "${OIIO_INSTALL_DIR}")
     endif()
 endforeach()
 

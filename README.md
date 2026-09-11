@@ -53,7 +53,7 @@ SDL安装位置 `SDL3_INSTALLED_DIR`
 cmake -P cmake/install_oiio.cmake
 ```
 
-如果使用了安装脚本，参数`-D OIIO_INSTALLED_DIR=./vendor/dist`
+如果使用了安装脚本，参数`-D OIIO_INSTALLED_DIR=%CD%/vendor/dist`
 
 ### 安装VulkanSDK
 
@@ -68,11 +68,11 @@ vulkan可以被`find_package`找到。Slang, VulkanMemoryAllocator, SDL3, glm的
 ### 命令
 
 ```bat
-cmake 	-D OIIO_INSTALLED_DIR=./vendor/dist^
-		-D VMA_INSTALLED_DIR=E:/Codes/VulkanSDK^
-		-D GLM_INSTALLED_DIR=E:/Codes/VulkanSDK^
-		-D SDL3_INSTALLED_DIR=E:/Codes/VulkanSDK^
-		-D SLANG_INSTALLED_DIR=E:/Codes/VulkanSDK^
+cmake 	-D OIIO_INSTALLED_DIR=%CD%/vendor/dist^
+		-D VMA_INSTALLED_DIR=%VULKAN_SDK%^
+		-D GLM_INSTALLED_DIR=%VULKAN_SDK%^
+		-D SDL3_INSTALLED_DIR=%VULKAN_SDK%^
+		-D SLANG_INSTALLED_DIR=%VULKAN_SDK%^
 		-S ./ -B ./build -G "Visual Studio 17 2022" -A x64 
 ```
 

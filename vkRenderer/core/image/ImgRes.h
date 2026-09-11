@@ -1,5 +1,4 @@
 #pragma once
-#include "OpenImageIO/imageio.h"
 
 namespace LT {
 

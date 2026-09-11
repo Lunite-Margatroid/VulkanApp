@@ -1,5 +1,6 @@
 /build
 /doc/*.bkp
+/vendor
 
 *.bat
 *.ps1

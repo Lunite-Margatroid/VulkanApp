@@ -1,7 +1,7 @@
 #include "EngineCommon.h"
 
 #include "ImgRes.h"
-
+#include "OpenImageIO/imageio.h"
 
 namespace LT {
 
