@@ -19,6 +19,7 @@ file(GLOB SOURCES
 	"renderer/material/*.cpp"
 	"renderer/entity/*.cpp"
 	"renderer/renderView/*.cpp"
+	"core/scene/*.cpp"
 )
 
 #set(HEADERS
@@ -59,6 +60,8 @@ file(GLOB PRIVATE_HEADERS
 	"renderer/entity/*.hpp"
 	"renderer/renderView/*.h"
 	"renderer/renderView/*.hpp"
+	"core/scene/*.h"
+	"core/scene/*.hpp"
 )
 
 # 添加筛选器
@@ -137,6 +140,7 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/material"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/entity"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/renderView"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/scene"
         "${GLM_INSTALLED_DIR}/include"
 		"${SLANG_INSTALLED_DIR}/include"
 		"${Vulkan_INCLUDE_DIRS}"

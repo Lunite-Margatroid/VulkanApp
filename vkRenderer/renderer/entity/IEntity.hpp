@@ -7,7 +7,7 @@ namespace LT {
 
 	class IEntity {
 	protected:
-		EntityID m_nID;
+		const EntityID m_nID;
 	public:
 		IEntity(EntityID nID) 
 			:m_nID(nID)
