@@ -13,6 +13,8 @@
 #include <unordered_map>
 #include <map>
 
+#include <algorithm>
+
 #if defined _WIN32
 
 #define NOMINMAX

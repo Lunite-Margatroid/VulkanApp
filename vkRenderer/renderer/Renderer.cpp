@@ -5,7 +5,7 @@
 #include "Renderer.h"
 #include "DeviceMemoryManager.h"
 #include "ImageManager.h"
-#include "image/ImgRes.h"
+#include "ImgRes.hpp"
 #include "sampler/SamplerManager.h"
 #include "MeshStatic.hpp"
 

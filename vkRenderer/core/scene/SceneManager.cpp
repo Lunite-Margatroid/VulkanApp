@@ -10,10 +10,6 @@ namespace LT {
 	{
 	}
 
-	NodeID SceneManager::GenID() {
-		return static_cast<NodeID>(m_nIDCounter++);
-	}
-
 	SceneManager::~SceneManager() {
 	}
 

@@ -1,11 +1,13 @@
-#include "EngineCommon.h"
-
-#include "ImgRes.h"
+#include "ImgRes.hpp"
 #include "OpenImageIO/imageio.h"
+
+#include "logger.hpp"
+
+#include <filesystem>
 
 namespace LT {
 
-    ImgRes::ImgRes(const std::string& path, int nDepth) :
+    ImgRes::ImgRes(const char* path, int nDepth) :
         m_Data(nullptr),
         m_Height(0),
         m_Width(0),
@@ -24,7 +26,7 @@ namespace LT {
 
 
         if (!std::filesystem::exists(path)) {
-            LOG_ERROR("File does not exist. %s\n", path.c_str());
+            LOG_ERROR("File does not exist. %s\n", path);
             return;
         }
 
@@ -36,7 +38,7 @@ namespace LT {
         if (!inputImage)
         {
             std::string err = OIIO::geterror();
-			LOG_ERROR("Cannt open file:%s. OIIO Error: %s\n", path.c_str(), err.c_str());
+			LOG_ERROR("Cannt open file:%s. OIIO Error: %s\n", path, err.c_str());
         }
 
         const OIIO::ImageSpec& pSpec = inputImage->spec();
@@ -70,7 +72,7 @@ namespace LT {
         if (inputImage->has_error())
         {
 			std::string err = inputImage->geterror();
-			LOG_ERROR("Cannt read file:%s. OIIO Error: %s\n", path.c_str(), err.c_str());
+			LOG_ERROR("Cannt read file:%s. OIIO Error: %s\n", path, err.c_str());
         }
 
         //bool hasError = has_error();

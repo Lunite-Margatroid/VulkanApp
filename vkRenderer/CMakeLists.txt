@@ -7,7 +7,6 @@ file(GLOB SOURCES
 	"renderer/pipeline/*.cpp"
     "exception/*.cpp"
 	"core/*.cpp"
-	"core/image/*.cpp"
 	"renderer/buffer/*.cpp"
 	"logger/*.cpp"
 	"renderer/deviceImage/*.cpp"
@@ -42,8 +41,6 @@ file(GLOB PRIVATE_HEADERS
 	"renderer/pipeline/*.hpp"
 	"renderer/buffer/*.h"
 	"renderer/buffer/*.hpp"
-	"core/image/*.h"
-	"core/image/*.hpp"
 	"renderer/deviceImage/*.h"
 	"renderer/deviceImage/*.hpp"
 	"renderer/sampler/*.h"
@@ -78,43 +75,8 @@ target_link_libraries(vkRenderer PRIVATE Vulkan::Vulkan)
 target_link_libraries(vkRenderer PRIVATE SlangCompiler)
 # 链接logger
 target_link_libraries(vkRenderer PUBLIC logger)
-
-# 链接OpenImageIO
-if(${OpenImageIO_FOUND})
-	target_link_libraries(vkRenderer PRIVATE OpenImageIO::OpenImageIO)
-else()
-	# 使用输入参数
-	if(WIN32)
-		target_link_libraries(vkRenderer 
-			PRIVATE
-				debug "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_d.lib"
-				optimized "${OIIO_INSTALLED_DIR}/lib/OpenImageIO.lib"
-		)
-		target_link_libraries(vkRenderer 
-			PRIVATE 
-				debug "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_Util_d.lib"
-				optimized "${OIIO_INSTALLED_DIR}/lib/OpenImageIO_Util.lib"
-		)
-	elseif(UNIX)
-		target_link_libraries(vkRenderer
-			PRIVATE 
-				"${OIIO_INSTALLED_DIR}/lib/libOpenImageIO.so"
-		)
-		target_link_libraries(vkRenderer
-			PRIVATE 
-				"${OIIO_INSTALLED_DIR}/lib/libOpenImageIO_Util.so"
-		)
-	else()
-		message(FATAL_ERROR "Unsupported platform")
-	endif()
-
-	target_include_directories(vkRenderer 
-		PRIVATE 
-			"${OIIO_INSTALLED_DIR}/include"
-	)
-
-endif()
-
+# 链接LunarImageIO
+target_link_libraries(vkRenderer PUBLIC LunarImageIO)
 
 
 # 使用utf-8编码编译源文件 仅windows
@@ -140,7 +102,7 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/material"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/entity"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/renderView"
-		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/scene"
+		"${CMAKE_CURRENT_SOURCE_DIR}/core/scene"
         "${GLM_INSTALLED_DIR}/include"
 		"${SLANG_INSTALLED_DIR}/include"
 		"${Vulkan_INCLUDE_DIRS}"

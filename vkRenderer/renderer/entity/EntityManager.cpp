@@ -1,5 +1,6 @@
 // Entity管理器
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "EntityManager.hpp"
 #include "EntityRenderMesh.hpp"
 

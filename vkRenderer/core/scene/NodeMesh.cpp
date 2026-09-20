@@ -1,6 +1,7 @@
 // Mesh节点
 
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "NodeMesh.hpp"
 #include "CompSprite3D.hpp"
 

@@ -7,12 +7,10 @@ namespace LT {
 	// 场景管理器 单例
 	class SceneManager {
 	private:
-		uint64_t m_nIDCounter;
+		int64_t m_nIDCounter;
 		std::map<NodeID, Node*> m_mapNodes;
 
 		SceneManager();
-
-		uint64_t GenID();
 
 	public:
 		~SceneManager();
@@ -24,6 +22,12 @@ namespace LT {
 		SceneManager(const SceneManager&) = delete;
 		SceneManager(SceneManager&&) = delete;
 
+	private:
+		NodeID GenID() {
+			return m_nIDCounter++;
+		}
+
+		// -------------- static ------------------
 	private:
 		static SceneManager* s_pSceneManager;
 	public:

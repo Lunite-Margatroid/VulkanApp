@@ -1,6 +1,6 @@
 // 场景树节点
 #include "vkRendererCommon.h"
-#include <algorithm>
+#include "EngineCommon.h"
 #include "Node.hpp"
 
 namespace LT {

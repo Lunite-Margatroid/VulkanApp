@@ -12,7 +12,7 @@ namespace LT {
 		int m_ResultCode;
 		unsigned char* m_Data;
 	public:
-		ImgRes(const std::string& path, int nTargetDepth);
+		ImgRes(const char* path, int nTargetDepth);
 		ImgRes() = delete;
 		~ImgRes();
 		ImgRes(const ImgRes&) = delete;
