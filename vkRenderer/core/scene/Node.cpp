@@ -49,4 +49,10 @@ namespace LT {
 		pChild->m_pParent = nullptr;
 		return true;
 	}
+
+	IComponent* Node::GetComponent(ComponentType eType)
+	{
+		RENDERER_ASSERT(IsValidCompnentType(eType), "Invalid Component Type.");
+		return m_arrComponents[static_cast<int>(eType)];
+	}
 } // namespace LT

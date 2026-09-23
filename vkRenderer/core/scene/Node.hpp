@@ -16,7 +16,6 @@ namespace LT {
 		eNodeMesh,
 	};
 
-
 	// 简单的树节点 用std::list<Node*>记录子节点
 	// 父节点拥有子节点的所有权 析构时级联释放子节点
 	class Node {
@@ -54,6 +53,9 @@ namespace LT {
 		NodeID GetID() const { return m_id; }
 
 		virtual NodeType GetNodeType() const { return NodeType::eNode; }
+
+
+		constexpr IComponent* GetComponent(ComponentType eType);
 	};
 
 } // namespace LT

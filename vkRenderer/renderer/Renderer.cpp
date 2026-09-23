@@ -11,9 +11,13 @@
 
 #include "SwapChain.h"
 
+#include "DisplayDevice.hpp"
+#include "View.hpp"
+
 namespace LT {
 	Renderer::Renderer()
-		:m_nFrameIndex(0)
+		: m_pDisplayDevice(nullptr)
+		, m_pView(nullptr)
 	{
 		DeviceMemoryManager::Init();
 		BufferManager::Init();
@@ -118,58 +122,16 @@ namespace LT {
 		m_pRenderView->SetCameraPos(vec4CameraPos);
 	}
 
-	void Renderer::DrawFrame() {
-		vk::Device& device = vkContext::GetVkDevice();
-		vk::SwapchainKHR swapchain = vkContext::GetNativeSwapChain();
-		m_nFrameIndex += 1;
+	void Renderer::DrawFrame(const FrameInfo& sFrameInfo) {
+		vk::Device& device = vkContext::GetVkDevice();		
 
-		FlightFrameIndex nFlightFrameIndex = m_nFrameIndex % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
+		FrameInfo sPipelineFrameInfo = sFrameInfo;
 
-		// 等待同一Flight Frame上一帧绘制
-		vk::Result waitResult = device.waitForFences(m_vecFenceDrawing[nFlightFrameIndex], vk::True, std::_Max_limit<uint64_t>());
-		RENDERER_ASSERT(waitResult == vk::Result::eSuccess, "Wait for Draing Failed.");
-		// 重置
-		device.resetFences(m_vecFenceDrawing[nFlightFrameIndex]);
+		// 收集RenderEntity
+		sPipelineFrameInfo.vecEntityRender = m_pView->GetRenderEntity();
+		sPipelineFrameInfo.pRenderView = m_pRenderView.get();
 
-		// 获取Swapchain image
-		int32_t imageIndex = vkContext::GetSwapChain().AcquireNextImage(std::_Max_limit<uint64_t>(), m_vecSemAcquiring[nFlightFrameIndex], vk::Fence());
-		RENDERER_ASSERT(imageIndex >= 0, "Acquire Swapchain Image Failed.");
-		uint32_t nImageIndex = static_cast<uint32_t>(imageIndex);
-		
-		FrameInfo sFrameInfo;
-		sFrameInfo.nFrameIndex = m_nFrameIndex;
-		sFrameInfo.nFightFrameIndex = nFlightFrameIndex;
-		sFrameInfo.vecRenderTargets.push_back(SWAPCHAIN_IMAGE_ID);
-		sFrameInfo.fenceDrawing = m_vecFenceDrawing[nFlightFrameIndex];
-		sFrameInfo.semAcquiring = m_vecSemAcquiring[nFlightFrameIndex];
-		sFrameInfo.semDrawing = m_vecSemDrawing[nFlightFrameIndex];
-		sFrameInfo.vecEntityRender.push_back(m_pEntity.get());
-		sFrameInfo.pRenderView = m_pRenderView.get();
-
-		m_pPipeline->Execute(sFrameInfo);
-
-		
-
-		// 交换链命令
-		vk::PresentInfoKHR pi;
-		pi.setWaitSemaphoreCount(1)
-			.setPWaitSemaphores(&m_vecSemDrawing[nFlightFrameIndex])	// 等待渲染完成
-			.setSwapchainCount(1)
-			.setPSwapchains(&swapchain)
-			.setPImageIndices(&nImageIndex)
-			;
-		// 提交交换链命令
-		vk::Result resultPresent = vkContext::GetCmdQueueForSurface().presentKHR(pi);
-
-		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)
-		{
-			vkContext::WaitIdel();
-			vkContext::GetInstance().ResizeSwapChain(m_pPipeline->GetWidth(), m_pPipeline->GetHeight());
-		}
-		else
-		{
-			RENDERER_ASSERT(resultPresent == vk::Result::eSuccess, "Present Failed.");
-		}
+		m_pPipeline->Execute(sPipelineFrameInfo);
 	}
 
 

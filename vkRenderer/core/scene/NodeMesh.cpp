@@ -5,7 +5,6 @@
 #include "NodeMesh.hpp"
 #include "CompSprite3D.hpp"
 
-
 namespace LT {
 	NodeMesh::NodeMesh(NodeID id)
 		: Node(id), m_refMesh()

@@ -38,6 +38,11 @@ struct RGB_32 {
 
 namespace LT
 {
+	enum class BlendMode
+	{
+		Default
+	};
+
 
 	// std130
 	struct MVPMatrixBuffer {

@@ -10,7 +10,6 @@
 namespace LT {
 	class EntityRenderMesh : public EntityRender{
 	protected:
-		MeshRef m_refMesh;
 		MaterialRef m_refMaterial;
 		VertexBuffer* m_pVertexBuffer;
 		IndexBuffer* m_pIndexBuffer;
@@ -29,7 +28,6 @@ namespace LT {
 		EntityRenderMesh& operator = (EntityRenderMesh&&) = delete;
 		EntityRenderMesh& operator = (const EntityRenderMesh&) = delete;
 
-		void SetMesh(const MeshRef& refMesh);
 		void SetMaterial(const MaterialRef& refMtl);
 		void SetVertexBuffer(VertexBuffer* pVertex);
 		void SetIndexBuffer(IndexBuffer* pIndex);

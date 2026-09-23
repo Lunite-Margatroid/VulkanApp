@@ -40,7 +40,7 @@ namespace LT {
 		}
 		else
 		{
-			delete iter->second;
+			delete iter->second.pDeviceImage;
 			instance.m_mapImage.erase(iter);
 		}
 	}
@@ -102,59 +102,106 @@ namespace LT {
 		}
 	}
 
-	uint64_t ImageManager::GenImageID()
+	DeviceImage* ImageManager::GetDeviceImage(ImageID id)
+	{
+#ifdef _DEBUG
+		RENDERER_ASSERT(IsValidImageID(id), "Invalid Image ID.");
+		RENDERER_ASSERT(m_mapImage.find(id) != m_mapImage.end(), "The Image does not exist.");
+#endif // _DEBUG
+
+		return m_mapImage[id].pDeviceImage;
+	}
+
+	SwapChain* ImageManager::GetSwapChain(ImageID id)
+	{
+#ifdef _DEBUG
+		RENDERER_ASSERT(IsSwapChainImageID(id), "Invalid Image ID.");
+		RENDERER_ASSERT(m_mapImage.find(id) != m_mapImage.end(), "The Image does not exist.");
+#endif // _DEBUG
+
+		return m_mapImage[id].pSwapChain;
+	}
+
+	ImageID ImageManager::GenImageID()
 	{
 		return m_nImageIDCounter++;
 	}
 
-	vk::Image ImageManager::GetNativeDeviceImage(ImageID nImageID) {
-		if(nImageID > INVALID_IMAGE_ID)
-		{
-			ImageManager& instance = ImageManager::GetInstance();
-			auto iter = instance.m_mapImage.find(nImageID);
-			if (iter != instance.m_mapImage.end())
-			{
-				return iter->second->GetNativeDeviceImage();
-			}
-		}
-		else
-		{
-			if(nImageID == SWAPCHAIN_IMAGE_ID)
-			{
-				// Handle swapchain image
-				return vkContext::GetSwapChain().GetCurrentTargetImage();
+	ImageID ImageManager::GenSwapChainImageID()
+	{
+		return m_nSwapChainImageCounter++;
+	}
 
+	vk::Image ImageManager::GetNativeDeviceImage(ImageID nImageID) {
+		ImageManager& instance = ImageManager::GetInstance();
+		auto iter = instance.m_mapImage.find(nImageID);
+
+		if (iter != instance.m_mapImage.end())
+		{
+			if (IsValidImageID(nImageID))
+			{
+				return instance.GetDeviceImage(nImageID)->GetNativeDeviceImage();
 			}
+
+			if (IsSwapChainImageID(nImageID))
+			{
+				return instance.GetSwapChain(nImageID)->GetCurrentTargetImage();
+			}
+
 		}
-		return nullptr;
+		return VK_NULL_HANDLE;
 	}
 
 	vk::ImageView ImageManager::GetNativeDeviceImageView(ImageID nImageID) {
-		if(nImageID > INVALID_IMAGE_ID)
+		ImageManager& instance = ImageManager::GetInstance();
+		auto iter = instance.m_mapImage.find(nImageID);
+		if (iter != instance.m_mapImage.end())
 		{
-			ImageManager& instance = ImageManager::GetInstance();
-			auto iter = instance.m_mapImage.find(nImageID);
-			if (iter != instance.m_mapImage.end())
+			if (IsValidImageID(nImageID))
 			{
-				ImageViewable* pViewable = dynamic_cast<ImageViewable*>(iter->second);
+
+				ImageViewable* pViewable = dynamic_cast<ImageViewable*>(instance.GetDeviceImage(nImageID));
 				if (pViewable)
 				{
 					return pViewable->GetNativeImageView();
 				}
-				else
-				{
-					return VK_NULL_HANDLE;
-				}
 			}
-		}
-		else
-		{
-			if(nImageID == SWAPCHAIN_IMAGE_ID)
+
+			if (IsSwapChainImageID(nImageID))
 			{
 				// Handle swapchain image
-				return vkContext::GetSwapChain().GetCurrentTargetImageView();
+				return instance.GetSwapChain(nImageID)->GetCurrentTargetImageView();
 			}
+
 		}
 		return VK_NULL_HANDLE;
+	}
+	ImageID ImageManager::RegisterSwapChainImage(SwapChain* pSwapChain)
+	{
+		ImageManager& mgr = GetInstance();
+		auto & map = mgr.m_mapImage;
+
+		ImageID id = mgr.GenSwapChainImageID();
+
+		map[id].pSwapChain = pSwapChain;
+
+		return id;
+	}
+	bool ImageManager::UnregisterSwapChainImage(ImageID nID)
+	{
+		bool bExist = false;
+		ImageManager& mgr = GetInstance();
+		auto& map = mgr.m_mapImage;
+
+
+		auto iter = map.find(nID);
+
+		if (iter != map.end())
+		{
+			map.erase(iter);
+			bExist = true;
+		} 
+
+		return bExist;
 	}
 }// namespace LT

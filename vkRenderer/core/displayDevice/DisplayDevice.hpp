@@ -5,11 +5,12 @@ namespace LT {
 	using DisplayDeviceFlag = uint32_t;
 
 	class DisplayDevice {
-	private:
+	protected:
 		// 目前没有使用
 		DisplayDeviceFlag m_flag;
-
 		View* m_pView;
+
+		FrameIndex m_nFrameIndex;
 
 	public:
 		DisplayDevice();
@@ -26,5 +27,11 @@ namespace LT {
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual void Present() = 0;
+
+		FrameIndex GetCurrentFrameIndex() const { return m_nFrameIndex; }
+	protected:
+		virtual void FrameBegin();
+		virtual void FrameEnd();
+
 	};
 } // namespace LT

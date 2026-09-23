@@ -9,18 +9,44 @@
 namespace LT {
 	class Image2DShaderRes;
 	class Image2DDepthBuffer;
+	class SwapChain;
 
 	class ImageManager {
 	private:
-		uint64_t m_nImageIDCounter;
+		union ImageHandle {
+			DeviceImage* pDeviceImage;
+			SwapChain* pSwapChain;
 
-		std::map<ImageID, DeviceImage*> m_mapImage;
+			ImageHandle() {
+				pDeviceImage = nullptr;
+			}
 
-		uint64_t GenImageID();
+			ImageHandle(void* p) {
+				pDeviceImage = reinterpret_cast<DeviceImage*>(p);
+			}
+
+			bool operator == (const ImageHandle& other) const {
+				return pDeviceImage == other.pDeviceImage;
+			}
+		};
+
+	private:
+		int64_t m_nImageIDCounter;
+		int64_t m_nSwapChainImageCounter;
+
+		std::map<ImageID, ImageHandle> m_mapImage;
+
+		ImageID GenImageID();
+
+		ImageID GenSwapChainImageID();
 
 		ImageManager();
 		~ImageManager();
 
+		DeviceImage* GetDeviceImage(ImageID id);
+		SwapChain* GetSwapChain(ImageID id);
+
+		// --------------- static ----------------
 	private:
 		static ImageManager* s_pImageManagerInstance;
 
@@ -39,5 +65,8 @@ namespace LT {
 
 		static vk::Image GetNativeDeviceImage(ImageID nImageID);
 		static vk::ImageView GetNativeDeviceImageView(ImageID nImageID);
+
+		static ImageID RegisterSwapChainImage(SwapChain* pSwapChain);
+		static bool UnregisterSwapChainImage(ImageID nID);
 	};
 }

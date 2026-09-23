@@ -39,8 +39,15 @@ namespace LT {
 
 		void PauseRendering();
 		void ResumeRendering();
-		
+	
 	private:
 		void InitDebugPipeline();
+
+		// ------- static ----------
+	private:
+		static Renderer* s_pDefaultRenderer;
+	public:
+		static Renderer* GetDefaultRenderer();
+		static void SetDefaultRenderer(Renderer* pRenderer);
 	};
 }

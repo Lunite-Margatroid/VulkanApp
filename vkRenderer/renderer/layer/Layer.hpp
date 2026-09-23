@@ -11,5 +11,10 @@ namespace LT {
 		Layer& operator=(const Layer&) = delete;
 		Layer(Layer&&) = delete;
 		Layer& operator=(Layer&&) = delete;
+
+		virtual void Draw();
+
+		// ----- static -----
+
 	};
 } // namespace LT

@@ -6,10 +6,16 @@
 #include "EntityManager.hpp"
 
 namespace LT {
+	class VertexBuffer;
+	class IndexBuffer;
+
 	class CompSprite3D : public IComponent {
 	private:
 		glm::mat4 m_matWorld; // Sprite3D的世界变换矩阵
 		EntityRef m_refEntityRender; // 关联的渲染实体
+		VertexBuffer* m_pVertexBuffer;
+		IndexBuffer* m_pIndexBuffer;
+
 
 	public:
 		CompSprite3D();
@@ -19,6 +25,9 @@ namespace LT {
 			return ComponentType::eSprite3D;
 		}
 
-		void Init(MeshRef refMesh);
+		void Init(MeshRef refMesh, int nFlag);
+		EntityRef GetRenderEntity();
+
+
 	};
 } // namespace LT

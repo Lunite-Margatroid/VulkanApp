@@ -9,7 +9,6 @@
 namespace LT {
 	EntityRenderMesh::EntityRenderMesh(EntityID nID)
 		:EntityRender(nID)
-		,m_refMesh(INVALID_MESH_ID)
 		,m_refMaterial(INVALID_MATERIAL_ID)
 		,m_pVertexBuffer(nullptr)
 		,m_pIndexBuffer(nullptr)
@@ -37,13 +36,6 @@ namespace LT {
 			BufferManager::DeleteBuffer(idBuffer);
 			idBuffer = INVALID_BUFFER_ID;
 		}
-	}
-	void EntityRenderMesh::SetMesh(const MeshRef& refMesh)
-	{
-		m_refMesh = refMesh;
-		auto nFlag = m_refMesh->GetRenderPassFlag();
-		SetPrimitiveTopology(m_eRenderPassFlag, GetPrimitiveTopology(nFlag));
-		m_eRenderPassFlag = (VERTEX_CHANNEL_FLAG_MASK & nFlag) | (m_eRenderPassFlag & ~VERTEX_CHANNEL_FLAG_MASK);
 	}
 
 	void EntityRenderMesh::SetMaterial(const MaterialRef& refMtl) {

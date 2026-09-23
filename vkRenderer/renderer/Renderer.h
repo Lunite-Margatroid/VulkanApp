@@ -3,9 +3,11 @@
 #include "Pipeline.h"
 
 
-
-
 namespace LT {
+	class View;
+	class DisplayDevice;
+	class Node;
+
 	class Renderer {
 	private:
 		std::unique_ptr<Pipeline> m_pPipeline;
@@ -32,11 +34,16 @@ namespace LT {
 		std::vector<vk::Semaphore> m_vecSemAcquiring;
 		std::vector<vk::Fence> m_vecFenceDrawing;
 
-		FrameIndex m_nFrameIndex;
+		DisplayDevice* m_pDisplayDevice;
+		View* m_pView;
+
 
 	public:
 		Renderer();
 		~Renderer();
+
+		void SetView(View* pView);
+		void SetDisplayDevice(DisplayDevice* pDisplayDevice);
 
 		void SetModelMat(const glm::mat4& matModel);
 		void SetViewMat(const glm::mat4& matView);
@@ -45,6 +52,6 @@ namespace LT {
 
 		void Resize(uint32_t nWidth, uint32_t nHeight);
 
-		void DrawFrame();
+		void DrawFrame(const FrameInfo& sFrameInfo);
 	};
 } // namespace LT

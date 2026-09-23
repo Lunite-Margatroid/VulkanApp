@@ -9,6 +9,8 @@
 
 namespace LT {
 
+	Renderer* Engine::s_pDefaultRenderer = nullptr;
+
 	Engine::Engine()
 		:m_pDebugRenderer(nullptr)
 		, m_nFrameIndex(0)
@@ -157,6 +159,16 @@ namespace LT {
 		glm::mat4 normalMat = glm::transpose(glm::inverse(modelMat));
 
 		m_pDebugRenderer->SetCameraPos(cameraPos);
+	}
+
+	Renderer* Engine::GetDefaultRenderer()
+	{
+		return s_pDefaultRenderer;
+	}
+
+	void Engine::SetDefaultRenderer(Renderer* pRenderer)
+	{
+		s_pDefaultRenderer = pRenderer;
 	}
 
 } // namespace LT
