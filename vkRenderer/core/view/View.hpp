@@ -9,7 +9,7 @@ namespace LT {
 	class View {
 	protected:
 		// 主场景的节点
-		Node* m_pMainScene;
+		NodeID  m_nMainScene;
 		// 索引为0的layer在最底层
 		std::vector<Layer*> m_layers;
 
@@ -25,7 +25,7 @@ namespace LT {
 		View(View&&) = delete;
 		View& operator=(View&&) = delete;
 
-		void SetMainScene(Node* pScene) {m_pMainScene = pScene;}
+		void SetMainScene(NodeID nScene) { m_nMainScene = nScene;}
 
 		void SetCamera(Camera* pCamera) { m_pCamera = pCamera; }
 		Camera* GetCamera() const { return m_pCamera; }

@@ -457,7 +457,7 @@ namespace LT {
 		cmdBuffer.endRendering();
 
 		// 颜色缓冲转为交换缓冲
-		if (sRecordInfo.vecImageIDColor[0] == SWAPCHAIN_IMAGE_ID)
+		if (IsSwapChainImageID(sRecordInfo.vecImageIDColor[0]))
 		{
 			TransitionImageLayoutInfo sTransInfoForPresent;
 			sTransInfoForPresent.vkCommandBuffer = cmdBuffer;

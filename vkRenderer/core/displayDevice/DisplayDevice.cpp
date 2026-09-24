@@ -11,7 +11,7 @@ namespace LT {
 	}
 
 	void DisplayDevice::FrameBegin() {
-	
+		m_nFrameIndex += 1;
 	}
 
 	void DisplayDevice::FrameEnd() {

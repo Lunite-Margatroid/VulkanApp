@@ -57,6 +57,7 @@ namespace LT {
 		static Image2DDepthBuffer* CreateImage2DDepthBuffer(uint32_t width, uint32_t height);
 
 		static void DeleteImage(DeviceImage* pImage);
+		static void DeleteImage(ImageID nImageID);
 
 		static void Init();
 		static void Release();

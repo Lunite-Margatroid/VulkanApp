@@ -18,8 +18,6 @@ namespace LT {
 		vk::Instance m_vkInstance;
 	private:
 
-		vk::SurfaceKHR m_vkSurface;
-
 		vk::PhysicalDevice m_phyDevice;
 		vk::Device m_vkDevice;
 		// vk命令队列
@@ -35,8 +33,6 @@ namespace LT {
 		// Descriptor Pool
 		vk::DescriptorPool m_vkDescriptorPool;
 
-		std::unique_ptr<SwapChain> m_pSwapChain;
-
 		// 获取的命令队列的索引 来自物理设备
 		std::optional<uint32_t> m_nQueueFamilyIndex; // 支持图形的命令队列
 		std::optional<uint32_t> m_nQueueIndexForSurface; // 支持sruface的命令队列
@@ -45,17 +41,13 @@ namespace LT {
 		// CheckPhysicalDeivceFeatures会修改该字段
 		bool m_bIsAnisotropySampleSupported;
 
-		// vk::Instance和vk::SurfaceKHR的所有权是否属于自己
-		bool m_bOwnInstanceAndSurface;
-
 	private:
-		vkContext(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd);
-		vkContext(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight);
+		vkContext(const std::vector<const char* >& extensions);
+		
 
 		void CreateVkInstance(const std::vector<const char* >& extensions);
 		void PickPhyDevice();
-		void CreateVkDevice();
-		void CreateSurface(void* hWnd = NULL);
+		void CreateVkDevice(vk::SurfaceKHR surface);
 
 		void CreateCommandPool();
 		void CreateCommandBuffer();
@@ -72,31 +64,23 @@ namespace LT {
 				m_nQueueFamilyIndex.value() == m_nQueueIndexForSurface.value();
 		}
 
-		void InitSwapChain(uint32_t nWidth, uint32_t nHeight);
-		void ReleaseSwapChain();
-
-
 		~vkContext();
 
 		// ------------ 静态 ----------------------
 	private:
 		static vkContext* s_pVkContext;
 	public:
-		static void Init(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd);
-		static void Init(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight);
+		static void InitVulkanInstance(const std::vector<const char* >& extensions);
+		static void InitVulkanDevice(vk::SurfaceKHR surface);
 		static void Release();
 		static vkContext& GetInstance();
 		static vk::Device& GetVkDevice();
 		static vk::Instance& GetVulkanInstance();
 		static vk::PhysicalDevice& GetPhysicalDevice();
-		static vk::SwapchainKHR& GetNativeSwapChain();
-		static SwapChain& GetSwapChain();
 
 		static bool GetIsAnisotropySampleSupported();
 
 		static void WaitIdel();
-
-		static void ResizeSwapChain(unsigned int width, unsigned int height);
 
 		static vk::Queue& GetCmdQueue();
 		static vk::Queue& GetCmdQueueForSurface();

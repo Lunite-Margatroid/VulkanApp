@@ -1,6 +1,7 @@
 // 场景管理器
 #include "vkRendererCommon.h"
 #include "SceneManager.hpp"
+#include "NodeMesh.hpp"
 
 namespace LT {
 	SceneManager* SceneManager::s_pSceneManager = nullptr;
@@ -39,6 +40,44 @@ namespace LT {
 		Node* pNode = new Node(id);
 		instance.m_mapNodes[id] = pNode;
 		return pNode;
+	}
+
+	NodeID SceneManager::CreateNode(NodeType eNodeType)
+	{
+		SceneManager& instance = GetInstance();
+
+		NodeID id = INVALID_NODE_ID;
+		Node* pNode = nullptr;
+
+		switch (eNodeType) {
+			case NodeType::eNode:
+				id = instance.GenID();
+				pNode = new Node(id);
+				break;
+			case NodeType::eNodeMesh:
+				id = instance.GenID();
+				pNode = new NodeMesh(id);
+				break;
+			default:
+				break;
+		}
+
+		if (id > INVALID_NODE_ID)
+		{
+			instance.m_mapNodes[id] = pNode;
+		}
+
+		return id;
+	}
+
+	Node* SceneManager::GetNode(NodeID id)
+	{
+		SceneManager& instance = GetInstance();
+		auto it = instance.m_mapNodes.find(id);
+		if (it != instance.m_mapNodes.end()) {
+			return it->second;
+		}
+		return nullptr;
 	}
 
 	void SceneManager::ReleaseNode(Node* pNode) {

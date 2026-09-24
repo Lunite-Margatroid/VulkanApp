@@ -1,7 +1,9 @@
 #pragma once
-#include "View.hpp"
 
 namespace LT {
+
+	class View;
+
 	using DisplayDeviceFlag = uint32_t;
 
 	class DisplayDevice {
@@ -10,7 +12,7 @@ namespace LT {
 		DisplayDeviceFlag m_flag;
 		View* m_pView;
 
-		FrameIndex m_nFrameIndex;
+		int64_t m_nFrameIndex;
 
 	public:
 		DisplayDevice();
@@ -27,11 +29,15 @@ namespace LT {
 
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual void Present() = 0;
+		
+		virtual void Pause() = 0;
+		virtual void Resume() = 0;
 
-		FrameIndex GetCurrentFrameIndex() const { return m_nFrameIndex; }
+		int64_t GetCurrentFrameIndex() const { return m_nFrameIndex; }
 	protected:
 		virtual void FrameBegin();
 		virtual void FrameEnd();
+
 
 	};
 } // namespace LT

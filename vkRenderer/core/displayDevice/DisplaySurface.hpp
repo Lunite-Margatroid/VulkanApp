@@ -9,7 +9,7 @@ namespace LT {
 	protected:
 		vk::SurfaceKHR m_vkSurface;
 		SwapChain* m_pSwapChain;
-		ImageID m_nSwapChainImageID;
+		int64_t m_nSwapChainImageID;
 		int32_t m_nSwapChainImageIndex;
 
 		uint32_t m_nWidth;
@@ -18,6 +18,8 @@ namespace LT {
 		std::vector<vk::Semaphore> m_vecSemDrawing;
 		std::vector<vk::Semaphore> m_vecSemAcquiring;
 		std::vector<vk::Fence> m_vecFenceDrawing;
+
+		bool m_bPause;
 
 	public:
 		DisplaySurface(vk::SurfaceKHR surface, uint32_t nWidth, uint32_t nHeight);
@@ -31,6 +33,14 @@ namespace LT {
 
 		void Resize(uint32_t width, uint32_t height) override;
 		void Present() override;
+
+		void Pause() override;
+		void Resume() override;
+
+		uint32_t GetWidth() const { return m_nWidth; }
+		uint32_t GetHeight() const { return m_nHeight; }
+
+
 	protected:
 		void FrameBegin() override;
 		void FrameEnd() override;

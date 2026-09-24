@@ -61,6 +61,8 @@ namespace LT {
 		vk::Semaphore semDrawing;
 		vk::Fence fenceDrawing;
 
+		uint32_t nWidth;
+		uint32_t nHeight;
 	};
 
 

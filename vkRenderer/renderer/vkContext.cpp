@@ -12,54 +12,11 @@
 namespace LT {
 	vkContext* vkContext::s_pVkContext = nullptr;
 
-	vkContext::vkContext(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd)
-	{
+	vkContext::vkContext(const std::vector<const char* >& extensions) {
 		m_bIsAnisotropySampleSupported = false;
-		m_bOwnInstanceAndSurface = true;
-
-		CreateVkInstance(extensions);
-		PickPhyDevice();
-
-		CreateSurface(hWnd);
-		CreateVkDevice();
-
-		InitSwapChain(nWidth, nHeight);
-
-		// 着色器编译器初始化
-		SlangCompiler::Init();
-
-		CreateCommandPool();
-		CreateCommandBuffer();
-
-		CreateDescriptorPool();
-
-	}
-
-	vkContext::vkContext(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight)
-	{
-		m_vkInstance = vkInstance;
-		m_vkSurface = vkSurface;
-
-		m_bIsAnisotropySampleSupported = false;
-		m_bOwnInstanceAndSurface = false;
-
-		PickPhyDevice();
-
-		CreateVkDevice();
-
-		InitSwapChain(nWidth, nHeight);
-
-		// 着色器编译器初始化
-		SlangCompiler::Init();
-
-		CreateCommandPool();
-		CreateCommandBuffer();
-
-		CreateDescriptorPool();
 	}
 
 	vkContext::~vkContext() {
-		ReleaseSwapChain();
 
 		m_vkDevice.destroyDescriptorPool(m_vkDescriptorPool);
 
@@ -68,19 +25,9 @@ namespace LT {
 		// command buffer会跟随command pool 自动释放
 		m_vecCommandBuffers.clear();
 
-
-		m_pSwapChain.reset();
-
 		m_vkDevice.destroy();
 
-
-		if (m_bOwnInstanceAndSurface)
-		{
-			m_vkInstance.destroySurfaceKHR(m_vkSurface);
-			m_vkInstance.destroy();
-		}
-
-
+		m_vkInstance.destroy();
 
 		SlangCompiler::Release();
 	}
@@ -90,56 +37,12 @@ namespace LT {
 		return *s_pVkContext;
 	}
 
-	void vkContext::InitSwapChain(uint32_t nWidth, uint32_t nHeight)
-	{
-		if (m_vkSurface)
-		{
-			if (!(m_pSwapChain))
-			{
-				m_pSwapChain.reset(new SwapChain(nWidth, nHeight,m_vkDevice, m_phyDevice, m_vkSurface, 
-					IsGraphicsSurfaceSameQueue() ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent));
-			}
-			else
-			{
-				LOG_WARNING("Repeating Init Swap Chain.");
-			}
-		}
-		else
-		{
-			LOG_WARNING("Init Swap Chain Failed. Surface is invalid.");
-
-		}
-	}
-
-
-
-	void vkContext::ReleaseSwapChain()
-	{
-		if (m_pSwapChain)
-		{
-			m_pSwapChain.reset();
-		}
-	}
-
 	void vkContext::Release() {
 		if (s_pVkContext)
 			delete s_pVkContext;
 		s_pVkContext = nullptr;
 	}
 
-	void vkContext::Init(const std::vector<const char* >& extensions, uint32_t nWidth, uint32_t nHeight, void* hWnd) {
-		if (!s_pVkContext)
-		{
-			s_pVkContext = new vkContext(extensions, nWidth, nHeight, hWnd);
-		}
-	}
-
-	void vkContext::Init(vk::Instance vkInstance, vk::SurfaceKHR vkSurface, uint32_t nWidth, uint32_t nHeight) {
-		if (!s_pVkContext)
-		{
-			s_pVkContext = new vkContext(vkInstance, vkSurface, nWidth, nHeight);
-		}
-	}
 
 	void vkContext::CreateVkInstance(const std::vector<const char* >& extensions) {
 
@@ -179,7 +82,7 @@ namespace LT {
 		vkContext::CheckPhysicalDeivceFeatures();
 	}
 
-	void vkContext::CreateVkDevice() {
+	void vkContext::CreateVkDevice(vk::SurfaceKHR surface) {
 		// 创建命令队列和设备
 
 		// 获取队列族 找到支持图形的队列族？
@@ -194,25 +97,17 @@ namespace LT {
 		}
 
 		// 查询支持surface的队列族
-
-		if (m_vkSurface)
+		if (surface)
 		{
 			for (int i = 0; i < vecQueueFamilys.size(); i++)
 			{
 				const auto& queueFamilyProperty = vecQueueFamilys[i];
-				if (m_phyDevice.getSurfaceSupportKHR(i, m_vkSurface)) {
+				if (m_phyDevice.getSurfaceSupportKHR(i, surface)) {
 					m_nQueueIndexForSurface = i;
 					break;
 				}
 			}
-
 		}
-		else
-		{
-			LOG_WARNING("Surface is not being created.(It is OK if only off-screen rendering is used.)\n");
-		}
-
-
 
 		// 默认的 图形的命令队列
 		vk::DeviceQueueCreateInfo queueCreateInfo;
@@ -356,23 +251,6 @@ do{\
 		}
 	}
 
-	void vkContext::CreateSurface(void* hWnd) {
-		if (hWnd)
-		{
-#ifdef WIN32
-			vk::Win32SurfaceCreateInfoKHR sci;
-			sci
-				.setHwnd(static_cast<HWND>(hWnd))
-				.setHinstance(GetModuleHandle(nullptr))
-				.setPNext(nullptr)
-				;
-
-			m_vkSurface = m_vkInstance.createWin32SurfaceKHR(sci);
-#endif
-
-		}
-	}
-
 	void vkContext::CreateCommandPool()
 	{
 		vk::CommandPoolCreateInfo cpci;
@@ -434,23 +312,6 @@ do{\
 		RENDERER_ASSERT(features.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState, "");
 
 		DeviceMemoryManager::CheckVMASupportedExtension(m_phyDevice);
-	}
-
-
-	void vkContext::ResizeSwapChain(unsigned int width, unsigned int height)
-	{
-		if (width == 0 || height == 0)
-			return;
-
-		vkContext& context = GetInstance();
-
-		if (context.m_pSwapChain->m_sSwapChainInfo.height == height && context.m_pSwapChain->m_sSwapChainInfo.width == width)
-		{
-			return;
-		}
-
-		vkContext::WaitIdel();
-		vkContext::GetInstance().m_pSwapChain->Resize(width, height);
 	}
 
 	void vkContext::WaitIdel()
@@ -587,20 +448,33 @@ do{\
 		return GetInstance().m_phyDevice;
 	}
 
-	vk::SwapchainKHR& vkContext::GetNativeSwapChain()
-	{
-		// TODO: 在此处插入 return 语句
-		return GetInstance().m_pSwapChain->NativeVKSwapChain();
-	}
-
-	SwapChain& vkContext::GetSwapChain() {
-		return *(GetInstance().m_pSwapChain);
-	}
-
 	bool vkContext::GetIsAnisotropySampleSupported()
 	{
 		return GetInstance().m_bIsAnisotropySampleSupported;
 	}
 
+	void vkContext::InitVulkanInstance(const std::vector<const char* >& extensions) {
+		if (!s_pVkContext)
+		{
+			s_pVkContext = new vkContext(extensions);
+		}
+
+		s_pVkContext->CreateVkInstance(extensions);
+	}
+
+	void vkContext::InitVulkanDevice(vk::SurfaceKHR surface) {
+
+
+		s_pVkContext->PickPhyDevice();
+		s_pVkContext->CreateVkDevice(surface);
+
+		// 着色器编译器初始化
+		SlangCompiler::Init();
+
+		s_pVkContext->CreateCommandPool();
+		s_pVkContext->CreateCommandBuffer();
+
+		s_pVkContext->CreateDescriptorPool();
+	}
 
 } // namespace LT

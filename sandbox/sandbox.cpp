@@ -27,10 +27,7 @@
 #include <windows.h>
 #endif
 
-constexpr uint32_t DEFAULT_WIDTH = 1280u;
-constexpr uint32_t DEFAULT_HEIGHT = 720u;
-
-void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngine);
+void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::DisplaySurface* pDisplaySurface, LT::Engine* pEngine);
 
 int main() {
 
@@ -47,9 +44,6 @@ int main() {
 		return 1;
 	}
 
-	// Surface Win32Surface SwapChain
-	
-		
 	std::vector<const char*> extensions;
 
 	{
@@ -61,18 +55,9 @@ int main() {
 		}
 	}
 
-
-	// Use validation layers if this is a debug build
-	std::vector<const char*> layers;
-#if defined(_DEBUG)
-	layers.push_back("VK_LAYER_KHRONOS_validation");
-#endif
-
-
-	vk::Instance vkInstance = LT::util::CreateVulkanInstance(extensions.data(), extensions.size());
-
-
-
+	// 初始化上下文
+	std::unique_ptr<LT::Engine> pEngine(new LT::Engine());
+	vk::Instance vkInstance = pEngine->CreateVulkanInstance(extensions);
 
 	vk::SurfaceKHR vkSurface;
 	if (!SDL_Vulkan_CreateSurface(window, vkInstance, NULL, reinterpret_cast<VkSurfaceKHR*>(&vkSurface)))
@@ -81,11 +66,12 @@ int main() {
 		return 1;
 	}
 
+	pEngine->InitVulkanContext(vkSurface);
 
-	// 初始化上下文
-	std::unique_ptr<LT::Engine> pEngine(new LT::Engine());
+	LT::DisplaySurface* pDisplaySurface = nullptr;
+	pEngine->CreateDisplaySurface(pDisplaySurface, vkSurface, DEFAULT_WIDTH, DEFAULT_HEIGHT, 0);
 
-	pEngine->InitRenderer(vkInstance, vkSurface, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+	pEngine->CreateDebugScene(pDisplaySurface);
 
 	// Poll for user input.
 	bool stillRunning = true;
@@ -103,52 +89,56 @@ int main() {
 					if (event.type & 0x200)
 					{
 						// 窗口事件
-						OnWindowEvent(event, window, pEngine.get());
+						OnWindowEvent(event, window, pDisplaySurface, pEngine.get());
 					}
 					break;
 			}
 		}
-		pEngine->DrawFrame();
+		pEngine->UpdateDebugScene();
+		pDisplaySurface->Present();
 		SDL_Delay(10);
 	}
 	// 等待空闲
 	pEngine->WaitIdel();
-	// 释放交换链
-	pEngine->ReleaseSwapChain();
-	// 释放上下文
-	pEngine->ReleaseRenderer();
+
+	pEngine->DestroyDebugScene();
+
+	pEngine->DeleteDisplaySurface(pDisplaySurface);
 
 	SDL_Vulkan_DestroySurface(vkInstance, vkSurface, NULL);
 
-	
-	vkInstance.destroy();
+	pEngine->DestroyVulkanContext();
+
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-
-
-
 
 	return 0;
 }
 
-void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::Engine* pEngine) {
+void OnWindowEvent(const SDL_Event& event, SDL_Window* window, LT::DisplaySurface* pDisplaySurface, LT::Engine* pEngine) {
 
 	switch (event.type) {
 		case SDL_EventType::SDL_EVENT_WINDOW_RESIZED:
+			pEngine->WaitIdel();
+			pDisplaySurface->Resize(event.window.data1, event.window.data2);
 			break;
 		case SDL_EventType::SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
 		case SDL_EventType::SDL_EVENT_WINDOW_MAXIMIZED:
 			pEngine->WaitIdel();
-			pEngine->ResumeRendering();
-			pEngine->ResizeSwapChain(event.window.data1, event.window.data2);
+			//pEngine->ResumeRendering();
+			//pEngine->ResizeSwapChain(event.window.data1, event.window.data2);
+			pDisplaySurface->Resume();
+			pDisplaySurface->Resize(event.window.data1, event.window.data2);
 			break;
 		case SDL_EventType::SDL_EVENT_WINDOW_RESTORED:
-			pEngine->ResumeRendering();
+			//pEngine->ResumeRendering();
+			pDisplaySurface->Resume();
 			break;
 
 		case SDL_EventType::SDL_EVENT_WINDOW_MINIMIZED:
 			pEngine->WaitIdel();
-			pEngine->PauseRendering();
+			//pEngine->PauseRendering();
+			pDisplaySurface->Pause();
 			break;
 
 		case SDL_EventType::SDL_EVENT_WINDOW_MOVED:

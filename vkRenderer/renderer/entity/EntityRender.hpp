@@ -35,7 +35,7 @@ namespace LT {
 
 	};
 
-	class EntityRender :IEntity {
+	class EntityRender : public IEntity {
 	protected:
 
 	public:

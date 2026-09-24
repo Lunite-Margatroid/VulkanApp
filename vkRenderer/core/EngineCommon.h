@@ -11,8 +11,14 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
+#include <map>
 
 #include "logger.hpp"
+
+
+constexpr uint32_t DEFAULT_WIDTH = 1280u;
+constexpr uint32_t DEFAULT_HEIGHT = 720u;
+
 
 constexpr glm::vec3 VEC3_AXIS_X = glm::vec3(1.f, 0.f, 0.f);
 constexpr glm::vec3 VEC3_AXIS_Y = glm::vec3(0.f, 1.f, 0.f);

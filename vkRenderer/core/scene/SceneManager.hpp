@@ -36,6 +36,9 @@ namespace LT {
 		static SceneManager& GetInstance();
 
 		static Node* CreateNode();
+		static NodeID CreateNode(NodeType eNodeType);
+
+		static Node* GetNode(NodeID id);
 
 		static void ReleaseNode(Node* pNode);
 		static void ReleaseNode(NodeID id);

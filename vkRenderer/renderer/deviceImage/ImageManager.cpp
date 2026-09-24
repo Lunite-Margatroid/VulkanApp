@@ -31,9 +31,12 @@ namespace LT {
 
 	void ImageManager::DeleteImage(DeviceImage* pImage)
 	{
+		DeleteImage(pImage->GetImageID());
+	}
+	void ImageManager::DeleteImage(ImageID nImageID)
+	{
 		ImageManager& instance = GetInstance();
-
-		auto iter = instance.m_mapImage.find(pImage->GetImageID());
+		auto iter = instance.m_mapImage.find(nImageID);
 		if (iter == instance.m_mapImage.end())
 		{
 			LOG_WARNING("%s, the Image did not exist", __FUNCTION__);
@@ -82,6 +85,7 @@ namespace LT {
 
 	ImageManager::ImageManager()
 		: m_nImageIDCounter(0)
+		, m_nSwapChainImageCounter(SWAPCHAIN_IMAGE_ID_MIN)
 	{
 		// 检查深度缓冲格式
 		// 检查D32Float
@@ -129,7 +133,7 @@ namespace LT {
 
 	ImageID ImageManager::GenSwapChainImageID()
 	{
-		return m_nSwapChainImageCounter++;
+		return m_nSwapChainImageCounter--;
 	}
 
 	vk::Image ImageManager::GetNativeDeviceImage(ImageID nImageID) {

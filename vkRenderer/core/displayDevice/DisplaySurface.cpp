@@ -12,6 +12,9 @@
 #include "ImageManager.h"
 
 
+#include "View.hpp"
+#include "CameraPerspective.h"
+
 namespace LT {
 	DisplaySurface::DisplaySurface(vk::SurfaceKHR surface, uint32_t nWidth, uint32_t nHeight)
 		: m_vkSurface(surface)
@@ -19,10 +22,11 @@ namespace LT {
 		, m_nHeight(nHeight)
 		, m_nSwapChainImageID(INVALID_IMAGE_ID)
 		, m_nSwapChainImageIndex(0)
+		, m_bPause(false)
 	{
 		vk::Device& device = vkContext::GetVkDevice();
 
-		m_pSwapChain = new SwapChain(nWidth, nHeight, device, vkContext::GetPhysicalDevice(), surface);
+		m_pSwapChain = new SwapChain(nWidth, nHeight, device, vkContext::GetPhysicalDevice(), surface, vk::SharingMode::eExclusive);
 
 		m_nSwapChainImageID = ImageManager::RegisterSwapChainImage(m_pSwapChain);
 
@@ -37,6 +41,15 @@ namespace LT {
 	DisplaySurface::~DisplaySurface() {
 		ImageManager::UnregisterSwapChainImage(m_nSwapChainImageID);
 		delete m_pSwapChain;
+
+		vk::Device& device = vkContext::GetVkDevice();
+
+		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++)
+		{
+			device.destroySemaphore(m_vecSemDrawing[i]);
+			device.destroySemaphore(m_vecSemAcquiring[i]);
+			device.destroyFence(m_vecFenceDrawing[i]);
+		}
 	}
 	void DisplaySurface::Resize(uint32_t width, uint32_t height)
 	{
@@ -44,10 +57,15 @@ namespace LT {
 		{
 			vkContext::WaitIdel();
 			m_pSwapChain->Resize(width, height);
+			m_nWidth = width;
+			m_nHeight = height;
 		}
 	}
 	void DisplaySurface::Present()
 	{
+		if (m_bPause)
+			return;
+
 		FrameBegin();
 
 		FlightFrameIndex nFlightFrameIndex = m_nFrameIndex % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
@@ -63,6 +81,13 @@ namespace LT {
 			sFrameInfo.fenceDrawing = m_vecFenceDrawing[nFlightFrameIndex];
 			sFrameInfo.semAcquiring = m_vecSemAcquiring[nFlightFrameIndex];
 			sFrameInfo.semDrawing = m_vecSemDrawing[nFlightFrameIndex];
+			sFrameInfo.nWidth = m_nWidth;
+			sFrameInfo.nHeight = m_nHeight;
+
+			if (CameraPerspective* pCamera = dynamic_cast<CameraPerspective*>(m_pView->GetCamera()))
+			{
+				pCamera->SetAspect(static_cast<float>(m_nWidth) / m_nHeight);
+			}
 
 			pRenderer->SetView(m_pView);
 			pRenderer->SetDisplayDevice(this);
@@ -71,6 +96,16 @@ namespace LT {
 
 		FrameEnd();
 	}
+	void DisplaySurface::Pause()
+	{
+		m_bPause = true;
+	}
+
+	void DisplaySurface::Resume()
+	{
+		m_bPause = false;
+	}
+
 	void DisplaySurface::FrameBegin()
 	{
 		DisplayDevice::FrameBegin();
@@ -78,10 +113,10 @@ namespace LT {
 		FlightFrameIndex nFlightFrameIndex = m_nFrameIndex % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
 		vk::Device& device = vkContext::GetVkDevice();
 
-		// µ»¥˝…œ“ª÷°µƒªÊ÷∆
+		// Á≠âÂæÖ‰∏ä‰∏ÄÂ∏ßÁöÑÁªòÂà∂
 		vk::Result resultWaitFence = device.waitForFences(m_vecFenceDrawing[nFlightFrameIndex], vk::True, std::_Max_limit<uint64_t>());
 		RENDERER_ASSERT(resultWaitFence == vk::Result::eSuccess, "Wait for FenceDrawing Failed.");
-		// ÷ÿ÷√Fence
+		// ÈáçÁΩÆFence
 		device.resetFences(m_vecFenceDrawing[nFlightFrameIndex]);
 
 		// acquire swapchain image
@@ -94,8 +129,8 @@ namespace LT {
 		FlightFrameIndex nFlightFrameIndex = m_nFrameIndex % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
 		vk::Device& device = vkContext::GetVkDevice();
 
-		// Ωªªª¡¥Ωªªªª∫≥Â
-		uint32_t nImageIndex = static_cast<uint32_t>(m_nFrameIndex);
+		// ‰∫§Êç¢Èìæ‰∫§Êç¢ÁºìÂÜ≤
+		uint32_t nImageIndex = static_cast<uint32_t>(m_nSwapChainImageIndex);
 		vk::SwapchainKHR swapchain = m_pSwapChain->NativeVKSwapChain();
 
 		vk::PresentInfoKHR pi;
@@ -106,7 +141,7 @@ namespace LT {
 			.setPWaitSemaphores(&m_vecSemDrawing[nFlightFrameIndex])
 			.setWaitSemaphoreCount(1)
 			;
-		// Ã·ΩªΩªªª¡¥√¸¡Ó
+		// Êèê‰∫§‰∫§Êç¢ÈìæÂëΩ‰ª§
 		vk::Result resultPresent = vkContext::GetCmdQueueForSurface().presentKHR(pi);
 
 		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)

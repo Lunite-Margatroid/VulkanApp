@@ -5,7 +5,7 @@
 
 #include <filesystem>
 
-namespace LT {
+namespace LIIO {
 
     ImgRes::ImgRes(const char* path, int nDepth) :
         m_Data(nullptr),

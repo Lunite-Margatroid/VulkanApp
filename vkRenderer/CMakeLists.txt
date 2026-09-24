@@ -98,6 +98,7 @@ target_include_directories(vkRenderer
     PUBLIC 
 		"${CMAKE_CURRENT_SOURCE_DIR}/core"
 		"${CMAKE_CURRENT_SOURCE_DIR}/util"
+		"${CMAKE_CURRENT_SOURCE_DIR}/core/displayDevice"
     PRIVATE 
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/swapchain"
@@ -113,7 +114,6 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/renderView"
 		"${CMAKE_CURRENT_SOURCE_DIR}/core/scene"
 		"${CMAKE_CURRENT_SOURCE_DIR}/core/view"
-		"${CMAKE_CURRENT_SOURCE_DIR}/core/displayDevice"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/layer"
         "${GLM_INSTALLED_DIR}/include"
 		"${SLANG_INSTALLED_DIR}/include"

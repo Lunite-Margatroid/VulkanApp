@@ -33,6 +33,8 @@ namespace LT {
 		void SetIndexBuffer(IndexBuffer* pIndex);
 
 		void Draw(const EntityDrawInfo& sDrawInfo) override;
+
+		void SetRenderPassFlag(RenderPassFlag nFlag) { m_eRenderPassFlag = nFlag; }
 	};
 
 } // namespace

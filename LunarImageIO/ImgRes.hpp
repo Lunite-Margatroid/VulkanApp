@@ -1,6 +1,6 @@
 #pragma once
 
-namespace LT {
+namespace LIIO {
 
 	class ImgRes
 	{

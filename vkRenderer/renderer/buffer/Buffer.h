@@ -3,68 +3,8 @@
 
 namespace LT {
 
-	enum class BufferDataType {
-		TypeUnknown,
-		TypeBinary,
-		TypeInt8,
-		TypeUint8,
-		TypeInt16,
-		TypeUint16,
-		TypeInt32,
-		TypeUint32,
-		TypeInt64,
-		TypeUInt64,
-		TypeFloat16,
-		TypeFloat32,
-		TypeFloat64
-	};
-
-	static size_t BufferDataType2Size(BufferDataType eBufferDataType) {
-		switch (eBufferDataType)
-		{
-		case LT::BufferDataType::TypeInt8:
-			return 1u;
-			break;
-		case LT::BufferDataType::TypeUint8:
-			return 1u;
-			break;
-		case LT::BufferDataType::TypeInt16:
-			return 2u;
-			break;
-		case LT::BufferDataType::TypeUint16:
-			return 2u;
-			break;
-		case LT::BufferDataType::TypeInt32:
-			return 4u;
-			break;
-		case LT::BufferDataType::TypeUint32:
-			return 4u;
-			break;
-		case LT::BufferDataType::TypeInt64:
-			return 8u;
-			break;
-		case LT::BufferDataType::TypeUInt64:
-			return 8u;
-			break;
-		case LT::BufferDataType::TypeFloat16:
-			return 2u;
-			break;
-		case LT::BufferDataType::TypeFloat32:
-			return 4u;
-			break;
-		case LT::BufferDataType::TypeFloat64:
-			return 8u;
-			break;
-		default:
-			return 0u;
-			break;
-		}
-		return 0u;
-	}
-
 	using BufferID = int64_t;
 	constexpr int64_t INVALID_BUFFER_ID = -1;
-
 
 	/// <summary>
 	/// 缓冲对象的基类

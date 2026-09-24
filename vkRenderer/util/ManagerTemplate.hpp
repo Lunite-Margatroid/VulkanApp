@@ -60,6 +60,10 @@ namespace LT {
 			TypeRefDecrease{}(m_nID);
 			m_nID = INVALID_ITEM_ID;
 		}
+
+		operator bool() const {
+			return m_nID != INVALID_ITEM_ID;
+		}
 	};
 
 	template<typename T>

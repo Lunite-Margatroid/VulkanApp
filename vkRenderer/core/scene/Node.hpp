@@ -55,7 +55,13 @@ namespace LT {
 		virtual NodeType GetNodeType() const { return NodeType::eNode; }
 
 
-		constexpr IComponent* GetComponent(ComponentType eType);
+		void AddComponent(ComponentType eType);
+		void EraseComponent(ComponentType eType);
+
+		// 边界当前节点及其子节点
+		void ForEach(std::function<void(Node*)> func);
+
+		IComponent* GetComponent(ComponentType eType);
 	};
 
 } // namespace LT

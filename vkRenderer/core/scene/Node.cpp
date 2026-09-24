@@ -3,6 +3,8 @@
 #include "EngineCommon.h"
 #include "Node.hpp"
 
+#include "CompSprite3D.hpp"
+
 namespace LT {
 	Node::Node(NodeID id)
 		: m_id(id), m_pParent(nullptr)
@@ -15,6 +17,13 @@ namespace LT {
 		for (Node* pChild : m_listChildren)
 		{
 			delete pChild;
+		}
+
+		for (IComponent* pComp : m_arrComponents) {
+			if (pComp)
+			{
+				delete pComp;
+			}
 		}
 	}
 
@@ -48,6 +57,39 @@ namespace LT {
 		m_listChildren.erase(iter);
 		pChild->m_pParent = nullptr;
 		return true;
+	}
+
+	void Node::AddComponent(ComponentType eType)
+	{
+		if (m_arrComponents[static_cast<int>(eType)] == nullptr)
+		{
+			switch (eType)
+			{
+				case ComponentType::eSprite3D:
+					m_arrComponents[static_cast<int>(eType)] = new CompSprite3D();
+					break;
+				default:
+					break;
+			};
+		}
+	}
+
+	void Node::EraseComponent(ComponentType eType)
+	{
+		if (m_arrComponents[static_cast<int>(eType)])
+		{
+			delete m_arrComponents[static_cast<int>(eType)];
+			m_arrComponents[static_cast<int>(eType)] = nullptr;
+		}
+	}
+
+	void Node::ForEach(std::function<void(Node*)> func)
+	{
+		func(this);
+		for (Node* pNode : m_listChildren)
+		{
+			pNode->ForEach(func);
+		}
 	}
 
 	IComponent* Node::GetComponent(ComponentType eType)
