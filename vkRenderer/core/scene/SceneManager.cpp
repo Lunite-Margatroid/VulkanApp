@@ -1,5 +1,6 @@
 // 场景管理器
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "SceneManager.hpp"
 #include "NodeMesh.hpp"
 

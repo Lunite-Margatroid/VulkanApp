@@ -3,8 +3,6 @@
 
 
 namespace LT {
-	using ImageSamplerID = int64_t;
-
 	class ImageSampler : public IBindable{
 		friend class SamplerManager;
 	protected:

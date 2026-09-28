@@ -3,10 +3,7 @@
 #pragma once
 
 namespace LT {
-
-	using MeshID = int64_t;
 	using GenVertexBufferFlag = RenderFlagType;
-	constexpr MeshID INVALID_MESH_ID = -1;
 
 
 	class IMesh {

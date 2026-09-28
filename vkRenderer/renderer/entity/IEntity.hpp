@@ -2,9 +2,6 @@
 #pragma once
 
 namespace LT {
-	using EntityID = int64_t;
-	constexpr EntityID INVALID_ENTITY_ID = -1;
-
 	class IEntity {
 	protected:
 		const EntityID m_nID;

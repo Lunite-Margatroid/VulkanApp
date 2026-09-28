@@ -5,14 +5,6 @@
 
 namespace LT {
 
-
-	using ImageID = int64_t;
-
-	constexpr ImageID INVALID_IMAGE_ID = -1;
-
-	constexpr ImageID SWAPCHAIN_IMAGE_ID_MIN = -2;
-	constexpr ImageID SWAPCHAIN_IMAGE_ID_MAX = -65534;
-
 	inline bool IsSwapChainImageID(ImageID id) {
 		return  id >= SWAPCHAIN_IMAGE_ID_MAX && id >= SWAPCHAIN_IMAGE_ID_MIN;
 	}

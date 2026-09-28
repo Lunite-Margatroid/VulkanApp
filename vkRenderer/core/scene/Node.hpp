@@ -4,17 +4,31 @@
 #include <list>
 #include <array>
 #include "IComponent.hpp"
+#include "CompSprite3D.hpp"
 
 namespace LT {
-	using NodeID = int64_t;
+	// 组件相关
+	// Component
+	// ---------------- Type->枚举 -------------------
+	template<typename TComponent>
+	ComponentType TypeOfComponent() {
+		if constexpr (std::is_same<CompSprite3D, TComponent>{})
+		{
+			return ComponentType::eSprite3D;
+		}
+		else
+		{
+			static_assert(false);
+		}
 
-	constexpr NodeID INVALID_NODE_ID = INVALID_ITEM_ID;
+	}
 
-	enum class NodeType : int {
-		eUnknown = -1,
-		eNode,
-		eNodeMesh,
-	};
+	// ---------------- 枚举->Type ---------------------
+	template<ComponentType eType>
+		requires(eType == ComponentType::eSprite3D)
+	struct ComponentTypeTraits { using type = CompSprite3D; };
+
+
 
 	// 简单的树节点 用std::list<Node*>记录子节点
 	// 父节点拥有子节点的所有权 析构时级联释放子节点
@@ -54,12 +68,25 @@ namespace LT {
 
 		virtual NodeType GetNodeType() const { return NodeType::eNode; }
 
+		template<ComponentType eType>
+		void AddComponent() {
+			static_assert(eType < ComponentType::ComponentTypeCount && static_cast<int>(eType) >= 0);
+			if (m_arrComponents[static_cast<int>(eType)] == nullptr)
+			{
+				m_arrComponents[static_cast<int>(eType)] = new ComponentTypeTraits<eType>::type();
+			}
+		}
 
-		void AddComponent(ComponentType eType);
 		void EraseComponent(ComponentType eType);
 
-		// 边界当前节点及其子节点
+		// 遍历当前节点及其子节点
 		void ForEach(std::function<void(Node*)> func);
+
+		template<typename TComponent>
+		TComponent* GetComponent() {
+			return reinterpret_cast<TComponent*>(m_arrComponents[static_cast<int>(TypeOfComponent<TComponent>())]);
+		}
+
 
 		IComponent* GetComponent(ComponentType eType);
 	};

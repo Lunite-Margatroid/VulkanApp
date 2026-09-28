@@ -13,6 +13,8 @@
 #include <fstream>
 #include <map>
 
+#include "TypeDef.hpp"
+
 #include "logger.hpp"
 
 

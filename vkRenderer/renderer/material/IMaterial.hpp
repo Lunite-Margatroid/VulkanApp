@@ -4,15 +4,6 @@
 #include "RenderPass.hpp"
 
 namespace LT {
-	using MaterialID = int64_t;
-	constexpr MaterialID INVALID_MATERIAL_ID = INVALID_ITEM_ID;
-
-	enum class MaterialType {
-		eUndifined = -1,
-		eMainTexture
-	};
-
-
 	struct MaterialSlot {
 		vk::DescriptorType eDescType;
 		int64_t nSrcID;

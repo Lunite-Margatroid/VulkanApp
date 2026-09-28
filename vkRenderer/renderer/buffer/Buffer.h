@@ -3,8 +3,6 @@
 
 namespace LT {
 
-	using BufferID = int64_t;
-	constexpr int64_t INVALID_BUFFER_ID = -1;
 
 	/// <summary>
 	/// 缓冲对象的基类

@@ -27,14 +27,14 @@ namespace LT {
 
 		bool m_bRenderingPaused;
 
-		std::map<int64_t, Camera*> m_mapCamera;
+		std::map<CameraID, Camera*> m_mapCamera;
 
 
 		// debugScene
-		int64_t m_nCameraID;
-		int64_t m_nMainScene;
-		int64_t m_nImageID;
-		int64_t m_nMtlID;
+		CameraID m_nCameraID;
+		NodeID m_nMainScene;
+		ImageID m_nImageID;
+		MaterialID m_nMtlID;
 		View* m_pView;
 
 	private:
@@ -59,12 +59,12 @@ namespace LT {
 		void DestroyDebugScene();
 
 
-		EngineResult CreateSceneNode(int64_t& nOutNodeID, int32_t nNodeType);
-		EngineResult SceneNodeRebase(int64_t nParient, int64_t nChild);
-		EngineResult DeleteSceneNode(int64_t nNodeID);
-		EngineResult DeleteSceneNodeAndChildren(int64_t nNodeID);
-		EngineResult CreateCamera(int64_t& nOutCameraID);
-		EngineResult DeleteCamera(int64_t nCameraID);
+		EngineResult CreateSceneNode(NodeID& nOutNodeID, NodeType nNodeType);
+		EngineResult SceneNodeRebase(NodeID nParient, NodeID nChild);
+		EngineResult DeleteSceneNode(NodeID nNodeID);
+		EngineResult DeleteSceneNodeAndChildren(NodeID nNodeID);
+		EngineResult CreateCamera(CameraID& nOutCameraID);
+		EngineResult DeleteCamera(CameraID nCameraID);
 
 		EngineResult CreateDisplaySurface(DisplaySurface*& pOutSurface, vk::SurfaceKHR, uint32_t nWidth, uint32_t nHeight, DisplayDeviceFlag nFlag);
 		EngineResult DeleteDisplaySurface(DisplaySurface* pDiplaySurface);

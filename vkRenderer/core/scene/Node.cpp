@@ -59,21 +59,6 @@ namespace LT {
 		return true;
 	}
 
-	void Node::AddComponent(ComponentType eType)
-	{
-		if (m_arrComponents[static_cast<int>(eType)] == nullptr)
-		{
-			switch (eType)
-			{
-				case ComponentType::eSprite3D:
-					m_arrComponents[static_cast<int>(eType)] = new CompSprite3D();
-					break;
-				default:
-					break;
-			};
-		}
-	}
-
 	void Node::EraseComponent(ComponentType eType)
 	{
 		if (m_arrComponents[static_cast<int>(eType)])

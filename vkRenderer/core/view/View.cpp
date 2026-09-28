@@ -17,7 +17,8 @@ namespace LT {
 		std::vector<EntityRender*> vecEntity;
 
 		auto func = [&](Node* pNode) {
-			CompSprite3D* pSprite3D = dynamic_cast<CompSprite3D*>(pNode->GetComponent(ComponentType::eSprite3D));
+			CompSprite3D* pSprite3D = pNode->GetComponent<CompSprite3D>();
+
 			if (pSprite3D)
 			{
 				vecEntity.push_back(reinterpret_cast<EntityRender*>(pSprite3D->GetRenderEntity().GetPtr()));

@@ -48,8 +48,8 @@ namespace LT {
 		, m_nHeight(720)
 		, m_bRenderingPaused(false)
 		, m_nCameraCounter(0)
-		, m_nCameraID(-1)
-		, m_nMainScene(-1)
+		, m_nCameraID(INVALID_CAMERA_ID)
+		, m_nMainScene(INVALID_NODE_ID)
 		, m_pView(nullptr)
 	{
 
@@ -120,7 +120,7 @@ namespace LT {
 	{
 		m_pView = new View();
 		CreateCamera(m_nCameraID);
-		CreateSceneNode(m_nMainScene, static_cast<int32_t>(NodeType::eNodeMesh));
+		CreateSceneNode(m_nMainScene, NodeType::eNodeMesh);
 
 		m_pView->SetCamera(m_mapCamera[m_nCameraID]);
 		m_pView->SetMainScene(m_nMainScene);
@@ -142,7 +142,7 @@ namespace LT {
 
 			pNode->SetMesh(cube);
 
-			pNode->AddComponent(ComponentType::eSprite3D);
+			pNode->AddComponent<ComponentType::eSprite3D>();
 			CompSprite3D* pSprite = dynamic_cast<CompSprite3D*>(pNode->GetComponent(ComponentType::eSprite3D));
 			if (pSprite)
 			{
@@ -194,7 +194,7 @@ namespace LT {
 		ImageManager::DeleteImage(m_nImageID);
 	}
 
-	EngineResult Engine::CreateSceneNode(int64_t& nOutNodeID, int32_t nNodeType)
+	EngineResult Engine::CreateSceneNode(NodeID& nOutNodeID, NodeType nNodeType)
 	{
 		nOutNodeID = SceneManager::CreateNode(static_cast<NodeType>(nNodeType));
 
@@ -208,7 +208,7 @@ namespace LT {
 		}
 	}
 
-	EngineResult Engine::DeleteSceneNode(int64_t nNodeID)
+	EngineResult Engine::DeleteSceneNode(NodeID nNodeID)
 	{
 		SceneManager::ReleaseNode(nNodeID);
 
@@ -220,14 +220,14 @@ namespace LT {
 		return s_pDefaultRenderer;
 	}
 
-	EngineResult Engine::CreateCamera(int64_t& nOutCameraID)
+	EngineResult Engine::CreateCamera(CameraID& nOutCameraID)
 	{
 		nOutCameraID = GenCameraID();
 		m_mapCamera[nOutCameraID] = new CameraPerspective();
 		return EngineResult::eSuccess;
 	}
 
-	EngineResult Engine::DeleteCamera(int64_t nCameraID)
+	EngineResult Engine::DeleteCamera(CameraID nCameraID)
 	{
 		auto iter = m_mapCamera.find(nCameraID);
 		if (iter == m_mapCamera.end())

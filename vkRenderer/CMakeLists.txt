@@ -30,7 +30,9 @@ file(GLOB SOURCES
 # 头文件
 file(GLOB PUBLIC_HEADERS
     "core/*.h"
+	"core/*.hpp"
 	"logger/*.h"
+	"logger/*.hpp"
 	"util/*.hpp"
 	"util/*.h"
 	"core/displayDevice/*.h"
