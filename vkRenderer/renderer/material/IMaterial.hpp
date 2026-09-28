@@ -13,22 +13,47 @@ namespace LT {
 	class IMaterial {
 		friend class MaterialManager;
 	protected:
-		using RenderPassMap = std::map<RenderPassFlag, RenderPass*>;
-	protected:
 		MaterialID m_nID;
-		std::map<RenderStageType, RenderPassMap> m_mapRenderPasses;
 		std::unordered_map<BindingInfo, MaterialSlot, BindingInfoHash> m_mapSlots;
 
 	protected:
 		IMaterial(MaterialID nID);
 
-		void RegisterStage(RenderStageType eStage);
+		virtual void RegisterStage(RenderStageType eStage) = 0;
 	public:
-		~IMaterial();
+		using _RenderPassMap = std::map<RenderPassFlag, RenderPass*>;
+		using RenderPassMap = std::map<RenderStageType, _RenderPassMap>;
+
+		virtual ~IMaterial();
 
 		virtual RenderPass* GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag) = 0;
 		virtual void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex) = 0;
 
+
 		ResultSetter SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID);
 	};
+
+	template<typename DerivedMaterial>
+	class BaseMaterial : public IMaterial
+	{
+		friend class MaterialManager;
+	protected:
+		static RenderPassMap s_mapRenderPasses;
+
+	protected:
+		BaseMaterial(MaterialID nID):IMaterial(nID)
+		{
+		}
+
+		void RegisterStage(RenderStageType eStage) override
+		{
+			if (m_mapRenderPasses.find(eStage) == m_mapRenderPasses.end())
+			{
+				m_mapRenderPasses[eStage] = _RenderPassMap();
+			}
+		}
+	};
+
+	template<typename DerivedMaterial>
+	IMaterial::RenderPassMap BaseMaterial<DerivedMaterial>::s_mapRenderPasses;
 } // namespace LT

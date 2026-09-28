@@ -41,7 +41,7 @@ namespace LT {
 	using MaterialID = int64_t;
 	constexpr MaterialID INVALID_MATERIAL_ID = INVALID_ITEM_ID;
 
-	enum class MaterialType {
+	enum class MaterialType : int{
 		eUndifined = -1,
 		eMainTexture
 	};

@@ -8,23 +8,7 @@ namespace LT {
 	{}
 
 	IMaterial::~IMaterial()
-	{
-		for (auto& passes : m_mapRenderPasses)
-		{
-			for (auto& pass : passes.second)
-			{
-				delete pass.second;
-			}
-		}
-	}
-
-	void IMaterial::RegisterStage(RenderStageType eStage)
-	{
-		if (m_mapRenderPasses.find(eStage) == m_mapRenderPasses.end())
-		{
-			m_mapRenderPasses[eStage] = RenderPassMap();
-		}
-	}
+	{}
 
 	ResultSetter IMaterial::SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID)
 	{

@@ -218,8 +218,7 @@ using TargetName##Ref = ManagerType::_##TargetName##Ref;\
 using TargetName##Ptr = PtrWithRefCount<TargetType>;\
 
 
-#define IMPLEMENT_SINGLETON_MANAGER(ManagerType, TargetType, IDType, TargetName)\
-\
+#define IMPLEMENT_SINGLETON_MANAGER_DEFAULT(ManagerType, TargetType, IDType, TargetName)\
 ManagerType* ManagerType::s_pInstance = nullptr;\
 ManagerType::~ManagerType(){\
 	if(m_mapResources.size() > 0){\
@@ -255,6 +254,33 @@ TargetName##Ref ManagerType::Insert(IDType nID, TargetType* pItem){\
 	ptrWarpper.m_nRefCount = 0; \
 	m_mapResources[nID] = ptrWarpper;\
 	return TargetName##Ref(nID);\
+}
+
+#ifdef SINGLETON_MANAGER_CUSTOMED_INIT_AND_RELEASE
+
+#define IMPLEMENT_SINGLETON_MANAGER(ManagerType, TargetType, IDType, TargetName) IMPLEMENT_SINGLETON_MANAGER_DEFAULT(ManagerType, TargetType, IDType, TargetName)
+
+#define IMPLEMENT_SINGLETON_MANAGER_INIT_BEGIN(ManagerType) void ManagerType::Init(){ if(!s_pInstance){s_pInstance = new ManagerType();}
+
+#define IMPLEMENT_SINGLETON_MANAGER_INIT_END(ManagerType) }
+
+#define IMPLEMENT_SINGLETON_MANAGER_RELEASE_BEGIN(ManagerType) void ManagerType::Release(){
+	
+#define IMPLEMENT_SINGLETON_MANAGER_RELEASE_END(ManagerType) if(s_pInstance){delete s_pInstance;s_pInstance = nullptr;} }
+
+#else
+
+#define IMPLEMENT_SINGLETON_MANAGER(ManagerType, TargetType, IDType, TargetName)\
+\
+IMPLEMENT_SINGLETON_MANAGER_DEFAULT(ManagerType, TargetType, IDType, TargetName)\
+\
+void ManagerType::Init(){\
+	if(!s_pInstance){s_pInstance = new ManagerType();}\
 }\
+void ManagerType::Release(){\
+	if(s_pInstance){delete s_pInstance;s_pInstance = nullptr;}\
+}
+
+#endif
 
 } // namespace

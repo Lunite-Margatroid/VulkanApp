@@ -4,7 +4,7 @@
 
 
 namespace LT {
-	class MaterialMainTexture : public IMaterial {
+	class MaterialMainTexture final : public BaseMaterial<MaterialMainTexture> {
 		friend class MaterialManager;
 
 	protected:
@@ -15,6 +15,7 @@ namespace LT {
 		MaterialMainTexture& operator = (MaterialMainTexture&&) = delete;
 		MaterialMainTexture(const MaterialMainTexture&) = delete;
 		MaterialMainTexture(MaterialMainTexture&&) = delete;
+
 	public:
 		RenderPass* GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag) override;
 		void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex) override;

@@ -4,8 +4,9 @@
 #include "GraphicPass.hpp"
 
 namespace LT {
+
 	MaterialMainTexture::MaterialMainTexture(MaterialID nID)
-		:IMaterial(nID)
+		:BaseMaterial<MaterialMainTexture>(nID)
 	{
 		m_mapSlots[BindingInfo(0u, BindingSpace::eVertexShader)] = MaterialSlot({ vk::DescriptorType::eUniformBuffer, -1 });
 		m_mapSlots[BindingInfo(1u, BindingSpace::eFragmentShader)] = MaterialSlot({ vk::DescriptorType::eCombinedImageSampler, -1 });
@@ -14,12 +15,12 @@ namespace LT {
 	}
 	RenderPass* MaterialMainTexture::GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag)
 	{
-		auto iterPasses = m_mapRenderPasses.find(eStage);
-		if (iterPasses == m_mapRenderPasses.end())
+		auto iterPasses = s_mapRenderPasses.find(eStage);
+		if (iterPasses == s_mapRenderPasses.end())
 		{
 			return nullptr;
 		}
-		RenderPassMap& mapPass = iterPasses->second;
+		auto& mapPass = iterPasses->second;
 
 		auto iterPass = mapPass.find(nFlag);
 		if (iterPass == mapPass.end())
