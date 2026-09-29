@@ -4,7 +4,7 @@
 
 
 namespace LT {
-	class MaterialMainTexture final : public BaseMaterial<MaterialMainTexture> {
+	class MaterialMainTexture final : public BaseMaterial<MaterialMainTexture, MaterialType::eMainTexture> {
 		friend class MaterialManager;
 
 	protected:

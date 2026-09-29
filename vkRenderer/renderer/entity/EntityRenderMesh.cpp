@@ -60,6 +60,7 @@ namespace LT {
 				RenderViewSingleCamera* pRenderView = dynamic_cast<RenderViewSingleCamera*>(sDrawInfo.pRenderView);
 				pRenderView->SetModelMat(m_matModel);
 				pConstBuffer->UpdateConstBuffer(pRenderView->GetTransBuffer());
+				pConstBuffer->UpdateConstBuffer();
 			}
 
 			pRenderPass->BindConstBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex], BindingSpace::eVertexShader, 0, sDrawInfo.nFlightFrameIndex);

@@ -1,6 +1,7 @@
 #pragma once 
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <stack>
 #include <chrono>
@@ -13,7 +14,10 @@
 #include <array>
 #include <unordered_map>
 #include <map>
+#include <set>
 #include <functional>
+#include <variant>
+#include <bitset>
 
 #include <algorithm>
 

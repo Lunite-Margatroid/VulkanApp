@@ -8,11 +8,6 @@ namespace LT {
 	class Renderer;
 	class View;
 
-	enum class EngineResult {
-		eSuccess,
-		eFailed,
-	};
-
 	class Engine {
 	private:
 		Renderer* m_pDebugRenderer;

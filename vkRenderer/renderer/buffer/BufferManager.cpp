@@ -99,6 +99,7 @@ namespace LT {
 		bufferManager.m_mapBuffers[pConstBuffer->GetBufferID()] = pConstBuffer;
 		return pConstBuffer;
 	}
+
 	void BufferManager::DeleteBuffer(BufferID nID)
 	{
 		BufferManager& bufferManager = GetInstance();

@@ -229,12 +229,6 @@ ManagerType::~ManagerType(){\
 	}\
 	}\
 }\
-void ManagerType::Init(){\
-	if(!s_pInstance){s_pInstance = new ManagerType();}\
-}\
-void ManagerType::Release(){\
-	if(s_pInstance){delete s_pInstance;s_pInstance = nullptr;}\
-}\
 \
 ManagerType& ManagerType::GetInstance(){\
 	if(!s_pInstance) {Init();} return *s_pInstance;\

@@ -43,7 +43,8 @@ namespace LT {
 
 	enum class MaterialType : int{
 		eUndifined = -1,
-		eMainTexture
+		eMainTexture,
+		eExample
 	};
 
 
@@ -58,4 +59,20 @@ namespace LT {
 
 	using ResultSetter = int32_t;
 
+	enum class EngineResult {
+		eSuccess,
+		eFailed,
+	};
+
+	using ConstBufferHandle = int64_t;
+	constexpr ConstBufferHandle INVALID_CONST_BUFFER_HANDLE = -1;
+
+
+	struct BufferBinding {
+		BufferID nBufferID;
+		size_t nOffset;
+		size_t nSize;
+	};
+
+	using MtlPropVar = std::variant<int, float, ImageID, std::array<float, 2>, std::array<float, 3>, std::array<float, 4>, std::array<int, 2>, std::array<int, 3>, std::array<int, 4>>;
 }

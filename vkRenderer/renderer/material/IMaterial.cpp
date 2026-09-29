@@ -3,8 +3,9 @@
 #include "IMaterial.hpp"
 
 namespace LT {
-	IMaterial::IMaterial(MaterialID nID) 
+	IMaterial::IMaterial(MaterialID nID, MaterialType eType) 
 		:m_nID(nID)
+		,m_eMtlType(eType)
 	{}
 
 	IMaterial::~IMaterial()

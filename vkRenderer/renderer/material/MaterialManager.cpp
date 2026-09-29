@@ -6,33 +6,47 @@
 
 #include "MaterialManager.hpp"
 #include "MaterialMainTexture.hpp"
+#include "MaterialExample.hpp"
 
 namespace LT {
 
 	template<typename ...Args>
 	struct _MaterialRegistry {
 		template<typename Func>
-		static void ForEach(Func&& func)
+		static void ForEach(Func && func)
 		{
 			(func.template operator() <Args> (), ...);
 		}
 	};
 	// 注册材质
-	using MaterialRegistry = _MaterialRegistry<MaterialMainTexture>;
+	using MaterialRegistry = _MaterialRegistry<MaterialMainTexture, MaterialExample>;
 
 
 	IMPLEMENT_SINGLETON_MANAGER(MaterialManager, IMaterial, MaterialID, Material)
 
-
+	// 初始化
 	IMPLEMENT_SINGLETON_MANAGER_INIT_BEGIN(MaterialManager)
 	{
+		MaterialRegistry::ForEach(
+			[]<typename M>() {
+			M::RegisterMaterialProp();
+		}
+		
+		);
 
+		MaterialRegistry::ForEach(
+			[]<typename M>() {
+			M::InitMaterialPropDataLayout();
+		}
+
+		);
 	}
 	IMPLEMENT_SINGLETON_MANAGER_INIT_END(MaterialManager)
 
-
+	// 释放
 	IMPLEMENT_SINGLETON_MANAGER_RELEASE_BEGIN(MaterialManager)
 	{
+		// 遍历已注册材质
 		MaterialRegistry::ForEach(
 			[]<typename M>() {
 			MaterialManager::UnregisterMaterial<M>();
@@ -57,10 +71,6 @@ namespace LT {
 		};
 
 		return mgr.Insert(nID, pMtl);
-	}
-
-	void RegisterMaterial(MaterialType eType)
-	{
 	}
 
 } // namespace

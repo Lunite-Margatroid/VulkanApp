@@ -57,10 +57,16 @@ namespace LT {
 		// DeviceMemoryManager::AsignMemory(this, m_nSize, m_pBuffer);
 		memcpy(m_pMapped, m_pBuffer, m_nSize);
 	}
+
 	void ConstBuffer::UpdateConstBuffer(const void* pData)
 	{
 		memcpy(m_pBuffer, pData, m_nSize);
-		UpdateConstBuffer();
+	}
+
+	void ConstBuffer::UpdateConstBuffer(const void* pData, size_t nOffset, size_t nSize)
+	{
+		RENDERER_ASSERT(m_nSize - nOffset > nSize, "out of bounds");
+		memcpy(m_pBuffer + nOffset, pData, nSize);
 	}
 	void ConstBuffer::Bind(BindTarget nTarget)
 	{

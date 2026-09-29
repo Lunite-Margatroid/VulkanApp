@@ -26,8 +26,10 @@ namespace LT {
 
 		void UpdateDataToGPU() override;
 
+		// 内存数据同步到GPU
 		void UpdateConstBuffer();
 		void UpdateConstBuffer(const void* pData);
+		void UpdateConstBuffer(const void* pData, size_t nOffset, size_t nSize);
 	public:
 		// IBindable
 

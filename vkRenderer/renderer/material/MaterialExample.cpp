@@ -1,19 +1,19 @@
-// 测试材质 单一贴图 无光照
+// 示例材质：演示材质属性布局（Float3 + Image + Float + Float）
 #include "vkRendererCommon.h"
-#include "MaterialMainTexture.hpp"
+#include "MaterialExample.hpp"
 #include "GraphicPass.hpp"
 
 namespace LT {
 
-	MaterialMainTexture::MaterialMainTexture(MaterialID nID)
-		:BaseMaterial<MaterialMainTexture, MaterialType::eMainTexture>(nID)
+	MaterialExample::MaterialExample(MaterialID nID)
+		:BaseMaterial<MaterialExample, MaterialType::eExample>(nID)
 	{
 		m_mapSlots[BindingInfo(0u, BindingSpace::eVertexShader)] = MaterialSlot({ vk::DescriptorType::eUniformBuffer, -1 });
 		m_mapSlots[BindingInfo(1u, BindingSpace::eFragmentShader)] = MaterialSlot({ vk::DescriptorType::eCombinedImageSampler, -1 });
 
 		RegisterStage(RenderStageType::eOpaqueForward);
 	}
-	RenderPass* MaterialMainTexture::GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag)
+	RenderPass* MaterialExample::GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag)
 	{
 		auto iterPasses = s_mapRenderPasses.find(eStage);
 		if (iterPasses == s_mapRenderPasses.end())
@@ -27,6 +27,7 @@ namespace LT {
 		{
 			GraphicPass* pPass = new GraphicPass();
 			pPass->SetRenderPassFlag(nFlag);
+			// 暂无专用示例shader，暂时复用MainTex的shader
 			pPass->AddShaderModule("FragmentShaderMainTex");
 			pPass->AddShaderModule("CommonVertexShader");
 			pPass->Init();
@@ -38,7 +39,7 @@ namespace LT {
 
 		return iterPass->second;
 	}
-	void MaterialMainTexture::UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex)
+	void MaterialExample::UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex)
 	{
 		GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(GetRenderPass(eStage, nFlag));
 		if (pRenderPass) {
@@ -62,12 +63,11 @@ namespace LT {
 		}
 	}
 
-	void MaterialMainTexture::SetMainTexture(ImageID nMainTex)
-	{
-		SetSlotSrc(BindingInfo(1u, BindingSpace::eFragmentShader), nMainTex);
-	}
 
-	void BaseMaterial<MaterialMainTexture, MaterialType::eMainTexture>::RegisterMaterialProp() {
-		AddMaterialProp(MtlProp::eTexDiffuse);
+	void BaseMaterial<MaterialExample, MaterialType::eExample>::RegisterMaterialProp() {
+
+		for (int i = 0; i < static_cast<int>(MtlProp::MtlPropCount); ++i) {
+			AddMaterialProp(static_cast<MtlProp>(i));
+		}
 	}
 } // namespace

@@ -19,11 +19,10 @@ private:
 			for (auto& pass : mapPasses.second) {
 				delete pass.second;
 			}
-			mapPasses.clear();
+			mapPasses.second.clear();
 		}
 		TMaterial::s_mapRenderPasses.clear();
 	}
-
 
 	DECLEAR_SINGLETON_MANAGER_END(MaterialManager, IMaterial, MaterialID, Material)
 }

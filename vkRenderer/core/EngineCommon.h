@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <variant>
 
 #include "TypeDef.hpp"
 
