@@ -3,35 +3,37 @@
 namespace LT {
 
 #define MtlPropDataTypeList(X)\
-	X(Bool, bool)\
-	X(Int, int)\
-X(Int2, int2)\
-X(Int3, int3)\
-X(Int4, int4)\
-X(Float, float)\
-X(Float2, float2)\
-X(Float3, float3)\
-X(Float4, float4)\
-X(Image, Image)\
+	X(Bool,		bool,	4)\
+	X(Int,		int,	4)\
+	X(Int2,		int2,	8)\
+	X(Int3,		int3,	12)\
+	X(Int4,		int4,	16)\
+	X(Float,	float,	4)\
+	X(Float2,	float2, 8)\
+	X(Float3,	float3, 12)\
+	X(Float4,	float4, 16)\
+	X(Image,	Image,	0)\
 
 
 	enum class MtlPropDataType
 	{
 		eUnknown = -1,
-#define X(type, strType) e##type,
-
+#define X(type, strType, nSize) e##type,
 		MtlPropDataTypeList(X)
-
 #undef X
 		MtlPropDataTypeCount
 
 	};
 
 	inline constexpr std::array<std::string_view, static_cast<size_t>(MtlPropDataType::MtlPropDataTypeCount)> g_arrMtlPropDataTypeStr = {
-#define X(type, strType) #strType,
-
+#define X(type, strType, nSize) #strType,
 		MtlPropDataTypeList(X)
+#undef X
+	};
 
+	inline constexpr std::array<size_t, static_cast<size_t>(MtlPropDataType::MtlPropDataTypeCount)> g_arrSizeOfMtlPropDataType = {
+#define X(type, strType, nSize) nSize,
+		MtlPropDataTypeList(X)
 #undef X
 	};
 
@@ -40,12 +42,29 @@ X(Image, Image)\
 		return index < g_arrMtlPropDataTypeStr.size() ? g_arrMtlPropDataTypeStr[index] : "Unknown";
 	}
 
+	constexpr size_t SizeOf(MtlPropDataType ePropDataType) {
+		size_t index = static_cast<size_t>(ePropDataType);
+		return index < g_arrSizeOfMtlPropDataType.size() ? g_arrSizeOfMtlPropDataType[index] : 0;
+	}
+
 	// 在此处添加属性
 #define MtlPropList(X)\
-			X(ColorDiffuse, Float3)	\
+			X(ColorDiffuse, Float3)\
 			X(TexDiffuse, Image)\
+			X(ColorSpecular, Float3)\
+			X(TexSpecular, Image)\
 			X(IOR, Float)\
-			X(Alpha, Float)
+			X(TexIOR, Image)\
+			X(Metalness, Float)\
+			X(TexMeltalness, Image)\
+			X(Roughness, Float)\
+			X(TexRoughness, Image)\
+			X(Alpha, Float)\
+			X(TexAlpha, Image)\
+
+
+	constexpr const char* MTL_PROP_UNIFORM_NAME = "u_MtlProp";
+
 
 	enum class MtlProp {
 #define X(eProp, eType)	e##eProp,
@@ -95,6 +114,10 @@ X(Image, Image)\
 	{
 		size_t index = static_cast<size_t>(eProp);
 		return index < g_arrMtlPropDataTypeList.size() ? g_arrMtlPropDataTypeList[index] : MtlPropDataType::eUnknown;
+	}
+
+	constexpr size_t SizeOf(MtlProp eProp) {
+		return SizeOf(GetMtlPropDataType(eProp));
 	}
 
 } // namespace LT

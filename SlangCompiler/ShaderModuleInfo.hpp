@@ -5,8 +5,9 @@ namespace LT {
 
 	enum class BindingSpace : uint32_t{
 		eVertexShader = 0,
-		eFragmentShader = 1,
-		eVertAndFragShader = 2,
+		eFragmentShader,
+		eVertAndFragShader,
+		BindingSpaceCount
 	};
 
 	struct BindingInfo {

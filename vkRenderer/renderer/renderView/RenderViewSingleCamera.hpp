@@ -22,7 +22,7 @@ namespace LT {
 		RenderViewSingleCamera(RenderViewSingleCamera&&) = delete;
 		RenderViewSingleCamera& operator=(RenderViewSingleCamera&&) = delete;
 
-		void SetModelMat(const glm::mat4& matModel);
+		void SetModelMat(const glm::mat4& matModel) override;
 		void SetProjectionMat(const glm::mat4& matProjection);
 		void SetViewMat(const glm::mat4& matView);
 		void SetCameraPos(const glm::vec3& vec3CameraPos);

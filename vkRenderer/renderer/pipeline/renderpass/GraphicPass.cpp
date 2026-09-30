@@ -11,6 +11,8 @@
 #include "BufferManager.h"
 #include "SamplerManager.h"
 
+#include "ShaderResourceManager.hpp"
+
 namespace LT {
 	GraphicPass::GraphicPass()
 		:m_nFlag(0)
@@ -36,22 +38,15 @@ namespace LT {
 			device.destroyDescriptorSetLayout(descSet);
 		}
 		m_vecVkDescSetLayout.clear();
-
-
-		if(m_vkPipelineLayout)
-		{
-			device.destroyPipelineLayout(m_vkPipelineLayout);
-		}
-
 	}
-	void GraphicPass::Init() {
+	void GraphicPass::Init(vk::PipelineLayout vkPipelineLayout) {
 
 		vk::Device& device = vkContext::GetVkDevice();
 
 		// 创建着色器
 		{
 			m_sShaderModuleInfo.Clear();
-			std::vector<BYTE> binShader = SlangCompiler::GetInstance().CompileShader(m_vecShaderModuleSrc, GenGraphicPPMacroDesc(m_nFlag), m_sShaderModuleInfo);
+			std::vector<BYTE> binShader = SlangCompiler::GetInstance().CompileShader(m_vecShaderCode,m_vecShaderModuleSrc, GenGraphicPPMacroDesc(m_nFlag), m_sShaderModuleInfo);
 
 			vk::ShaderModuleCreateInfo smci(
 				{},
@@ -153,88 +148,95 @@ namespace LT {
 			;
 
 		// ------------- Pipeline Layout ------------------
-		{
-			std::vector<vk::DescriptorSetLayoutBinding> bindingsVert;
-			std::vector<vk::DescriptorSetLayoutBinding> bindingsFrag;
-			std::vector<vk::DescriptorSetLayoutBinding> bindingsVertAndFrag;
+		//{
+		//	std::vector<vk::DescriptorSetLayoutBinding> bindingsVert;
+		//	std::vector<vk::DescriptorSetLayoutBinding> bindingsFrag;
+		//	std::vector<vk::DescriptorSetLayoutBinding> bindingsVertAndFrag;
 
-			auto funcAddToBindingSet = [&](BindingSpace eSpace, const vk::DescriptorSetLayoutBinding& vkBindings) {
-				switch (eSpace) {
-					case BindingSpace::eVertexShader:
-						bindingsVert.push_back(vkBindings);
-						break;
-					case BindingSpace::eFragmentShader:
-						bindingsFrag.push_back(vkBindings);
-						break;
-					case BindingSpace::eVertAndFragShader:
-						bindingsVertAndFrag.push_back(vkBindings);
-						break;
-					default:break;
-				};
-			};
+		//	auto funcAddToBindingSet = [&](BindingSpace eSpace, const vk::DescriptorSetLayoutBinding& vkBindings) {
+		//		
+		//		SlotKey key;
+		//		key.eSpace = eSpace;
+		//		key.nBindingIndex = vkBindings.binding;
+		//		key.eType = vkBindings.descriptorType;
+		//		m_mapSlots[key] = INVALID_ITEM_ID;
 
-			// const buffer
-			for (const auto& bindingInfo : m_sShaderModuleInfo.m_vecConstBufferBindingInfo) {
+		//		switch (eSpace) {
+		//			case BindingSpace::eVertexShader:
+		//				bindingsVert.push_back(vkBindings);
+		//				break;
+		//			case BindingSpace::eFragmentShader:
+		//				bindingsFrag.push_back(vkBindings);
+		//				break;
+		//			case BindingSpace::eVertAndFragShader:
+		//				bindingsVertAndFrag.push_back(vkBindings);
+		//				break;
+		//			default:break;
+		//		};
+		//	};
 
-				vk::DescriptorSetLayoutBinding dslb;
-				dslb
-					.setBinding(bindingInfo.nIndex)
-					.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-					.setDescriptorCount(1)
-					.setStageFlags(GetShaderStageFlag(bindingInfo.eSpace))
-					;
+		//	// const buffer
+		//	for (const auto& bindingInfo : m_sShaderModuleInfo.m_vecConstBufferBindingInfo) {
 
-				funcAddToBindingSet(bindingInfo.eSpace, dslb);
-			}
+		//		vk::DescriptorSetLayoutBinding dslb;
+		//		dslb
+		//			.setBinding(bindingInfo.nIndex)
+		//			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		//			.setDescriptorCount(1)
+		//			.setStageFlags(GetShaderStageFlag(bindingInfo.eSpace))
+		//			;
 
-			// Texture2D
-			for (const auto& bindingInfo : m_sShaderModuleInfo.m_vecTexture2DBindingInfo) {
-				vk::DescriptorSetLayoutBinding dslb;
-				dslb
-					.setBinding(bindingInfo.nIndex)
-					.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-					.setDescriptorCount(1)
-					.setStageFlags(GetShaderStageFlag(bindingInfo.eSpace))
-					;
-				funcAddToBindingSet(bindingInfo.eSpace, dslb);
-			}
+		//		funcAddToBindingSet(bindingInfo.eSpace, dslb);
+		//	}
+
+		//	// Texture2D
+		//	for (const auto& bindingInfo : m_sShaderModuleInfo.m_vecTexture2DBindingInfo) {
+		//		vk::DescriptorSetLayoutBinding dslb;
+		//		dslb
+		//			.setBinding(bindingInfo.nIndex)
+		//			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+		//			.setDescriptorCount(1)
+		//			.setStageFlags(GetShaderStageFlag(bindingInfo.eSpace))
+		//			;
+		//		funcAddToBindingSet(bindingInfo.eSpace, dslb);
+		//	}
 
 
-			vk::DescriptorSetLayoutCreateInfo dslciVert;
-			dslciVert.setBindings(bindingsVert);
-			vk::DescriptorSetLayoutCreateInfo dslciFrag;
-			dslciFrag.setBindings(bindingsFrag);
-			vk::DescriptorSetLayoutCreateInfo dslciVertAndFrag;
-			dslciVertAndFrag.setBindings(bindingsVertAndFrag);
+		//	vk::DescriptorSetLayoutCreateInfo dslciVert;
+		//	dslciVert.setBindings(bindingsVert);
+		//	vk::DescriptorSetLayoutCreateInfo dslciFrag;
+		//	dslciFrag.setBindings(bindingsFrag);
+		//	vk::DescriptorSetLayoutCreateInfo dslciVertAndFrag;
+		//	dslciVertAndFrag.setBindings(bindingsVertAndFrag);
 
-			m_vecVkDescSetLayout.resize(3);
-			m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eVertexShader)] = device.createDescriptorSetLayout(dslciVert);
-			m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eFragmentShader)] = device.createDescriptorSetLayout(dslciFrag);
-			m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eVertAndFragShader)] = device.createDescriptorSetLayout(dslciVertAndFrag);
-		}
-		vk::PipelineLayoutCreateInfo plci;
-		plci
-			.setSetLayoutCount(m_vecVkDescSetLayout.size())
-			.setPSetLayouts(m_vecVkDescSetLayout.data())
-			.setPushConstantRanges(0)
-			;
+		//	m_vecVkDescSetLayout.resize(3);
+		//	m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eVertexShader)] = device.createDescriptorSetLayout(dslciVert);
+		//	m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eFragmentShader)] = device.createDescriptorSetLayout(dslciFrag);
+		//	m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eVertAndFragShader)] = device.createDescriptorSetLayout(dslciVertAndFrag);
+		//}
+		//vk::PipelineLayoutCreateInfo plci;
+		//plci
+		//	.setSetLayoutCount(m_vecVkDescSetLayout.size())
+		//	.setPSetLayouts(m_vecVkDescSetLayout.data())
+		//	.setPushConstantRanges(0)
+		//	;
 
-		m_vkPipelineLayout = device.createPipelineLayout(plci);
+		//m_vkPipelineLayout = device.createPipelineLayout(plci);
 
-		// Allocate Descriptor Set
-		std::vector<vk::DescriptorSetLayout> setlayouts;
-		setlayouts.insert(setlayouts.end(), m_vecVkDescSetLayout.begin(), m_vecVkDescSetLayout.end());
-		vk::DescriptorSetAllocateInfo dsai;
-		dsai
-			.setDescriptorPool(vkContext::GetDescriptorPool())
-			.setDescriptorSetCount(setlayouts.size())
-			.setPSetLayouts(setlayouts.data())
-			;
+		//// Allocate Descriptor Set
+		//std::vector<vk::DescriptorSetLayout> setlayouts;
+		//setlayouts.insert(setlayouts.end(), m_vecVkDescSetLayout.begin(), m_vecVkDescSetLayout.end());
+		//vk::DescriptorSetAllocateInfo dsai;
+		//dsai
+		//	.setDescriptorPool(vkContext::GetDescriptorPool())
+		//	.setDescriptorSetCount(setlayouts.size())
+		//	.setPSetLayouts(setlayouts.data())
+		//	;
 
-		// Frame0
-		m_vecDescriptorSets0 = device.allocateDescriptorSets(dsai);
-		// Frame1
-		m_vecDescriptorSets1 = device.allocateDescriptorSets(dsai);
+		//// Frame0
+		//m_vecDescriptorSets0 = device.allocateDescriptorSets(dsai);
+		//// Frame1
+		//m_vecDescriptorSets1 = device.allocateDescriptorSets(dsai);
 
 		// 深度模板测试
 		vk::PipelineDepthStencilStateCreateInfo pdssci = {};
@@ -257,7 +259,7 @@ namespace LT {
 			.setPColorBlendState(&pcbsci)
 			.setPDepthStencilState(&pdssci)
 			.setPDynamicState(&pdsci)
-			.setLayout(m_vkPipelineLayout)
+			.setLayout(vkPipelineLayout)
 			.setRenderPass(VK_NULL_HANDLE)
 			.setPDepthStencilState(&pdssci)
 			;
@@ -282,6 +284,16 @@ namespace LT {
 	void GraphicPass::AddShaderModule(const char* strShaderModule)
 	{
 		m_vecShaderModuleSrc.push_back(strShaderModule);
+	}
+
+	void GraphicPass::AddShaderModule(const std::string& strName, const std::string& strCode)
+	{
+		m_vecShaderCode.emplace_back(strName, strCode);
+	}
+
+	void GraphicPass::AddShaderModule(std::string&& strName, std::string&& strCode)
+	{
+		m_vecShaderCode.emplace_back(std::move(strName), std::move(strCode));
 	}
 
 	void GraphicPass::SetRenderPassFlag(RenderPassFlag nFlag)
@@ -512,60 +524,93 @@ namespace LT {
 		}
 	}
 
-	void GraphicPass::BindConstBuffer(BufferID id, BindingSpace eSpace, uint32_t nBindingIndex, FlightFrameIndex nFlightFrameIndex)
+	void GraphicPass::BindConstBuffer(ConstBufferHandle nConstBufferHandle, BindingSpace eSpace, uint32_t nBindingIndex)
 	{
-		Buffer* pBuffer = BufferManager::GetBuffer(id);
+		SlotKey key{ eSpace , nBindingIndex, vk::DescriptorType::eUniformBuffer };
 
-		vk::DescriptorBufferInfo dbi = {};
-		dbi
-			.setBuffer(pBuffer->GetNativeBuffer())
-			.setOffset(0)
-			.setRange(pBuffer->Size())
-			;
-
-
-
-		std::array<vk::WriteDescriptorSet, 1> wds = {};
-		wds[0]
-			.setDstBinding(nBindingIndex)
-			.setDstArrayElement(0)
-			.setDescriptorCount(1)
-			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-			.setPBufferInfo(&dbi)
-			;
-
-		std::vector<vk::DescriptorSet>* pVecDescSets = (nFlightFrameIndex == 0 ? &m_vecDescriptorSets0 : &m_vecDescriptorSets1);
-		
-		wds[0].setDstSet((*pVecDescSets)[static_cast<size_t>(eSpace)]);
-
-
-		vkContext::GetVkDevice().updateDescriptorSets(wds, {});
-
+		auto iter = m_mapSlots.find(key);
+		if (iter != m_mapSlots.end())
+		{
+			iter->second = static_cast<int64_t>(nConstBufferHandle);
+		}
 	}
 
-	void GraphicPass::BindImage2D(ImageID id, BindingSpace eSpace, uint32_t nBindingIndex, FlightFrameIndex nFlightFrameIndex)
+	void GraphicPass::BindImage2D(ImageID id, BindingSpace eSpace, uint32_t nBindingIndex)
 	{
-		vk::DescriptorImageInfo ddi = {};
+		SlotKey key{ eSpace , nBindingIndex, vk::DescriptorType::eCombinedImageSampler };
 
-		ddi
-			.setImageView(ImageManager::GetNativeDeviceImageView(id))
-			.setSampler(SamplerManager::GetDefaultImageSampler()->GetNativeSampler())
-			.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-			;
+		auto iter = m_mapSlots.find(key);
+		if (iter != m_mapSlots.end())
+		{
+			iter->second = static_cast<int64_t>(id);
+		}
+	}
 
-		std::array<vk::WriteDescriptorSet, 1> wds;
-		wds[0]
-			.setDstBinding(nBindingIndex)
-			.setDstArrayElement(0)
-			.setDescriptorCount(1)
-			.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-			.setPImageInfo(&ddi)
-			;
+	void GraphicPass::BindResourceToDevice(FlightFrameIndex nFlightFrameIndex)
+	{
+		std::vector<vk::WriteDescriptorSet> vecWDS;
 
 		std::vector<vk::DescriptorSet>* pVecDescSets = (nFlightFrameIndex == 0 ? &m_vecDescriptorSets0 : &m_vecDescriptorSets1);
 
-		wds[0].setDstSet((*pVecDescSets)[static_cast<size_t>(eSpace)]);
-		vkContext::GetVkDevice().updateDescriptorSets(wds, {});
+		for (const auto& [key, nSrcID] : m_mapSlots)
+		{
+			vk::WriteDescriptorSet wds;
+			bool bInvalidSrc = true;
+
+			switch (key.eType)
+			{
+				case vk::DescriptorType::eUniformBuffer:
+				{
+					BufferBinding binding = ShaderResourceManager::GetConstBufferBinding(nSrcID);
+					Buffer* pBuffer = BufferManager::GetBuffer(binding.nBufferID);
+
+					vk::DescriptorBufferInfo dbi = {};
+					dbi
+						.setBuffer(pBuffer->GetNativeBuffer())
+						.setOffset(binding.nOffset)
+						.setRange(binding.nSize)
+						;
+
+
+					wds.setPBufferInfo(&dbi);
+				}
+				break;
+				case vk::DescriptorType::eCombinedImageSampler:
+				{
+					vk::DescriptorImageInfo ddi = {};
+
+					ddi
+						.setImageView(ImageManager::GetNativeDeviceImageView(nSrcID))
+						.setSampler(SamplerManager::GetDefaultImageSampler()->GetNativeSampler())
+						.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+						;
+
+					wds.setPImageInfo(&ddi);
+				}
+				break;
+				default:
+					bInvalidSrc = false;
+					break;
+			}
+			if (bInvalidSrc)
+			{
+				wds
+					.setDstBinding(key.nBindingIndex)
+					.setDstArrayElement(0)
+					.setDescriptorCount(1)
+					.setDescriptorType(key.eType)
+					.setDstSet((*pVecDescSets)[static_cast<size_t>(key.eSpace)])
+					;
+					
+
+				vecWDS.push_back(std::move(wds));
+			}
+		}
+
+		if (!vecWDS.empty())
+		{
+			vkContext::GetVkDevice().updateDescriptorSets(vecWDS, {});
+		}
 	}
 
 } // namespace LT

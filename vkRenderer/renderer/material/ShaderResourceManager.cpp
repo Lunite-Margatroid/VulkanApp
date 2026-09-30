@@ -1,5 +1,6 @@
 // 材质Shader资源管理器
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "BufferManager.h"
 #include "ShaderResourceManager.hpp"
 
@@ -7,7 +8,9 @@ namespace LT {
 	ShaderResourceManager* ShaderResourceManager::s_pInstance = nullptr;
 
 	ShaderResourceManager::ShaderResourceManager()
-		:m_nConstBufferHandleCounter(0)
+		: m_nConstBufferHandleCounter(0)
+		, m_sMVPTransBufferPool(sizeof(MVPMatrixBuffer))
+		, m_vkDescriptorPool(VK_NULL_HANDLE)
 	{
 	}
 
@@ -15,6 +18,11 @@ namespace LT {
 	{
 		if (m_mapHandle.size() > 0) {
 			LOG_ERROR("%s, ConstBuffers did not release.", __FUNCTION__);
+		}
+
+		if (m_vkDescriptorPool)
+		{
+			vkContext::GetVkDevice().destroyDescriptorPool(m_vkDescriptorPool);
 		}
 	}
 
@@ -33,6 +41,28 @@ namespace LT {
 		s_pInstance = nullptr;
 	}
 
+	void ShaderResourceManager::CreateDescriptorPool(const std::map<vk::DescriptorType, uint32_t>& mapDescriptorCount) {
+		std::vector<vk::DescriptorPoolSize> vecDPS;
+		for (const auto& [eType, nCount] : mapDescriptorCount)
+		{
+			vk::DescriptorPoolSize dps;
+			dps
+				.setType(eType)
+				.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * nCount)
+				;
+		}
+
+		vk::DescriptorPoolCreateInfo dpci;
+		dpci
+			.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
+			.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * 3)
+			.setPoolSizeCount(vecDPS.size())
+			.setPPoolSizes(vecDPS.data())
+			;
+
+		GetInstance().m_vkDescriptorPool = vkContext::GetVkDevice().createDescriptorPool(dpci);
+	}
+
 	ShaderResourceManager& ShaderResourceManager::GetInstance() {
 		RENDERER_ASSERT(s_pInstance, "ShaderResourceManager Did not init.");
 		return *s_pInstance;
@@ -45,25 +75,59 @@ namespace LT {
 		{
 			return iter->second;
 		}
-		return BufferBinding{INVALID_BUFFER_ID, 0, 0};
+		return BufferBinding{ INVALID_BUFFER_ID, 0, 0 };
 	}
 
-	void ShaderResourceManager::UpdateConstBuffer(ConstBufferHandle nHandle, void* pData, size_t nOffset, size_t nSize)
+	ConstBufferHandle ShaderResourceManager::CreateTransBufferHandle()
+	{
+		auto& mgr = GetInstance();
+		ConstBufferHandle nHandle = mgr.GenConstBufferHandle();
+		mgr.m_mapHandle[nHandle] = mgr.m_sMVPTransBufferPool.AllocateBuffer();
+
+		return nHandle;
+	}
+
+	void ShaderResourceManager::ReleaseTransBufferHandle(ConstBufferHandle nHandle)
 	{
 		auto& mgr = GetInstance();
 		auto iter = mgr.m_mapHandle.find(nHandle);
 		if (iter != mgr.m_mapHandle.end())
 		{
-			BufferBinding binding = iter->second;
-			ConstBuffer* pBuffer = dynamic_cast<ConstBuffer*>(BufferManager::GetBuffer(binding.nBufferID));
-			if (pBuffer)
-			{
-				nOffset = binding.nOffset + nOffset;
-				RENDERER_ASSERT(binding.nSize - nOffset >= nSize, "Out of bounds");
-				pBuffer->UpdateConstBuffer(pData);
-			}
+			mgr.m_sMVPTransBufferPool.ReleaseBuffer(iter->second);
+			mgr.m_mapHandle.erase(iter);
+		}
+		else
+		{
+			LOG_WARNING("invalid const buffer Handle");
 		}
 
+	}
+
+	void ShaderResourceManager::UpdateTransBuffer(ConstBufferHandle nHandle, const void* pData)
+	{
+		auto& mgr = GetInstance();
+		auto iter = mgr.m_mapHandle.find(nHandle);
+		if (iter != mgr.m_mapHandle.end())
+		{
+			mgr.m_sMVPTransBufferPool.UpdateConstBuffer(iter->second, pData);
+		}
+		else
+		{
+			LOG_WARNING("invalid const buffer Handle");
+		}
+	}
+
+	void ShaderResourceManager::UpdateDeviceTransBuffer()
+	{
+		auto& mgr = GetInstance();
+		mgr.m_sMVPTransBufferPool.UpdateDeviceConstBuffer();
+	}
+
+	void ShaderResourceManager::UpdateDeviceMtlPropBuffer() {
+		auto& mgr = GetInstance();
+		for (auto& [eMaterialType, pool] : mgr.m_mapBuffers) {
+			pool.UpdateDeviceConstBuffer();
+		}
 	}
 
 

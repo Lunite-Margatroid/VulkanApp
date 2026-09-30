@@ -75,6 +75,8 @@ namespace LT {
 
 		SamplerManager::Init();
 
+		ShaderResourceManager::Init();
+
 		MaterialManager::Init();
 		MeshManager::Init();
 
@@ -95,6 +97,8 @@ namespace LT {
 
 		MeshManager::Release();
 		MaterialManager::Release();
+
+		ShaderResourceManager::Release();
 
 		SamplerManager::Release();
 

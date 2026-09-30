@@ -18,7 +18,6 @@ namespace LT {
 
 	public:
 		RenderPass* GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag) override;
-		void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex) override;
 
 		void SetMainTexture(ImageID nMainTex);
 	};

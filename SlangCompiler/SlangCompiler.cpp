@@ -115,14 +115,16 @@ namespace LT {
 		return vecOutCode;
 	}
 
-	std::vector<uint8_t> SlangCompiler::CompileShader(const std::vector<std::string>& vecModules, 
+	std::vector<uint8_t> SlangCompiler::CompileShader(
+		const std::vector<std::pair<std::string, std::string>>& vecShaderCode,
+		const std::vector<std::string>& vecModules, 
 		const std::vector<std::pair<const char*, const char*>>& vecPPMacro,
 		ShaderModuleInfo& sOutShaderModuleInfo)
 	{
 
 		Slang::ComPtr<slang::IComponentType> pLinked;
 		Slang::ComPtr<slang::ISession> pSession;
-		CompileShaderToProgram(vecModules, vecPPMacro, pSession.writeRef(), pLinked.writeRef());
+		CompileShaderToProgram(vecShaderCode, vecModules, vecPPMacro, pSession.writeRef(), pLinked.writeRef());
 
 		// 反射 获取着色器信息
 		{
@@ -198,6 +200,7 @@ namespace LT {
 	}
 
 	void SlangCompiler::CompileShaderToProgram(
+		const std::vector<std::pair<std::string, std::string>>& vecShaderCode,
 		const std::vector<std::string>& vecModules, 
 		const std::vector<std::pair<const char*, const char*>>& vecPPMacro,
 		slang::ISession** ppOutSesson,
@@ -238,22 +241,18 @@ namespace LT {
 		// 创建
 		m_pGlobalSession->createSession(sd, ppOutSesson);
 
-		// 加载Module
+
+
 		std::vector<Slang::ComPtr<slang::IModule>> vecPModules;
-		for (const std::string strModule : vecModules)
-		{
+		auto funcLoadModule = [&](const std::string& moduleName, const std::string& strPath, const std::string& moduleCode) {
+			// 查错
 			Slang::ComPtr<slang::IBlob> pDiagnosticsBlob;
-			std::string strModulePath = strModule + ".slang";
-
-			std::string strFilePath = "./slang/" + strModulePath;
-
-			std::filesystem::path pathModuleFile(strFilePath);
 
 			Slang::ComPtr<slang::IModule> pModule;
 			pModule = (*ppOutSesson)->loadModuleFromSourceString(
-				strModule.c_str(),
-				strModulePath.c_str(),
-				ReadText(pathModuleFile).c_str(),
+				moduleName.c_str(),
+				strPath.c_str(),
+				moduleCode.c_str(),
 				pDiagnosticsBlob.writeRef()
 			);
 
@@ -264,9 +263,31 @@ namespace LT {
 			if (pDiagnosticsBlob)
 			{
 				// 查错
-				LOG_INFO("Shader Compiler Log. Module %s :\n%s", strModule.c_str(), static_cast<const char*> (pDiagnosticsBlob->getBufferPointer()));
+				LOG_INFO("Shader Compiler Log. Module %s :\n%s", moduleName.c_str(), static_cast<const char*> (pDiagnosticsBlob->getBufferPointer()));
 			}
+
+			};
+
+
+		// 从文件加载Module
+		for (const std::string strModule : vecModules)
+		{
+			Slang::ComPtr<slang::IBlob> pDiagnosticsBlob;
+			std::string strModulePath = strModule + ".slang";
+
+			std::string strFilePath = "./slang/" + strModulePath;
+
+			std::filesystem::path pathModuleFile(strFilePath);
+
+			funcLoadModule(strModule, strFilePath, ReadText(pathModuleFile));
 		}
+
+		// 从代码加载 Shader Module
+		for (const auto& [strModuleName, strModuleCode] : vecShaderCode)
+		{
+			funcLoadModule(strModuleName, strModuleName, strModuleCode);
+		}
+
 		// 组合
 		std::vector<slang::IComponentType*> vecComponents;
 		for (Slang::ComPtr<slang::IModule> pModule : vecPModules)

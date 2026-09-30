@@ -13,8 +13,22 @@ namespace LT {
 		// 如果是纹理 nSrcID是一个ImageID
 		// 如果是const buffer, nSrcID是一个ConstBufferHandle，由ShaderResource控制
 		int64_t nSrcID;
+
+		MaterialSlot(vk::DescriptorType desc, int64_t srcID)
+			: eDescType(desc)
+			, nSrcID(srcID)
+		{}
+
+		MaterialSlot()
+			: eDescType(vk::DescriptorType::eUniformBuffer)
+			, nSrcID(-1)
+		{
+		}
 	};
 
+	constexpr uint32_t MTL_TRANS_BUFFER_BINDING_INDEX = 0u;
+	constexpr uint32_t MTL_PROP_BINDING_INDEX = 2u;
+	constexpr uint32_t MTL_TEX_BINDING_MIN = 3u;
 	
 
 	using MaterialPropDataLayout = std::map<MtlProp, size_t>;
@@ -37,13 +51,16 @@ namespace LT {
 		virtual ~IMaterial();
 
 		virtual RenderPass* GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag) = 0;
-		virtual void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex) = 0;
+		virtual void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag) = 0;
 		
 		virtual EngineResult SetMtlProp(MtlProp eProp, const MtlPropVar& value) = 0;
 
+		EngineResult SetTransBuffer(ConstBufferHandle nHandle);
+
 		MaterialType GetMaterialType() const { return m_eMtlType; }
 
-		ResultSetter SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID);
+		EngineResult SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID);
+
 	};
 
 	template<typename DerivedMaterial, MaterialType eTypeMaterial>
@@ -51,10 +68,15 @@ namespace LT {
 	{
 		friend class MaterialManager;
 	protected:
+
+		using TBaseMaterial = BaseMaterial<DerivedMaterial, eTypeMaterial>;
+
+		ConstBufferHandle m_nPropBufferHandle;
+
 		BaseMaterial(MaterialID nID) :IMaterial(nID, eTypeMaterial)
 		{
-			ConstBufferHandle nBufferHandle = ShaderResourceManager::CreateConstBufferHandle<BaseMaterial<DerivedMaterial, eTypeMaterial>>();
-			m_mapSlots[BindingInfo(2u, BindingSpace::eVertAndFragShader)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
+			m_nPropBufferHandle = ShaderResourceManager::CreateConstBufferHandle<TBaseMaterial>();
+			m_mapSlots[BindingInfo(MTL_PROP_BINDING_INDEX, BindingSpace::eVertAndFragShader)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, static_cast<int64_t>(m_nPropBufferHandle));
 		}
 
 		void RegisterStage(RenderStageType eStage) override
@@ -64,16 +86,113 @@ namespace LT {
 				s_mapRenderPasses[eStage] = _RenderPassMap();
 			}
 		}
+
+		void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag) override
+		{
+			GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(GetRenderPass(eStage, nFlag));
+			if (pRenderPass) {
+				for (const auto& [bindingInfo, mtlSlot] : m_mapSlots)
+				{
+					if (mtlSlot.nSrcID >= 0)
+					{
+						switch (mtlSlot.eDescType)
+						{
+							case vk::DescriptorType::eUniformBuffer:
+								pRenderPass->BindConstBuffer(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex);
+								break;
+							case vk::DescriptorType::eCombinedImageSampler:
+								pRenderPass->BindImage2D(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex);
+								break;
+							default:
+								break;
+						};
+					}
+				}
+			}
+		}
+
+	public:
+		EngineResult SetMtlProp(MtlProp eProp, const MtlPropVar& value) override {
+			MtlPropDataType eDataType = GetMtlPropDataType(eProp);
+			// 纹理类型的属性
+			if (eDataType >= MtlPropDataType::eImage && eDataType < MtlPropDataType::MtlPropDataTypeCount)
+			{
+				auto iter = s_setImage.find(eProp);
+				if (iter == s_setImage.end())
+				{
+					return EngineResult::eInvalidParam;
+				}
+				m_mapSlots[BindingInfo(iter->second, BindingSpace::eFragmentShader)] = MaterialSlot(vk::DescriptorType::eSampledImage, std::get<ImageID>(value));
+			}
+			else
+			{
+				auto iter = s_mapMtlPropDataLayout.find(eProp);
+				if (iter == s_mapMtlPropDataLayout.end())
+				{
+					return EngineResult::eInvalidParam;
+				}
+
+				// 变量类型的属性
+				ShaderResourceManager::UpdateConstBuffer<TBaseMaterial>(m_nPropBufferHandle, &value, s_mapMtlPropDataLayout[eProp], SizeOf(eProp));
+			}
+			return EngineResult::eSuccess;
+		}
 		// ---- static -----
 
 	protected:
 		static RenderPassMap s_mapRenderPasses;
 
+	public:
+		static std::string GenMtlPropShaderModule() {
+			std::ostringstream oss;
+			if (s_vecMtlPropDataLayout.size() > 0)
+			{
+				oss
+					<< "struct MtlProps {" << std::endl;
+
+				int paddingCounter = 0;
+
+				for (MtlProp eProp : s_vecMtlPropDataLayout) {
+					if (eProp == MtlProp::Padding)
+					{
+						oss << "float padding" << paddingCounter++ << ";" << std::endl;
+					}
+					else
+					{
+						oss << ToString(GetMtlPropDataType(eProp)) << " " << ToString(eProp) << ";" << std::endl;
+					}
+				}
+
+
+				oss << "};" << std::endl
+					<< "[[vk::binding(" << MTL_PROP_BINDING_INDEX << ", " << static_cast<int>(BindingSpace::eVertAndFragShader) << ")]]" << std::endl
+					<< "ConstantBuffer<MtlProps, Std140DataLayout> " << MTL_PROP_UNIFORM_NAME<< "; " << std::endl;
+			}
+
+			for (const auto& [eProp , bindingIndex] : s_setImage)
+			{
+				oss << "[[vk::binding(" << bindingIndex << ", " << static_cast<int>(BindingSpace::eFragmentShader) << ")]]" << std::endl
+					<< "Sampler2D " << ToString(eProp) << ";" <<std::endl;
+			}
+
+			return oss.str();
+		}
 	protected:
 		static MaterialPropDataLayout s_mapMtlPropDataLayout;
 		static std::vector<MtlProp> s_vecMtlPropDataLayout;
-		static std::set<MtlProp> s_setImage;
+		static std::map<MtlProp, uint32_t> s_setImage;
 		static size_t s_nPropBufferSize;
+
+		static vk::PipelineLayout s_vkPipelineLayout;
+
+		static void GetDescriptorCount(std::map<vk::DescriptorType, uint32_t>& mapOut) {
+			uint32_t& nUniformCount = mapOut[vk::DescriptorType::eUniformBuffer];
+			uint32_t& nImageCount = mapOut[vk::DescriptorType::eCombinedImageSampler];
+			// Mtl Prop Buffer
+			nUniformCount += 1;
+			// Image
+			nImageCount += s_setImage.size();
+		}
 
 		static void RegisterMaterialProp();
 		static void AddMaterialProp(MtlProp eProp) {
@@ -183,12 +302,17 @@ namespace LT {
 			s_nPropBufferSize = nOffset;
 
 			// Image
-			s_setImage = std::move(mapType2Props[MtlPropDataType::eImage]);
+			s_setImage.clear();
+			uint32_t imageBindingCounter = MTL_TEX_BINDING_MIN;
+			for (MtlProp eProp : mapType2Props[MtlPropDataType::eImage])
+			{
+				s_setImage[eProp] = imageBindingCounter ++;
+			}
 
 			// Log
 			{
 				std::ostringstream oss;
-				oss << "======= Variant =======\n";
+				oss << "=========== Variant ===========\n";
 				for (MtlProp eProp : s_vecMtlPropDataLayout)
 				{
 					if (eProp == MtlProp::Padding)
@@ -200,11 +324,14 @@ namespace LT {
 						oss << ToString(GetMtlPropDataType(eProp)) << '\t' << ToString(eProp) << "\toffset: " << s_mapMtlPropDataLayout[eProp] << std::endl;
 					}
 				}
-				oss << "======= Image =======\n";
-				for (MtlProp eProp : s_setImage)
+				oss << "============ Image ============\n";
+				for (const auto & [eProp, bindingIndex] : s_setImage)
 				{
 					oss << ToString(eProp) << std::endl;
 				}
+
+				oss << "======== Shader Define ========\n";
+				oss << GenMtlPropShaderModule() << std::endl;
 
 				LOG_INFO("Init Material Prop Buffer Layout:\n%s", oss.str().c_str());
 			}
@@ -213,7 +340,100 @@ namespace LT {
 		public:
 			static MaterialType GetMaterialType() { return eTypeMaterial; }
 			static size_t GetPropBufferSize() { return s_nPropBufferSize; }
-	};
+
+		protected:
+			static std::array<vk::DescriptorSet, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> CreateMtlPropDescriptor(vk::DescriptorPool vkDescPool) {
+
+				vk::Device& device = vkContext::GetVkDevice();
+
+				std::vector<vk::DescriptorSetLayoutBinding> bindingsVert;
+				std::vector<vk::DescriptorSetLayoutBinding> bindingsFrag;
+				std::vector<vk::DescriptorSetLayoutBinding> bindingsVertAndFrag;
+
+				auto funcAddToBindingSet = [&](BindingSpace eSpace, const vk::DescriptorSetLayoutBinding& vkBindings) {
+					switch (eSpace) {
+						case BindingSpace::eVertexShader:
+							bindingsVert.push_back(vkBindings);
+							break;
+						case BindingSpace::eFragmentShader:
+							bindingsFrag.push_back(vkBindings);
+							break;
+						case BindingSpace::eVertAndFragShader:
+							bindingsVertAndFrag.push_back(vkBindings);
+							break;
+						default:break;
+					};
+					};
+
+				// const buffer
+				// Mtl Prop
+				vk::DescriptorSetLayoutBinding dslb;
+				dslb
+					.setBinding(MTL_PROP_BINDING_INDEX)
+					.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+					.setDescriptorCount(1)
+					.setStageFlags(GetShaderStageFlag(BindingSpace::eVertAndFragShader))
+					;
+
+				funcAddToBindingSet(BindingSpace::eVertAndFragShader, dslb);
+
+
+				// Texture2D
+				// Prop texture
+				for (const auto& [eProp, bindingIndex]: s_setImage) {
+					vk::DescriptorSetLayoutBinding dslb;
+					dslb
+						.setBinding(bindingIndex)
+						.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
+						.setDescriptorCount(1)
+						.setStageFlags(GetShaderStageFlag(BindingSpace::eFragmentShader))
+						;
+					funcAddToBindingSet(BindingSpace::eFragmentShader, dslb);
+				}
+
+
+				vk::DescriptorSetLayoutCreateInfo dslciVert;
+				dslciVert.setBindings(bindingsVert);
+				vk::DescriptorSetLayoutCreateInfo dslciFrag;
+				dslciFrag.setBindings(bindingsFrag);
+				vk::DescriptorSetLayoutCreateInfo dslciVertAndFrag;
+				dslciVertAndFrag.setBindings(bindingsVertAndFrag);
+
+				std::vector<vk::DescriptorSetLayout> vecVkDescSetLayout(3);
+				vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eVertexShader)] = device.createDescriptorSetLayout(dslciVert);
+				vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eFragmentShader)] = device.createDescriptorSetLayout(dslciFrag);
+				vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eVertAndFragShader)] = device.createDescriptorSetLayout(dslciVertAndFrag);
+			
+			vk::PipelineLayoutCreateInfo plci;
+			plci
+				.setSetLayoutCount(vecVkDescSetLayout.size())
+				.setPSetLayouts(vecVkDescSetLayout.data())
+				.setPushConstantRanges(0)
+				;
+			if (!s_vkPipelineLayout)
+			{
+				s_vkPipelineLayout = device.createPipelineLayout(plci);
+			}
+
+			// Allocate Descriptor Set
+			std::vector<vk::DescriptorSetLayout> setlayouts;
+			setlayouts.insert(setlayouts.end(), vecVkDescSetLayout.begin(), vecVkDescSetLayout.end());
+			vk::DescriptorSetAllocateInfo dsai;
+			dsai
+				.setDescriptorPool(vkContext::GetDescriptorPool())
+				.setDescriptorSetCount(setlayouts.size())
+				.setPSetLayouts(setlayouts.data())
+				;
+
+			std::array<vk::DescriptorSet, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> descriptorSets;
+
+			for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; ++i)
+			{
+				descriptorSets[i] = device.allocateDescriptorSets(dsai);
+			}
+
+			return descriptorSets;
+	}
 
 	template<typename DerivedMaterial, MaterialType eTypeMaterial>
 	IMaterial::RenderPassMap BaseMaterial<DerivedMaterial, eTypeMaterial>::s_mapRenderPasses;
@@ -222,11 +442,14 @@ namespace LT {
 	MaterialPropDataLayout BaseMaterial<DerivedMaterial, eTypeMaterial>::s_mapMtlPropDataLayout;
 
 	template<typename DerivedMaterial, MaterialType eTypeMaterial>
-	std::set<MtlProp> BaseMaterial<DerivedMaterial, eTypeMaterial>::s_setImage;
+	std::map<MtlProp, uint32_t> BaseMaterial<DerivedMaterial, eTypeMaterial>::s_setImage;
 
 	template<typename DerivedMaterial, MaterialType eTypeMaterial>
 	std::vector<MtlProp> BaseMaterial<DerivedMaterial, eTypeMaterial>::s_vecMtlPropDataLayout;
 
 	template<typename DerivedMaterial, MaterialType eTypeMaterial>
 	size_t BaseMaterial<DerivedMaterial, eTypeMaterial>::s_nPropBufferSize = 0;
+
+	template<typename DerivedMaterial, MaterialType eTypeMaterial>
+	vk::PipelineLayout BaseMaterial<DerivedMaterial, eTypeMaterial>::s_vkPipelineLayout = VK_NULL_HANDLE;
 } // namespace LT

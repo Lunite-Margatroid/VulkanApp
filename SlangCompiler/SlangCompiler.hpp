@@ -23,8 +23,14 @@ namespace LT {
 	public:
 		std::vector<uint8_t> CompileFromFile(const std::filesystem::path &path, const std::vector<std::string>& vecEntryPoint);
 
-		std::vector<uint8_t> CompileShader(const std::vector<std::string>& vecModules, const std::vector<std::pair<const char*, const char*>>& vecPPMacro, ShaderModuleInfo& sOutShaderModuleInfo);
+		std::vector<uint8_t> CompileShader(
+			const std::vector<std::pair<std::string, std::string>>&vecShaderCode, 
+			const std::vector<std::string>& vecModules, 
+			const std::vector<std::pair<const char*, const char*>>& vecPPMacro,
+			ShaderModuleInfo& sOutShaderModuleInfo);
+
 		void CompileShaderToProgram(
+			const std::vector<std::pair<std::string, std::string>>& vecShaderCode,
 			const std::vector<std::string>& vecModules, 
 			const std::vector<std::pair<const char*, const char*>>& vecPPMacro,
 			slang::ISession** ppOutSesson,

@@ -8,8 +8,8 @@ namespace LT {
 	MaterialExample::MaterialExample(MaterialID nID)
 		:BaseMaterial<MaterialExample, MaterialType::eExample>(nID)
 	{
-		m_mapSlots[BindingInfo(0u, BindingSpace::eVertexShader)] = MaterialSlot({ vk::DescriptorType::eUniformBuffer, -1 });
-		m_mapSlots[BindingInfo(1u, BindingSpace::eFragmentShader)] = MaterialSlot({ vk::DescriptorType::eCombinedImageSampler, -1 });
+		m_mapSlots[BindingInfo(0u, BindingSpace::eVertexShader)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
+		m_mapSlots[BindingInfo(1u, BindingSpace::eFragmentShader)] = MaterialSlot(vk::DescriptorType::eCombinedImageSampler, -1);
 
 		RegisterStage(RenderStageType::eOpaqueForward);
 	}
@@ -27,8 +27,9 @@ namespace LT {
 		{
 			GraphicPass* pPass = new GraphicPass();
 			pPass->SetRenderPassFlag(nFlag);
-			// 暂无专用示例shader，暂时复用MainTex的shader
-			pPass->AddShaderModule("FragmentShaderMainTex");
+
+			pPass->AddShaderModule("MaterialTexampleProp", GenMtlPropShaderModule());
+			pPass->AddShaderModule("FragmentShaderExample");
 			pPass->AddShaderModule("CommonVertexShader");
 			pPass->Init();
 
@@ -39,30 +40,6 @@ namespace LT {
 
 		return iterPass->second;
 	}
-	void MaterialExample::UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag, FlightFrameIndex nFlightFrameIndex)
-	{
-		GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(GetRenderPass(eStage, nFlag));
-		if (pRenderPass) {
-			for (const auto& [bindingInfo, mtlSlot] : m_mapSlots)
-			{
-				if (mtlSlot.nSrcID >= 0)
-				{
-					switch (mtlSlot.eDescType)
-					{
-						case vk::DescriptorType::eUniformBuffer:
-							pRenderPass->BindConstBuffer(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex, nFlightFrameIndex);
-							break;
-						case vk::DescriptorType::eCombinedImageSampler:
-							pRenderPass->BindImage2D(mtlSlot.nSrcID, bindingInfo.eSpace, bindingInfo.nIndex, nFlightFrameIndex);
-							break;
-						default:
-							break;
-					};
-				}
-			}
-		}
-	}
-
 
 	void BaseMaterial<MaterialExample, MaterialType::eExample>::RegisterMaterialProp() {
 

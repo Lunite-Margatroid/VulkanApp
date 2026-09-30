@@ -22,6 +22,8 @@ namespace LT {
 
 		vk::Fence vkFenceSet;
 
+		glm::mat4 matModule;
+
 		EntityDrawInfo() 
 			: nWidth(0)
 			, nHeight(0)
@@ -29,6 +31,7 @@ namespace LT {
 			, eRenderStage(RenderStageType::eUnknown)
 			, nDepthBuffer(INVALID_IMAGE_ID)
 			, pRenderView(nullptr)
+			, matModule(glm::identity<glm::mat4>())
 		{
 			
 		}
@@ -36,8 +39,6 @@ namespace LT {
 	};
 
 	class EntityRender : public IEntity {
-	protected:
-
 	public:
 		EntityRender(EntityID);
 		~EntityRender() = default;
@@ -48,6 +49,8 @@ namespace LT {
 		EntityRender& operator = (const EntityRender&) = delete;
 
 		virtual void Draw(const EntityDrawInfo& sDrawInfo) = 0;
+
+		virtual void UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) = 0;
 	};
 
 

@@ -6,20 +6,27 @@ namespace LT {
 	IMaterial::IMaterial(MaterialID nID, MaterialType eType) 
 		:m_nID(nID)
 		,m_eMtlType(eType)
-	{}
+	{
+		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, BindingSpace::eVertexShader)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
+	}
 
 	IMaterial::~IMaterial()
 	{}
 
-	ResultSetter IMaterial::SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID)
+	EngineResult IMaterial::SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID)
 	{
 		auto iter = m_mapSlots.find(sBindingInfo);
 		if (iter != m_mapSlots.end())
 		{
 			iter->second.nSrcID = nSrcID;
-			return 0;
+			return EngineResult::eSuccess;
 		}
-		return -1;
+		return EngineResult::eFailed;
 	}
 
+	EngineResult IMaterial::SetTransBuffer(ConstBufferHandle nHandle)
+	{
+		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, BindingSpace::eVertexShader)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nHandle);
+		return EngineResult::eSuccess;
+	}
 } // namespace

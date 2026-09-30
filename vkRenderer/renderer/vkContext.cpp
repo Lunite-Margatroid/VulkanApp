@@ -273,30 +273,6 @@ do{\
 
 	}
 
-	void vkContext::CreateDescriptorPool()
-	{
-		std::array<vk::DescriptorPoolSize,2> dps;
-		dps[0]
-			.setType(vk::DescriptorType::eUniformBuffer)
-			.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
-			;
-
-		dps[1]
-			.setType(vk::DescriptorType::eCombinedImageSampler)
-			.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
-			;
-
-		vk::DescriptorPoolCreateInfo dpci;
-		dpci
-			.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-			.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * 3)
-			.setPoolSizeCount(dps.size())
-			.setPPoolSizes(&dps[0])
-			;
-
-		m_vkDescriptorPool = m_vkDevice.createDescriptorPool(dpci);
-	}
-
 	void vkContext::CheckPhysicalDeivceFeatures()
 	{
 		auto features = m_phyDevice.getFeatures2<
@@ -350,11 +326,6 @@ do{\
 	vk::CommandBuffer& vkContext::GetCmdBuffer(unsigned int nIndex)
 	{
 		return GetInstance().m_vecCommandBuffers[nIndex];
-	}
-
-	vk::DescriptorPool& vkContext::GetDescriptorPool()
-	{
-		return GetInstance().m_vkDescriptorPool;
 	}
 
 	vk::CommandBuffer vkContext::BeginSingleTimeCmdBuffer()
@@ -473,8 +444,6 @@ do{\
 
 		s_pVkContext->CreateCommandPool();
 		s_pVkContext->CreateCommandBuffer();
-
-		s_pVkContext->CreateDescriptorPool();
 	}
 
 } // namespace LT

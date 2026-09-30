@@ -57,11 +57,10 @@ namespace LT {
 	using CameraID = int64_t;
 	constexpr CameraID INVALID_CAMERA_ID = INVALID_ITEM_ID;
 
-	using ResultSetter = int32_t;
-
 	enum class EngineResult {
 		eSuccess,
 		eFailed,
+		eInvalidParam
 	};
 
 	using ConstBufferHandle = int64_t;

@@ -30,9 +30,6 @@ namespace LT {
 		vk::CommandPool m_vkCommandPool;
 		std::vector<vk::CommandBuffer> m_vecCommandBuffers;
 
-		// Descriptor Pool
-		vk::DescriptorPool m_vkDescriptorPool;
-
 		// 获取的命令队列的索引 来自物理设备
 		std::optional<uint32_t> m_nQueueFamilyIndex; // 支持图形的命令队列
 		std::optional<uint32_t> m_nQueueIndexForSurface; // 支持sruface的命令队列
@@ -51,7 +48,6 @@ namespace LT {
 
 		void CreateCommandPool();
 		void CreateCommandBuffer();
-		void CreateDescriptorPool();
 
 		void CheckPhysicalDeivceFeatures();
 
@@ -87,8 +83,6 @@ namespace LT {
 		static vk::CommandPool& GetCmdPool();
 
 		static vk::CommandBuffer& GetCmdBuffer(unsigned int nIndex);
-
-		static vk::DescriptorPool& GetDescriptorPool();
 
 		static vk::CommandBuffer BeginSingleTimeCmdBuffer();
 

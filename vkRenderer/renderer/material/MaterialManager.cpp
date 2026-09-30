@@ -40,6 +40,19 @@ namespace LT {
 		}
 
 		);
+
+		std::map<vk::DescriptorType, uint32_t> mapDescriptorCount;
+
+		// Trans Buffer
+		mapDescriptorCount[vk::DescriptorType::eUniformBuffer] += 1;
+		// Get From Material
+		MaterialRegistry::ForEach(
+			[&]<typename M>() {
+			M::GetDescriptorCount(mapDescriptorCount);
+		}
+		);
+
+		ShaderResourceManager::CreateDescriptorPool(mapDescriptorCount);
 	}
 	IMPLEMENT_SINGLETON_MANAGER_INIT_END(MaterialManager)
 

@@ -16,8 +16,7 @@ namespace LT {
 
 		RenderPassFlag m_eRenderPassFlag;
 
-		glm::mat4 m_matModel;
-		std::array<BufferID, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrConstBufferVertTrans;
+		std::array<ConstBufferHandle, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrConstBufferVertTrans;
 
 	public:
 		EntityRenderMesh(EntityID nID);
@@ -32,6 +31,7 @@ namespace LT {
 		void SetVertexBuffer(VertexBuffer* pVertex);
 		void SetIndexBuffer(IndexBuffer* pIndex);
 
+		void UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) override;
 		void Draw(const EntityDrawInfo& sDrawInfo) override;
 
 		void SetRenderPassFlag(RenderPassFlag nFlag) { m_eRenderPassFlag = nFlag; }

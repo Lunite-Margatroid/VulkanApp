@@ -12,5 +12,7 @@ namespace LT {
 		RenderView& operator=(const RenderView&) = delete;
 		RenderView(RenderView&&) = delete;
 		RenderView& operator=(RenderView&&) = delete;
+
+		virtual void SetModelMat(const glm::mat4& matModel) = 0;
 	};
 } // namespace LT

@@ -3,13 +3,7 @@
 [shader("fragment")]
 float4 FragMain(SVertexOutput sVertOut) : SV_Target{
 	float4 cOutColor = float4(0,0,0,1);
-#ifdef VERT_UV0
-	cOutColor = TexDiffuse.Sample(sVertOut.fragUV0);
-#else
-	float2 uvTemp = sVertOut.fragWorldPos.xy;
-	cOutColor = TexDiffuse.Sample(uvTemp);
-#endif
-	
+	cOutColor.xyz = u_MtlProp.ColorDiffuse;
+	cOutColor.a = u_MtlProp.Alpha;
 	return cOutColor;
-	
 }
