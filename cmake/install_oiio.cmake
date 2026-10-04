@@ -3,12 +3,12 @@
 # 用法(在项目根目录执行):
 #   cmake -P cmake/install_oiio.cmake
 #
-# 1. 将 OpenImageIO 源码拉取到 vendor/OpenImageIO, 并切换到 dev-3.2 分支
+# 1. 将 OpenImageIO 源码拉取到 vendor/OpenImageIO, 并切换到 release 分支
 # 2. 分别构建 Debug/Release 到 vendor/OpenImageIO/build_debug、vendor/OpenImageIO/build_release
 # 3. 分别安装到 vendor/dist_debug、vendor/dist_release, 再合并拷贝到 vendor/dist
 #
 # 可选参数(通过 -D 传入):
-#   OIIO_GIT_TAG     分支/标签, 默认 dev-3.2
+#   OIIO_GIT_TAG     分支/标签, 默认 release
 #   OIIO_CONFIGS     要构建的配置列表, 默认 "Debug;Release"
 #   OIIO_BUILD_JOBS  并行编译数, 默认不指定(使用全部核心)
 #   OIIO_EXTRA_ARGS  追加的 cmake 配置参数, 如 "-DSTOP_ON_WARNING=0"
@@ -25,7 +25,7 @@ if(NOT DEFINED OIIO_GIT_URL)
     set(OIIO_GIT_URL "https://github.com/AcademySoftwareFoundation/OpenImageIO.git")
 endif()
 if(NOT DEFINED OIIO_GIT_TAG)
-    set(OIIO_GIT_TAG "dev-3.2")
+    set(OIIO_GIT_TAG "release")
 endif()
 if(NOT DEFINED OIIO_CONFIGS)
     set(OIIO_CONFIGS "Debug;Release")
