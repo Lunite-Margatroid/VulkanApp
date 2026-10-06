@@ -20,6 +20,8 @@ namespace LT {
 		ImageID nDepthStencilID;
 		std::vector<ImageID> vecImageIDColor;
 		std::vector<BufferID> vecVertexBufferID;
+
+		std::vector<vk::DescriptorSet> vecDescriptorSet;
 	};
 
 
@@ -68,10 +70,12 @@ namespace LT {
 		// 0 vert
 		// 1 frag
 		// 2 vert and frag
-		std::vector<vk::DescriptorSetLayout> m_vecVkDescSetLayout;
+		//std::vector<vk::DescriptorSetLayout> m_vecVkDescSetLayout;
 
 		//std::vector<vk::DescriptorSet> m_vecDescriptorSets0;
 		//std::vector<vk::DescriptorSet> m_vecDescriptorSets1;
+
+		vk::PipelineLayout m_vkPipelineLayout;
 
 		vk::Pipeline m_vkPipeline;
 
@@ -86,7 +90,7 @@ namespace LT {
 		GraphicPass(GraphicPass&&) = delete;
 		GraphicPass(const GraphicPass&) = delete;
 
-		void Init(vk::PipelineLayout vkPipelineLayout);
+		void Init(const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout);
 
 		void AddShaderModule(const char* strShaderModule);
 		void AddShaderModule(const std::string& strName, const std::string& strCode);
@@ -97,10 +101,6 @@ namespace LT {
 		void RecordCommand(const RecordCommandInfo& sRecordInfo);
 
 		void Submit(const GraphicSubmitInfo& sSubmitInfo);
-
-		void BindConstBuffer(ConstBufferHandle nConstBufferHandle, BindingSpace eSpace, uint32_t nBindingIndex);
-		void BindImage2D(ImageID id, BindingSpace eSpace, uint32_t eBindingIndex);
-		void BindResourceToDevice(FlightFrameIndex nFlightFrameIndex);
 
 	public:
 		static void GenVertexAttributeDesc(VertexChannelFlag nVertexChannelFlag, std::vector<vk::VertexInputBindingDescription>& vecInputBindDesc, std::vector<vk::VertexInputAttributeDescription>& vertDesc);

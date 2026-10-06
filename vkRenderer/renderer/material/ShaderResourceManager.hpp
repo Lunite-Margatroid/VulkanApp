@@ -3,10 +3,23 @@
 #include "TypeDef.hpp"
 #include "BufferManager.h"
 
+#include "ShaderModuleInfo.hpp"
+
 namespace LT {
 	class ConstBuffer;
 
 	constexpr uint32_t BLOCK_COUNT_PER_BUFFER_HEAP = 128;
+
+
+	// Trans Buffer的binding index
+	constexpr uint32_t MTL_TRANS_BUFFER_BINDING_INDEX = 0u;
+	constexpr BindingSpace MTL_TRANS_BUFFER_BINDING_SPACE = BindingSpace::eVertexShader;
+	// Mtl Prop Buffer的binding index
+	constexpr uint32_t MTL_PROP_BINDING_INDEX = 2u;
+	constexpr BindingSpace MTL_PROP_BINDING_SPACE = BindingSpace::eVertAndFragShader;
+	// Mtl Prop Tex的起始binding index
+	constexpr uint32_t MTL_TEX_BINDING_MIN = 3u;
+	constexpr BindingSpace MTL_TEX_BINDING_SPACE = BindingSpace::eFragmentShader;
 
 	// 材质Shader资源管理器 单例
 	// 管理材质的Shader资源（const buffer等）
@@ -16,8 +29,8 @@ namespace LT {
 			BufferID nBufferID;
 			bool bDirt;
 			BufferWithCounter()
-			: nBufferID(INVALID_BUFFER_ID)
-			, bDirt(false)
+				: nBufferID(INVALID_BUFFER_ID)
+				, bDirt(false)
 			{}
 
 			BufferWithCounter(BufferID bufferID, bool dirt)
@@ -171,22 +184,16 @@ namespace LT {
 		std::map<MaterialType, ConstBufferPool> m_mapBuffers;
 		// 用于MVPTrans的Buffer Pool
 		ConstBufferPool m_sMVPTransBufferPool;
-		
+
+		// 目前仅用于Trans Buffer的DescriptorPool
 		vk::DescriptorPool m_vkDescriptorPool;
-
-		struct DescriptorSets {
-			using _DescSets = std::array<vk::DescriptorSet, static_cast<size_t>(BindingSpace::BindingSpaceCount>;
-
-			std::array<_DescSets, RENDERER_DEFAULT_FLIGHT_FRAME_NUM)> m_descriptorSets;
-
-			vk::DescriptorSet& GetDescriptorSet(FlightFrameIndex nFlightIndex, BindingSpace eSpace)
-			{
-				return m_descriptorSets[nFlightIndex][static_cast<size_t>(eSpace)];
-			}
-		};
-
-		DescriptorSets m_sTransBufferDescriptor;
-		std::map<MaterialType, DescriptorSets> m_mapMtlPropDescriptor;
+		// 用于材质属性的Descriptor pool
+		vk::DescriptorPool m_vkMtlPropDescriptorPool;
+		
+		// trans buffer desc layout
+		vk::DescriptorSetLayout m_vkTransBufferDescriptorSetLayout;
+		// trans buffer Desc set
+		std::array<vk::DescriptorSet, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_sTransBufferDescriptor;
 
 		ShaderResourceManager();
 
@@ -221,7 +228,8 @@ namespace LT {
 
 		static BufferBinding GetConstBufferBinding(ConstBufferHandle nHandle);
 
-		static void CreateDescriptorPool(const std::map<vk::DescriptorType, uint32_t> & mapDescriptorCount);
+		// 传入的是材质属性所用的Decriptor的统计
+		static void CreateDescriptorPool(const std::map<vk::DescriptorType, uint32_t>& mapDescriptorCount);
 
 		static ConstBufferHandle CreateTransBufferHandle();
 		static void ReleaseTransBufferHandle(ConstBufferHandle nHandle);
@@ -230,18 +238,66 @@ namespace LT {
 
 		static void GetTransDescriptorSet();
 
-		template<typename TMaterial>
-		static void GetMtlPropDescriptorSet(BindingSpace eSpace, FlightFrameIndex nFlightFrameIndex) {
-			auto& mgr = GetInstance();
-			vk::DescriptorSet & descSet = mgr.m_mapMtlPropDescriptor.GetDescriptorSet(nFlightFrameIndex, eSpace);
-			if (descSet)
+		static vk::DescriptorSetLayout GetTransBufferDescLayout() {
+			
+		}
+
+		// 获取Trnas Buffer Layout
+		static vk::DescriptorSetLayout GetTransBufferDescriptorSetLayout() {
+
+			ShaderResourceManager& mgr = GetInstance();
+
+			if (!mgr.m_vkTransBufferDescriptorSetLayout)
 			{
+				vk::Device& device = vkContext::GetVkDevice();
+
+				std::array<vk::DescriptorSetLayoutBinding, 1> bindings;
+				bindings[0]
+					.setBinding(MTL_TRANS_BUFFER_BINDING_INDEX)
+					.setDescriptorCount(1)
+					.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+					.setStageFlags(GetShaderStageFlag(MTL_TEX_BINDING_SPACE))
+					;
+
+				vk::DescriptorSetLayoutCreateInfo dslci = {};
+				dslci
+					.setBindings(bindings)
+					;
+
+				mgr.m_vkTransBufferDescriptorSetLayout = device.createDescriptorSetLayout(dslci);
 
 			}
-			else
-			{
-			}
+
+			return mgr.m_vkTransBufferDescriptorSetLayout;
 		}
+
+
+		// 获取Trans Buffer描述符
+		static vk::DescriptorSet GetTransBufferDescriptorSet(FlightFrameIndex nFlightIndex) {
+			ShaderResourceManager& mgr = GetInstance();
+
+			if (!mgr.m_sTransBufferDescriptor[0])
+			{
+				vk::Device& device = vkContext::GetVkDevice();
+
+				vk::DescriptorSetAllocateInfo dsai = {};
+				dsai
+					.setDescriptorPool(mgr.m_vkDescriptorPool)
+					.setDescriptorSetCount(1)
+					.setPSetLayouts(&mgr.m_vkTransBufferDescriptorSetLayout)
+					;
+
+				for (int i = 0; i < mgr.m_sTransBufferDescriptor.size(); i++)
+				{
+					std::vector<vk::DescriptorSet> descSets = device.allocateDescriptorSets(dsai);
+					mgr.m_sTransBufferDescriptor[i]= descSets[0];
+				}
+			}
+
+			return mgr.m_sTransBufferDescriptor[nFlightIndex];
+		}
+
+
 
 		template<typename TMaterial>
 		static ConstBufferHandle CreateMtlPropBufferHandle()
@@ -300,6 +356,14 @@ namespace LT {
 		}
 
 		static void UpdateDeviceMtlPropBuffer();
+
+		static vk::DescriptorPool GetDescriptorPool() {
+			return GetInstance().m_vkDescriptorPool;
+		}
+
+		static vk::DescriptorPool GetMtlPropDescriptorPool() {
+			return GetInstance().m_vkMtlPropDescriptorPool;
+		}
 	};
 
 } // namespace LT

@@ -2,6 +2,8 @@
 #include "vkRendererCommon.h"
 #include "MaterialExample.hpp"
 #include "GraphicPass.hpp"
+#include "ImageManager.h"
+#include "SamplerManager.h"
 
 namespace LT {
 
@@ -13,32 +15,47 @@ namespace LT {
 
 		RegisterStage(RenderStageType::eOpaqueForward);
 	}
-	RenderPass* MaterialExample::GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag)
+
+	RenderPass* MaterialExample::Bind(const MaterialBindInfo& sMtlBindInfo)
 	{
-		auto iterPasses = s_mapRenderPasses.find(eStage);
+		GraphicPass* pPass = nullptr;
+
+		auto iterPasses = s_mapRenderPasses.find(sMtlBindInfo.eStage);
 		if (iterPasses == s_mapRenderPasses.end())
 		{
 			return nullptr;
 		}
 		auto& mapPass = iterPasses->second;
 
-		auto iterPass = mapPass.find(nFlag);
+		auto iterPass = mapPass.find(sMtlBindInfo.nFlag);
 		if (iterPass == mapPass.end())
 		{
-			GraphicPass* pPass = new GraphicPass();
-			pPass->SetRenderPassFlag(nFlag);
+			pPass = new GraphicPass();
+			pPass->SetRenderPassFlag(sMtlBindInfo.nFlag);
 
 			pPass->AddShaderModule("MaterialTexampleProp", GenMtlPropShaderModule());
 			pPass->AddShaderModule("FragmentShaderExample");
 			pPass->AddShaderModule("CommonVertexShader");
-			pPass->Init();
 
-			mapPass[nFlag] = pPass;
+			std::vector<vk::DescriptorSetLayout> vecSetLayout;
 
-			return pPass;
+			auto arrMtlPropDescSet = GetMtlPropDescriptorSetLayout();
+			vecSetLayout.insert(vecSetLayout.end(), arrMtlPropDescSet.begin(), arrMtlPropDescSet.end());
+			auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescLayout();
+			vecSetLayout.push_back(vkTransBufferSetLayout);
+
+			pPass->Init(vecSetLayout);
+
+			mapPass[sMtlBindInfo.nFlag] = pPass;
+		}
+		else
+		{
+			pPass = reinterpret_cast<GraphicPass*>(iterPass->second);
 		}
 
-		return iterPass->second;
+		BindShaderResource(sMtlBindInfo);
+
+		return pPass;
 	}
 
 	void BaseMaterial<MaterialExample, MaterialType::eExample>::RegisterMaterialProp() {

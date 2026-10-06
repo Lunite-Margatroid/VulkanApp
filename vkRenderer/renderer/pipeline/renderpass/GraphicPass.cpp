@@ -33,13 +33,12 @@ namespace LT {
 			device.destroyPipeline(m_vkPipeline);
 		}
 
-		for(auto & descSet : m_vecVkDescSetLayout)
-		{
-			device.destroyDescriptorSetLayout(descSet);
+		if (m_vkPipelineLayout) {
+			device.destroyPipelineLayout(m_vkPipelineLayout);
 		}
-		m_vecVkDescSetLayout.clear();
+
 	}
-	void GraphicPass::Init(vk::PipelineLayout vkPipelineLayout) {
+	void GraphicPass::Init(const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout) {
 
 		vk::Device& device = vkContext::GetVkDevice();
 
@@ -214,14 +213,14 @@ namespace LT {
 		//	m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eFragmentShader)] = device.createDescriptorSetLayout(dslciFrag);
 		//	m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eVertAndFragShader)] = device.createDescriptorSetLayout(dslciVertAndFrag);
 		//}
-		//vk::PipelineLayoutCreateInfo plci;
-		//plci
-		//	.setSetLayoutCount(m_vecVkDescSetLayout.size())
-		//	.setPSetLayouts(m_vecVkDescSetLayout.data())
-		//	.setPushConstantRanges(0)
-		//	;
+		vk::PipelineLayoutCreateInfo plci;
+		plci
+			.setSetLayoutCount(vecVkDescSetLayout.size())
+			.setPSetLayouts(vecVkDescSetLayout.data())
+			.setPushConstantRanges(0)
+			;
 
-		//m_vkPipelineLayout = device.createPipelineLayout(plci);
+		m_vkPipelineLayout = device.createPipelineLayout(plci);
 
 		//// Allocate Descriptor Set
 		//std::vector<vk::DescriptorSetLayout> setlayouts;
@@ -259,7 +258,7 @@ namespace LT {
 			.setPColorBlendState(&pcbsci)
 			.setPDepthStencilState(&pdssci)
 			.setPDynamicState(&pdsci)
-			.setLayout(vkPipelineLayout)
+			.setLayout(m_vkPipelineLayout)
 			.setRenderPass(VK_NULL_HANDLE)
 			.setPDepthStencilState(&pdssci)
 			;
@@ -429,12 +428,11 @@ namespace LT {
 		// 绑定
 		// const buffer
 		// texture resource
-		std::vector<vk::DescriptorSet>* pDescSet = (nFlightFrameIndex == 0 ? &m_vecDescriptorSets0 : &m_vecDescriptorSets1);
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,
 			m_vkPipelineLayout,
 			0,
-			*pDescSet,
+			sRecordInfo.vecDescriptorSet,
 			VK_NULL_HANDLE
 		);
 
@@ -523,94 +521,4 @@ namespace LT {
 			vkContext::GetCmdQueue().submit(si);
 		}
 	}
-
-	void GraphicPass::BindConstBuffer(ConstBufferHandle nConstBufferHandle, BindingSpace eSpace, uint32_t nBindingIndex)
-	{
-		SlotKey key{ eSpace , nBindingIndex, vk::DescriptorType::eUniformBuffer };
-
-		auto iter = m_mapSlots.find(key);
-		if (iter != m_mapSlots.end())
-		{
-			iter->second = static_cast<int64_t>(nConstBufferHandle);
-		}
-	}
-
-	void GraphicPass::BindImage2D(ImageID id, BindingSpace eSpace, uint32_t nBindingIndex)
-	{
-		SlotKey key{ eSpace , nBindingIndex, vk::DescriptorType::eCombinedImageSampler };
-
-		auto iter = m_mapSlots.find(key);
-		if (iter != m_mapSlots.end())
-		{
-			iter->second = static_cast<int64_t>(id);
-		}
-	}
-
-	void GraphicPass::BindResourceToDevice(FlightFrameIndex nFlightFrameIndex)
-	{
-		std::vector<vk::WriteDescriptorSet> vecWDS;
-
-		std::vector<vk::DescriptorSet>* pVecDescSets = (nFlightFrameIndex == 0 ? &m_vecDescriptorSets0 : &m_vecDescriptorSets1);
-
-		for (const auto& [key, nSrcID] : m_mapSlots)
-		{
-			vk::WriteDescriptorSet wds;
-			bool bInvalidSrc = true;
-
-			switch (key.eType)
-			{
-				case vk::DescriptorType::eUniformBuffer:
-				{
-					BufferBinding binding = ShaderResourceManager::GetConstBufferBinding(nSrcID);
-					Buffer* pBuffer = BufferManager::GetBuffer(binding.nBufferID);
-
-					vk::DescriptorBufferInfo dbi = {};
-					dbi
-						.setBuffer(pBuffer->GetNativeBuffer())
-						.setOffset(binding.nOffset)
-						.setRange(binding.nSize)
-						;
-
-
-					wds.setPBufferInfo(&dbi);
-				}
-				break;
-				case vk::DescriptorType::eCombinedImageSampler:
-				{
-					vk::DescriptorImageInfo ddi = {};
-
-					ddi
-						.setImageView(ImageManager::GetNativeDeviceImageView(nSrcID))
-						.setSampler(SamplerManager::GetDefaultImageSampler()->GetNativeSampler())
-						.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-						;
-
-					wds.setPImageInfo(&ddi);
-				}
-				break;
-				default:
-					bInvalidSrc = false;
-					break;
-			}
-			if (bInvalidSrc)
-			{
-				wds
-					.setDstBinding(key.nBindingIndex)
-					.setDstArrayElement(0)
-					.setDescriptorCount(1)
-					.setDescriptorType(key.eType)
-					.setDstSet((*pVecDescSets)[static_cast<size_t>(key.eSpace)])
-					;
-					
-
-				vecWDS.push_back(std::move(wds));
-			}
-		}
-
-		if (!vecWDS.empty())
-		{
-			vkContext::GetVkDevice().updateDescriptorSets(vecWDS, {});
-		}
-	}
-
 } // namespace LT

@@ -43,9 +43,8 @@ namespace LT {
 
 		std::map<vk::DescriptorType, uint32_t> mapDescriptorCount;
 
-		// Trans Buffer
-		mapDescriptorCount[vk::DescriptorType::eUniformBuffer] += 1;
 		// Get From Material
+		// 收集注册材质的用于属性的Decriptor
 		MaterialRegistry::ForEach(
 			[&]<typename M>() {
 			M::GetDescriptorCount(mapDescriptorCount);

@@ -16,7 +16,7 @@ namespace LT {
 		MaterialExample& operator = (MaterialExample&&) = delete;
 
 	public:
-		RenderPass* GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag) override;
+		RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) override;
 	};
 
 } // namespace LT

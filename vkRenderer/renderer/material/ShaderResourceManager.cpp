@@ -24,6 +24,11 @@ namespace LT {
 		{
 			vkContext::GetVkDevice().destroyDescriptorPool(m_vkDescriptorPool);
 		}
+
+		if (m_vkMtlPropDescriptorPool)
+		{
+			vkContext::GetVkDevice().destroyDescriptorPool(m_vkMtlPropDescriptorPool);
+		}
 	}
 
 	void ShaderResourceManager::Init() {
@@ -42,25 +47,48 @@ namespace LT {
 	}
 
 	void ShaderResourceManager::CreateDescriptorPool(const std::map<vk::DescriptorType, uint32_t>& mapDescriptorCount) {
-		std::vector<vk::DescriptorPoolSize> vecDPS;
-		for (const auto& [eType, nCount] : mapDescriptorCount)
+		
+		// 材质属性描述符
 		{
-			vk::DescriptorPoolSize dps;
-			dps
-				.setType(eType)
-				.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * nCount)
+			std::vector<vk::DescriptorPoolSize> vecDPS;
+			for (const auto& [eType, nCount] : mapDescriptorCount)
+			{
+				vk::DescriptorPoolSize dps;
+				dps
+					.setType(eType)
+					.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * nCount)
+					;
+				vecDPS.push_back(dps);
+			}
+
+			vk::DescriptorPoolCreateInfo dpci;
+			dpci
+				.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
+				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * 3)
+				.setPoolSizeCount(vecDPS.size())
+				.setPPoolSizes(vecDPS.data())
 				;
+
+			GetInstance().m_vkMtlPropDescriptorPool = vkContext::GetVkDevice().createDescriptorPool(dpci);
 		}
 
-		vk::DescriptorPoolCreateInfo dpci;
-		dpci
-			.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-			.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * 3)
-			.setPoolSizeCount(vecDPS.size())
-			.setPPoolSizes(vecDPS.data())
-			;
-
-		GetInstance().m_vkDescriptorPool = vkContext::GetVkDevice().createDescriptorPool(dpci);
+		// 其他描述符
+		{
+			// Trans Buffer
+			vk::DescriptorPoolSize dps = {};
+			dps
+				.setType(vk::DescriptorType::eUniformBuffer)
+				.setDescriptorCount(1)
+				;
+			vk::DescriptorPoolCreateInfo dpci;
+			dpci
+				.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
+				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
+				.setPoolSizeCount(1)
+				.setPPoolSizes(&dps)
+				;
+			GetInstance().m_vkDescriptorPool = vkContext::GetVkDevice().createDescriptorPool(dpci);
+		}
 	}
 
 	ShaderResourceManager& ShaderResourceManager::GetInstance() {

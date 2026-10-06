@@ -17,8 +17,7 @@ namespace LT {
 		MaterialMainTexture(MaterialMainTexture&&) = delete;
 
 	public:
-		RenderPass* GetRenderPass(RenderStageType eStage, RenderPassFlag nFlag) override;
-
+		RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) override;
 		void SetMainTexture(ImageID nMainTex);
 	};
 
