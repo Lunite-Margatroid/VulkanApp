@@ -1,5 +1,6 @@
 // 示例材质：演示材质属性布局（Float3 + Image + Float + Float）
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "MaterialExample.hpp"
 #include "GraphicPass.hpp"
 #include "ImageManager.h"
@@ -41,7 +42,7 @@ namespace LT {
 
 			auto arrMtlPropDescSet = GetMtlPropDescriptorSetLayout();
 			vecSetLayout.insert(vecSetLayout.end(), arrMtlPropDescSet.begin(), arrMtlPropDescSet.end());
-			auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescLayout();
+			auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescriptorSetLayout();
 			vecSetLayout.push_back(vkTransBufferSetLayout);
 
 			pPass->Init(vecSetLayout);

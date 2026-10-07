@@ -10,6 +10,7 @@ namespace LT {
 		BindingSpaceCount
 	};
 
+
 	struct BindingInfo {
 		uint32_t nIndex;
 		BindingSpace eSpace;

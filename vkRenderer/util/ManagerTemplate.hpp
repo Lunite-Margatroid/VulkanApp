@@ -4,7 +4,8 @@ namespace LT {
 
 	template<typename TypeID, typename T, typename TypeGetPtr, typename TypeRefIncrease, typename TypeRefDecrease>
 	class ResourceRef {
-		TypeID m_nID;
+		// 默认初始化为无效ID：即使某个构造函数漏写初始化列表，也不会读到未初始化值
+		TypeID m_nID = INVALID_ITEM_ID;
 	public:
 		ResourceRef() : m_nID(INVALID_ITEM_ID) {}
 
@@ -16,19 +17,15 @@ namespace LT {
 			TypeRefDecrease{}(m_nID);
 		}
 
-		ResourceRef(const ResourceRef& other) {
-			TypeRefDecrease{}(m_nID);
-			m_nID = other.m_nID;
-			TypeRefIncrease{}(m_nID);
-		}
+		// 拷贝构造：新对象尚未持有任何资源，不能调用 TypeRefDecrease，只需增加一次引用
+		ResourceRef(const ResourceRef& other) : ResourceRef(other.m_nID) {}
 
-		ResourceRef(ResourceRef&& other) {
-			TypeRefDecrease{}(m_nID);
-			m_nID = other.m_nID;
+		// 移动构造：直接转移引用，不增不减
+		ResourceRef(ResourceRef&& other) noexcept : m_nID(other.m_nID) {
 			other.m_nID = INVALID_ITEM_ID;
 		}
 
-		ResourceRef& operator = (ResourceRef&& other) {
+		ResourceRef& operator = (ResourceRef&& other) noexcept {
 			if (this != &other) {
 				TypeRefDecrease{}(m_nID);
 				m_nID = other.m_nID;

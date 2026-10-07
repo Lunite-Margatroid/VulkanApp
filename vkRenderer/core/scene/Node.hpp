@@ -18,7 +18,9 @@ namespace LT {
 		}
 		else
 		{
-			static_assert(false);
+			RENDERER_ASSERT(false, "It is not Compoent Type");
+			return ComponentType::eUnknown;
+			//static_assert(false);
 		}
 
 	}

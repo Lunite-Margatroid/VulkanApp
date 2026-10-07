@@ -18,7 +18,6 @@ namespace LT {
 
 	public:
 		RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) override;
-		void SetMainTexture(ImageID nMainTex);
 	};
 
 } // namespace LT

@@ -64,7 +64,7 @@ namespace LT {
 			vk::DescriptorPoolCreateInfo dpci;
 			dpci
 				.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * 3)
+				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * static_cast<int>(BindingSpace::BindingSpaceCount) * static_cast<int>(MaterialType::MaterialTypeCount))
 				.setPoolSizeCount(vecDPS.size())
 				.setPPoolSizes(vecDPS.data())
 				;

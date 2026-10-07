@@ -5,6 +5,8 @@
 
 #include "ShaderModuleInfo.hpp"
 
+#include "RenderPass.hpp"
+
 namespace LT {
 	class ConstBuffer;
 
@@ -130,7 +132,7 @@ namespace LT {
 
 				if (!bFound)
 				{
-					LOG_WARNING("Can't find the Buffer.");
+					LOG_WARNING("%s: Can't find the Buffer.", __FUNCTION__);
 				}
 			}
 
@@ -235,12 +237,6 @@ namespace LT {
 		static void ReleaseTransBufferHandle(ConstBufferHandle nHandle);
 		static void UpdateTransBuffer(ConstBufferHandle nHandle, const void* pData);
 		static void UpdateDeviceTransBuffer();
-
-		static void GetTransDescriptorSet();
-
-		static vk::DescriptorSetLayout GetTransBufferDescLayout() {
-			
-		}
 
 		// 获取Trnas Buffer Layout
 		static vk::DescriptorSetLayout GetTransBufferDescriptorSetLayout() {

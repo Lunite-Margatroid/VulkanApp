@@ -18,8 +18,6 @@ namespace LT {
 
 	vkContext::~vkContext() {
 
-		m_vkDevice.destroyDescriptorPool(m_vkDescriptorPool);
-
 		// 销毁Command Pool
 		m_vkDevice.destroyCommandPool(m_vkCommandPool);
 		// command buffer会跟随command pool 自动释放

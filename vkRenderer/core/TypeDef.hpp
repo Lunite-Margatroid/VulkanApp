@@ -44,7 +44,8 @@ namespace LT {
 	enum class MaterialType : int{
 		eUndifined = -1,
 		eMainTexture,
-		eExample
+		eExample,
+		MaterialTypeCount
 	};
 
 

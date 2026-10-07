@@ -1,6 +1,6 @@
 // 材质 MaterialManager
 #include "vkRendererCommon.h"
-
+#include "EngineCommon.h"
 
 #define SINGLETON_MANAGER_CUSTOMED_INIT_AND_RELEASE
 
@@ -41,15 +41,21 @@ namespace LT {
 
 		);
 
-		std::map<vk::DescriptorType, uint32_t> mapDescriptorCount;
+		std::vector<std::pair<vk::DescriptorType, BindingInfo>> vecDescriptors;
 
 		// Get From Material
 		// 收集注册材质的用于属性的Decriptor
 		MaterialRegistry::ForEach(
 			[&]<typename M>() {
-			M::GetDescriptorCount(mapDescriptorCount);
+			M::GetDescriptorBindings(vecDescriptors);
 		}
 		);
+
+		std::map<vk::DescriptorType, uint32_t> mapDescriptorCount;
+		for (const auto& [eType, sBinding] : vecDescriptors)
+		{
+			mapDescriptorCount[eType] += 1;
+		}
 
 		ShaderResourceManager::CreateDescriptorPool(mapDescriptorCount);
 	}

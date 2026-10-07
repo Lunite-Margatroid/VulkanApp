@@ -2,6 +2,8 @@
 
 namespace LT {
 
+
+	// 保证图片类型的属性在最后面
 #define MtlPropDataTypeList(X)\
 	X(Bool,		bool,	4)\
 	X(Int,		int,	4)\

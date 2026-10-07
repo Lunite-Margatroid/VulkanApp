@@ -137,7 +137,7 @@ namespace LT {
 		MaterialRef refMtl = MaterialManager::CreateMaterial(MaterialType::eMainTexture);
 
 		MaterialMainTexture* pMtl = dynamic_cast<MaterialMainTexture*>(refMtl.GetPtr());
-		pMtl->SetMainTexture(m_nImageID);
+		pMtl->SetMtlProp(MtlProp::eTexDiffuse, m_nImageID);
 
 		NodeMesh* pNode = dynamic_cast<NodeMesh*>(SceneManager::GetNode(m_nMainScene));
 		if (pNode)

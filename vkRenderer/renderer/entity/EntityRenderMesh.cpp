@@ -32,10 +32,11 @@ namespace LT {
 	}
 	EntityRenderMesh::~EntityRenderMesh()
 	{
-		for (auto& idBuffer : m_arrConstBufferVertTrans)
+		for (ConstBufferHandle& hBuffer : m_arrConstBufferVertTrans)
 		{
-			BufferManager::DeleteBuffer(idBuffer);
-			idBuffer = INVALID_BUFFER_ID;
+			ShaderResourceManager::ReleaseTransBufferHandle(hBuffer);
+			hBuffer = INVALID_CONST_BUFFER_HANDLE;
+
 		}
 	}
 
@@ -64,18 +65,19 @@ namespace LT {
 
 	void EntityRenderMesh::Draw(const EntityDrawInfo& sDrawInfo)
 	{
-		GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(m_refMaterial->GetRenderPass(sDrawInfo.eRenderStage, m_eRenderPassFlag));
+		// 设置变换矩阵
+		sDrawInfo.pRenderView->SetModelMat(sDrawInfo.matModule);
+		// TransBuffer绑定到ShaderResource
+		m_refMaterial->SetTransBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex]);
+
+		MaterialBindInfo sBindInfo;
+		sBindInfo.eStage = sDrawInfo.eRenderStage;
+		sBindInfo.nFlag = m_eRenderPassFlag;
+		sBindInfo.nFlightIndex = sDrawInfo.nFlightFrameIndex;
+
+		GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(m_refMaterial->Bind(sBindInfo));
 		if (pRenderPass)
 		{
-			// 设置变换矩阵
-			sDrawInfo.pRenderView->SetModelMat(sDrawInfo.matModule);
-			// TransBuffer绑定到ShaderResource
-			m_refMaterial->SetTransBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex]);
-			// ShaderResource绑定到RenderPass
-			m_refMaterial->UpdateMtlResource(sDrawInfo.eRenderStage, m_eRenderPassFlag);
-			// 提交RenderPass的ShaderResource
-			pRenderPass->BindResourceToDevice(sDrawInfo.nFlightFrameIndex);
-
 			RecordCommandInfo sRecordInfo;
 			sRecordInfo.nWidth = sDrawInfo.nWidth;
 			sRecordInfo.nHeight = sDrawInfo.nHeight;

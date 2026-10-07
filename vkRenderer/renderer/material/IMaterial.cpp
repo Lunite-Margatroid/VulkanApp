@@ -1,5 +1,6 @@
 // 材质基类
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "IMaterial.hpp"
 
 namespace LT {

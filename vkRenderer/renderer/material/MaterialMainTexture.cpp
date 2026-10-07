@@ -1,5 +1,6 @@
 // 测试材质 单一贴图 无光照
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "MaterialMainTexture.hpp"
 #include "GraphicPass.hpp"
 #include "ImageManager.h"
@@ -38,7 +39,7 @@ namespace LT {
 
 			auto arrMtlPropDescSet = GetMtlPropDescriptorSetLayout();
 			vecSetLayout.insert(vecSetLayout.end(), arrMtlPropDescSet.begin(), arrMtlPropDescSet.end());
-			auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescLayout();
+			auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescriptorSetLayout();
 			vecSetLayout.push_back(vkTransBufferSetLayout);
 
 			pPass->Init(vecSetLayout);
@@ -53,11 +54,6 @@ namespace LT {
 		BindShaderResource(sMtlBindInfo);
 
 		return pPass;
-	}
-
-	void MaterialMainTexture::SetMainTexture(ImageID nMainTex)
-	{
-		SetSlotSrc(BindingInfo(1u, BindingSpace::eFragmentShader), nMainTex);
 	}
 
 	void BaseMaterial<MaterialMainTexture, MaterialType::eMainTexture>::RegisterMaterialProp() {
