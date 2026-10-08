@@ -37,17 +37,17 @@ namespace LT {
 
 	// 储存材质属性的Desc Set的结构体
 	struct MtlPropDescriptorSets {
-		using _DescSets = std::array<vk::DescriptorSet, static_cast<size_t>(BindingSpace::BindingSpaceCount)>;
+		using _DescSets = std::array<vk::DescriptorSet, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)>;
 
 		std::array<_DescSets, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_descriptorSets;
 
 		MtlPropDescriptorSets();
 
-		void Init(const std::array<vk::DescriptorSetLayout, static_cast<size_t>(BindingSpace::BindingSpaceCount)>& layouts);
+		void Init(const std::array<vk::DescriptorSetLayout, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)>& layouts);
 
-		vk::DescriptorSet GetDescriptorSet(FlightFrameIndex nFlightIndex, BindingSpace eSpace);
+		vk::DescriptorSet GetDescriptorSet(FlightFrameIndex nFlightIndex, ShaderResSpace eSpace);
 
-		std::array<vk::DescriptorSet, static_cast<size_t>(BindingSpace::BindingSpaceCount)> GetDescriptorSet(FlightFrameIndex nFlightIndex);
+		std::array<vk::DescriptorSet, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)> GetDescriptorSet(FlightFrameIndex nFlightIndex);
 
 		operator bool() const;
 	};
@@ -95,7 +95,12 @@ namespace LT {
 		BaseMaterial(MaterialID nID) :IMaterial(nID, eTypeMaterial)
 		{
 			m_nPropBufferHandle = ShaderResourceManager::CreateMtlPropBufferHandle<TBaseMaterial>();
-			m_mapSlots[BindingInfo(MTL_PROP_BINDING_INDEX, BindingSpace::eVertAndFragShader)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, static_cast<int64_t>(m_nPropBufferHandle));
+			// Mtl Prop Buffer
+			m_mapSlots[BindingInfo(MTL_PROP_BINDING_INDEX, MTL_PROP_BINDING_SPACE, ShaderResSpace::eMtlProp)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, static_cast<int64_t>(m_nPropBufferHandle));
+			// Mtl Prop tex
+			for (const auto& [eProp, nBinding] : s_setImage) {
+				m_mapSlots[BindingInfo(nBinding, MTL_TEX_BINDING_SPACE, ShaderResSpace::eMtlProp)] = MaterialSlot(vk::DescriptorType::eCombinedImageSampler, INVALID_IMAGE_ID);
+			}
 		}
 
 		void RegisterStage(RenderStageType eStage) override
@@ -141,7 +146,7 @@ namespace LT {
 				{
 					return EngineResult::eInvalidParam;
 				}
-				m_mapSlots[BindingInfo(iter->second, BindingSpace::eFragmentShader)] = MaterialSlot(vk::DescriptorType::eSampledImage, std::get<ImageID>(value));
+				m_mapSlots[BindingInfo(iter->second, MTL_TEX_BINDING_SPACE, ShaderResSpace::eMtlProp)] = MaterialSlot(vk::DescriptorType::eSampledImage, std::get<ImageID>(value));
 			}
 			else
 			{
@@ -212,15 +217,21 @@ namespace LT {
 						.setDescriptorType(mtlSlot.eDescType)
 						;
 
-					if (bindings.nIndex == MTL_TRANS_BUFFER_BINDING_INDEX)
+					switch (bindings.eResSpace)
 					{
-						wds.setDstSet(ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex));
+					case ShaderResSpace::eTransBuffer:
+						{
+							wds.setDstSet(ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex));
+							break;
+						}
+					case ShaderResSpace::eMtlProp:
+						{
+							wds.setDstSet(s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex, bindings.eSpace));
+							break;
+						}
+					default:
+						break;
 					}
-					else
-					{
-						wds.setDstSet(s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex, bindings.eSpace));
-					}
-
 					vecWDS.push_back(std::move(wds));
 				}
 			}
@@ -256,13 +267,13 @@ namespace LT {
 
 
 				oss << "};" << std::endl
-					<< "[[vk::binding(" << MTL_PROP_BINDING_INDEX << ", " << static_cast<int>(BindingSpace::eVertAndFragShader) << ")]]" << std::endl
+					<< "[[vk::binding(" << MTL_PROP_BINDING_INDEX << ", " << static_cast<int>(ShaderResSpace::eMtlProp) << ")]]" << std::endl
 					<< "ConstantBuffer<MtlProps, Std140DataLayout> " << MTL_PROP_UNIFORM_NAME << "; " << std::endl;
 			}
 
 			for (const auto& [eProp, bindingIndex] : s_setImage)
 			{
-				oss << "[[vk::binding(" << bindingIndex << ", " << static_cast<int>(BindingSpace::eFragmentShader) << ")]]" << std::endl
+				oss << "[[vk::binding(" << bindingIndex << ", " << static_cast<int>(ShaderResSpace::eMtlProp) << ")]]" << std::endl
 					<< "Sampler2D " << ToString(eProp) << ";" << std::endl;
 			}
 

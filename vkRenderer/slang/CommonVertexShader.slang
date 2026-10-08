@@ -13,7 +13,7 @@ struct MVPMatrix{
 
 // (binding, set)
 // binding = 0
-// set = 0 : VertexShader
+// set = 0 : TransBuffer
 [[vk::binding(0, 0)]]
 ConstantBuffer<MVPMatrix, Std140DataLayout> u_MVPMatix;
 

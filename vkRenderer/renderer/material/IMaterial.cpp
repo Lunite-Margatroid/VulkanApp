@@ -28,7 +28,7 @@ namespace LT {
 		return false;
 	}
 
-	void MtlPropDescriptorSets::Init(const std::array<vk::DescriptorSetLayout, static_cast<size_t>(BindingSpace::BindingSpaceCount)>& layouts) {
+	void MtlPropDescriptorSets::Init(const std::array<vk::DescriptorSetLayout, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)>& layouts) {
 		vk::Device& device = vkContext::GetVkDevice();
 
 		vk::DescriptorSetAllocateInfo dsai;
@@ -50,12 +50,12 @@ namespace LT {
 
 	}
 
-	vk::DescriptorSet MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex, BindingSpace eSpace)
+	vk::DescriptorSet MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex, ShaderResSpace eSpace)
 	{
 		return m_descriptorSets[nFlightIndex][static_cast<size_t>(eSpace)];
 	}
 
-	std::array<vk::DescriptorSet, static_cast<size_t>(BindingSpace::BindingSpaceCount)> MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex)
+	std::array<vk::DescriptorSet, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)> MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex)
 	{
 		return m_descriptorSets[nFlightIndex];
 	}
@@ -64,7 +64,7 @@ namespace LT {
 		:m_nID(nID)
 		, m_eMtlType(eType)
 	{
-		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, BindingSpace::eVertexShader)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
+		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, BindingSpace::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
 	}
 
 	IMaterial::~IMaterial()
@@ -83,7 +83,7 @@ namespace LT {
 
 	EngineResult IMaterial::SetTransBuffer(ConstBufferHandle nHandle)
 	{
-		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, BindingSpace::eVertexShader)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nHandle);
+		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, BindingSpace::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nHandle);
 		return EngineResult::eSuccess;
 	}
 } // namespace

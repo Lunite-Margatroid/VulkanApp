@@ -11,9 +11,8 @@ namespace LT {
 	MaterialExample::MaterialExample(MaterialID nID)
 		:BaseMaterial<MaterialExample, MaterialType::eExample>(nID)
 	{
-		m_mapSlots[BindingInfo(0u, BindingSpace::eVertexShader)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
-		m_mapSlots[BindingInfo(1u, BindingSpace::eFragmentShader)] = MaterialSlot(vk::DescriptorType::eCombinedImageSampler, -1);
-
+		// Trans Buffer
+		m_mapSlots[BindingInfo(0u, BindingSpace::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
 		RegisterStage(RenderStageType::eOpaqueForward);
 	}
 
