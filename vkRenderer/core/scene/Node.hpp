@@ -9,6 +9,7 @@
 namespace LT {
 	// 组件相关
 	// Component
+	// 映射
 	// ---------------- Type->枚举 -------------------
 	template<typename TComponent>
 	ComponentType TypeOfComponent() {
@@ -25,6 +26,7 @@ namespace LT {
 
 	}
 
+	// 映射
 	// ---------------- 枚举->Type ---------------------
 	template<ComponentType eType>
 		requires(eType == ComponentType::eSprite3D)

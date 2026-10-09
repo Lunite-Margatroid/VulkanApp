@@ -29,6 +29,7 @@ namespace LT {
 	enum class ComponentType : int {
 		eUnknown = -1,
 		eSprite3D,
+		eTransform3D,
 		ComponentTypeCount,
 		eCustomedComponent = 8192, // 自定义组件类型起始值
 	};
