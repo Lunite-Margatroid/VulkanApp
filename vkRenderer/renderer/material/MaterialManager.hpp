@@ -22,6 +22,8 @@ private:
 			mapPasses.second.clear();
 		}
 		TMaterial::s_mapRenderPasses.clear();
+
+		TMaterial::UnresigterMaterial();
 	}
 
 	DECLEAR_SINGLETON_MANAGER_END(MaterialManager, IMaterial, MaterialID, Material)

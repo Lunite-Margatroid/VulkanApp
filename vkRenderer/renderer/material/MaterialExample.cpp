@@ -11,8 +11,6 @@ namespace LT {
 	MaterialExample::MaterialExample(MaterialID nID)
 		:BaseMaterial<MaterialExample, MaterialType::eExample>(nID)
 	{
-		// Trans Buffer
-		m_mapSlots[BindingInfo(0u, BindingSpace::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
 		RegisterStage(RenderStageType::eOpaqueForward);
 	}
 
@@ -33,16 +31,23 @@ namespace LT {
 			pPass = new GraphicPass();
 			pPass->SetRenderPassFlag(sMtlBindInfo.nFlag);
 
-			pPass->AddShaderModule("MaterialTexampleProp", GenMtlPropShaderModule());
-			pPass->AddShaderModule("FragmentShaderExample");
-			pPass->AddShaderModule("CommonVertexShader");
+			pPass->AddShaderModule("MaterialTexampleProp", GenMtlPropShaderModule(), std::vector<std::string>());
+			pPass->AddShaderModule("FragmentShaderExample", { "MaterialTexampleProp" });
+			pPass->AddShaderModule("CommonVertexShader", std::vector<std::string>());
 
 			std::vector<vk::DescriptorSetLayout> vecSetLayout;
 
-			auto arrMtlPropDescSet = GetMtlPropDescriptorSetLayout();
-			vecSetLayout.insert(vecSetLayout.end(), arrMtlPropDescSet.begin(), arrMtlPropDescSet.end());
+			//跟 enum ShaderResSpace 的顺序保持一致
+			//	eTransBuffer = 0,
+			//	eMtlProp = 1,
+
+			// 0 Trans Buffer
 			auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescriptorSetLayout();
 			vecSetLayout.push_back(vkTransBufferSetLayout);
+			// 1 Mtl Prop
+			auto vkMtlPropDescSet = GetMtlPropDescriptorSetLayout();
+			vecSetLayout.push_back(vkMtlPropDescSet);
+
 
 			pPass->Init(vecSetLayout);
 
@@ -54,7 +59,7 @@ namespace LT {
 		}
 
 		BindShaderResource(sMtlBindInfo);
-
+		pPass->SetDescriptorSets({ ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex)});
 		return pPass;
 	}
 

@@ -20,8 +20,6 @@ namespace LT {
 		ImageID nDepthStencilID;
 		std::vector<ImageID> vecImageIDColor;
 		std::vector<BufferID> vecVertexBufferID;
-
-		std::vector<vk::DescriptorSet> vecDescriptorSet;
 	};
 
 
@@ -42,7 +40,7 @@ namespace LT {
 	};
 
 	struct SlotKey {
-		BindingSpace eSpace; 
+		ShaderStage eSpace; 
 		uint32_t nBindingIndex;
 		vk::DescriptorType eType;
 
@@ -62,18 +60,13 @@ namespace LT {
 	{
 	protected:
 		std::vector<std::string> m_vecShaderModuleSrc;
-		std::vector<std::pair<std::string, std::string>> m_vecShaderCode;
+		ShaderSrc m_sShaderSrc;
 		RenderPassFlag m_nFlag;
 		vk::ShaderModule m_vkShaderModule;
 		ShaderModuleInfo m_sShaderModuleInfo;
-		// index和BindingSpace一致
-		// 0 vert
-		// 1 frag
-		// 2 vert and frag
-		//std::vector<vk::DescriptorSetLayout> m_vecVkDescSetLayout;
 
-		//std::vector<vk::DescriptorSet> m_vecDescriptorSets0;
-		//std::vector<vk::DescriptorSet> m_vecDescriptorSets1;
+		// 临时 不由GraphicPass管理
+		std::vector<vk::DescriptorSet> m_vecDescriptorSets;
 
 		vk::PipelineLayout m_vkPipelineLayout;
 
@@ -92,9 +85,10 @@ namespace LT {
 
 		void Init(const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout);
 
-		void AddShaderModule(const char* strShaderModule);
-		void AddShaderModule(const std::string& strName, const std::string& strCode);
-		void AddShaderModule(std::string&& strName, std::string&& strCode);
+		void SetDescriptorSets(const std::vector<vk::DescriptorSet>& vecDescriptorSets);
+
+		void AddShaderModule(const char* strShaderModule, const std::vector<std::string>& vecDepMod);
+		void AddShaderModule(const std::string& strName, const std::string& strCode, const std::vector<std::string>& vecDepMod);
 		void SetRenderPassFlag(RenderPassFlag nFlag);
 		RenderPassFlag GetRenderPassFlag() const;
 

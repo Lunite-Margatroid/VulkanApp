@@ -2,6 +2,7 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include "SlangCompiler.hpp"
 
 #include "logger.hpp"
@@ -116,15 +117,14 @@ namespace LT {
 	}
 
 	std::vector<uint8_t> SlangCompiler::CompileShader(
-		const std::vector<std::pair<std::string, std::string>>& vecShaderCode,
-		const std::vector<std::string>& vecModules, 
+		const ShaderSrc& sSrc,
 		const std::vector<std::pair<const char*, const char*>>& vecPPMacro,
 		ShaderModuleInfo& sOutShaderModuleInfo)
 	{
 
 		Slang::ComPtr<slang::IComponentType> pLinked;
 		Slang::ComPtr<slang::ISession> pSession;
-		CompileShaderToProgram(vecShaderCode, vecModules, vecPPMacro, pSession.writeRef(), pLinked.writeRef());
+		CompileShaderToProgram(sSrc, vecPPMacro, pSession.writeRef(), pLinked.writeRef());
 
 		// 反射 获取着色器信息
 		{
@@ -163,12 +163,12 @@ namespace LT {
 					
 						if (nDomension == 2)
 						{
-							sOutShaderModuleInfo.m_vecTexture2DBindingInfo.emplace_back(nBindingIndex ,nSpace);
+							sOutShaderModuleInfo.m_vecTexture2DBindingInfo.emplace_back(nBindingIndex ,static_cast<ShaderStage>(nSpace), static_cast<ShaderResSpace>(nSpace));
 						}
 					}
 					else if (pType->getKind() == slang::TypeReflection::Kind::ConstantBuffer)
 					{
-						sOutShaderModuleInfo.m_vecConstBufferBindingInfo.emplace_back(pVar->getBindingIndex(), pVar->getBindingSpace());
+						sOutShaderModuleInfo.m_vecConstBufferBindingInfo.emplace_back(pVar->getBindingIndex(), static_cast<ShaderStage>(pVar->getBindingSpace()), static_cast<ShaderResSpace>(pVar->getBindingSpace()));
 					}
 
 				}
@@ -200,8 +200,7 @@ namespace LT {
 	}
 
 	void SlangCompiler::CompileShaderToProgram(
-		const std::vector<std::pair<std::string, std::string>>& vecShaderCode,
-		const std::vector<std::string>& vecModules, 
+		const ShaderSrc& sSrc,
 		const std::vector<std::pair<const char*, const char*>>& vecPPMacro,
 		slang::ISession** ppOutSesson,
 		slang::IComponentType** ppOutProgram
@@ -244,15 +243,39 @@ namespace LT {
 
 
 		std::vector<Slang::ComPtr<slang::IModule>> vecPModules;
-		auto funcLoadModule = [&](const std::string& moduleName, const std::string& strPath, const std::string& moduleCode) {
+		for(const ShaderModuleSrc& src : sSrc.vecShaderModuleSrc) {
 			// 查错
 			Slang::ComPtr<slang::IBlob> pDiagnosticsBlob;
 
+			std::string strSrcCode;
+			if (src.eSrcType == ShaderSrcType::ePath)
+			{
+				strSrcCode = ReadText(src.strModulePath);
+			}
+			else
+			{
+				strSrcCode = src.strSrcCode;
+			}
+
+			// 添加import语句
+			{
+				std::ostringstream oss;
+
+				for (const std::string& depMod : src.vecDepModule)
+				{
+					oss << "import " << depMod << ";\n";
+				}
+
+
+				std::string strImportCode = oss.str();
+				strSrcCode.insert(strSrcCode.begin(), strImportCode.begin(), strImportCode.end());
+			}
+
 			Slang::ComPtr<slang::IModule> pModule;
 			pModule = (*ppOutSesson)->loadModuleFromSourceString(
-				moduleName.c_str(),
-				strPath.c_str(),
-				moduleCode.c_str(),
+				src.strModuleName.c_str(),
+				src.strModulePath.c_str(),
+				strSrcCode.c_str(),
 				pDiagnosticsBlob.writeRef()
 			);
 
@@ -263,30 +286,10 @@ namespace LT {
 			if (pDiagnosticsBlob)
 			{
 				// 查错
-				LOG_INFO("Shader Compiler Log. Module %s :\n%s", moduleName.c_str(), static_cast<const char*> (pDiagnosticsBlob->getBufferPointer()));
+				LOG_INFO("Shader Compiler Log. Module %s :\n%s", src.strModuleName.c_str(), static_cast<const char*> (pDiagnosticsBlob->getBufferPointer()));
 			}
 
 			};
-
-
-		// 从文件加载Module
-		for (const std::string strModule : vecModules)
-		{
-			Slang::ComPtr<slang::IBlob> pDiagnosticsBlob;
-			std::string strModulePath = strModule + ".slang";
-
-			std::string strFilePath = "./slang/" + strModulePath;
-
-			std::filesystem::path pathModuleFile(strFilePath);
-
-			funcLoadModule(strModule, strFilePath, ReadText(pathModuleFile));
-		}
-
-		// 从代码加载 Shader Module
-		for (const auto& [strModuleName, strModuleCode] : vecShaderCode)
-		{
-			funcLoadModule(strModuleName, strModuleName, strModuleCode);
-		}
 
 		// 组合
 		std::vector<slang::IComponentType*> vecComponents;

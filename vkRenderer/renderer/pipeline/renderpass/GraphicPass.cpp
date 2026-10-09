@@ -45,7 +45,9 @@ namespace LT {
 		// 创建着色器
 		{
 			m_sShaderModuleInfo.Clear();
-			std::vector<BYTE> binShader = SlangCompiler::GetInstance().CompileShader(m_vecShaderCode,m_vecShaderModuleSrc, GenGraphicPPMacroDesc(m_nFlag), m_sShaderModuleInfo);
+
+
+			std::vector<BYTE> binShader = SlangCompiler::GetInstance().CompileShader(m_sShaderSrc, GenGraphicPPMacroDesc(m_nFlag), m_sShaderModuleInfo);
 
 			vk::ShaderModuleCreateInfo smci(
 				{},
@@ -152,7 +154,7 @@ namespace LT {
 		//	std::vector<vk::DescriptorSetLayoutBinding> bindingsFrag;
 		//	std::vector<vk::DescriptorSetLayoutBinding> bindingsVertAndFrag;
 
-		//	auto funcAddToBindingSet = [&](BindingSpace eSpace, const vk::DescriptorSetLayoutBinding& vkBindings) {
+		//	auto funcAddToBindingSet = [&](ShaderStage eSpace, const vk::DescriptorSetLayoutBinding& vkBindings) {
 		//		
 		//		SlotKey key;
 		//		key.eSpace = eSpace;
@@ -161,13 +163,13 @@ namespace LT {
 		//		m_mapSlots[key] = INVALID_ITEM_ID;
 
 		//		switch (eSpace) {
-		//			case BindingSpace::eVertexShader:
+		//			case ShaderStage::eVertexShader:
 		//				bindingsVert.push_back(vkBindings);
 		//				break;
-		//			case BindingSpace::eFragmentShader:
+		//			case ShaderStage::eFragmentShader:
 		//				bindingsFrag.push_back(vkBindings);
 		//				break;
-		//			case BindingSpace::eVertAndFragShader:
+		//			case ShaderStage::eVertAndFragShader:
 		//				bindingsVertAndFrag.push_back(vkBindings);
 		//				break;
 		//			default:break;
@@ -209,9 +211,9 @@ namespace LT {
 		//	dslciVertAndFrag.setBindings(bindingsVertAndFrag);
 
 		//	m_vecVkDescSetLayout.resize(3);
-		//	m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eVertexShader)] = device.createDescriptorSetLayout(dslciVert);
-		//	m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eFragmentShader)] = device.createDescriptorSetLayout(dslciFrag);
-		//	m_vecVkDescSetLayout[static_cast<size_t>(BindingSpace::eVertAndFragShader)] = device.createDescriptorSetLayout(dslciVertAndFrag);
+		//	m_vecVkDescSetLayout[static_cast<size_t>(ShaderStage::eVertexShader)] = device.createDescriptorSetLayout(dslciVert);
+		//	m_vecVkDescSetLayout[static_cast<size_t>(ShaderStage::eFragmentShader)] = device.createDescriptorSetLayout(dslciFrag);
+		//	m_vecVkDescSetLayout[static_cast<size_t>(ShaderStage::eVertAndFragShader)] = device.createDescriptorSetLayout(dslciVertAndFrag);
 		//}
 		vk::PipelineLayoutCreateInfo plci;
 		plci
@@ -280,19 +282,32 @@ namespace LT {
 		m_vkPipeline = result.value;
 	}
 
-	void GraphicPass::AddShaderModule(const char* strShaderModule)
+	void GraphicPass::SetDescriptorSets(const std::vector<vk::DescriptorSet>& vecDescriptorSets)
 	{
-		m_vecShaderModuleSrc.push_back(strShaderModule);
+		m_vecDescriptorSets = vecDescriptorSets;
 	}
 
-	void GraphicPass::AddShaderModule(const std::string& strName, const std::string& strCode)
+	void GraphicPass::AddShaderModule(const char* strShaderModule, const std::vector<std::string>& vecDepMod)
 	{
-		m_vecShaderCode.emplace_back(strName, strCode);
+		ShaderModuleSrc sModSrc;
+		sModSrc.eSrcType = ShaderSrcType::ePath;
+		sModSrc.strModuleName = strShaderModule;
+		sModSrc.strModulePath = std::string("./slang/") + strShaderModule + ".slang";
+		sModSrc.strSrcCode;
+		sModSrc.vecDepModule = vecDepMod;
+		m_sShaderSrc.vecShaderModuleSrc.push_back(std::move(sModSrc));
+
 	}
 
-	void GraphicPass::AddShaderModule(std::string&& strName, std::string&& strCode)
+	void GraphicPass::AddShaderModule(const std::string& strName, const std::string& strCode, const std::vector<std::string>& vecDepMod)
 	{
-		m_vecShaderCode.emplace_back(std::move(strName), std::move(strCode));
+		ShaderModuleSrc sModSrc;
+		sModSrc.eSrcType = ShaderSrcType::eSrcCode;
+		sModSrc.strModuleName = strName;
+		sModSrc.strModulePath = strName + ".slang";
+		sModSrc.strSrcCode = strCode;
+		sModSrc.vecDepModule = vecDepMod;
+		m_sShaderSrc.vecShaderModuleSrc.push_back(std::move(sModSrc));
 	}
 
 	void GraphicPass::SetRenderPassFlag(RenderPassFlag nFlag)
@@ -432,7 +447,7 @@ namespace LT {
 			vk::PipelineBindPoint::eGraphics,
 			m_vkPipelineLayout,
 			0,
-			sRecordInfo.vecDescriptorSet,
+			m_vecDescriptorSets,
 			VK_NULL_HANDLE
 		);
 

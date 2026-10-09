@@ -8,15 +8,15 @@
 #include "ShaderModuleInfo.hpp"
 
 namespace LT {
-	inline vk::ShaderStageFlags GetShaderStageFlag(BindingSpace eSpace)
+	inline vk::ShaderStageFlags GetShaderStageFlag(ShaderStage eSpace)
 	{
 		switch (eSpace)
 		{
-			case BindingSpace::eVertexShader:
+			case ShaderStage::eVertexShader:
 				return vk::ShaderStageFlagBits::eVertex;
-			case BindingSpace::eFragmentShader:
+			case ShaderStage::eFragmentShader:
 				return vk::ShaderStageFlagBits::eFragment;
-			case BindingSpace::eVertAndFragShader:
+			case ShaderStage::eVertAndFragShader:
 				return (vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 			default:
 				return vk::ShaderStageFlagBits::eAll;

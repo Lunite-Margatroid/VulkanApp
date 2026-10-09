@@ -15,7 +15,7 @@ namespace LT {
 		: Buffer(id, nSize, pBuffer)
 		, m_pMapped(nullptr)
 	{
-		if (nSize && pBuffer)
+		if (nSize)
 		{
 			UpdateDataToGPU();
 		}

@@ -67,6 +67,10 @@ namespace LT {
 	{
 		// 设置变换矩阵
 		sDrawInfo.pRenderView->SetModelMat(sDrawInfo.matModule);
+		// TODO: 处理变换矩阵的更新
+		UpdateTransBuffer(sDrawInfo);
+		ShaderResourceManager::UpdateDeviceTransBuffer();
+
 		// TransBuffer绑定到ShaderResource
 		m_refMaterial->SetTransBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex]);
 

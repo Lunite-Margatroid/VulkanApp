@@ -30,16 +30,20 @@ namespace LT {
 		MaterialRegistry::ForEach(
 			[]<typename M>() {
 			M::RegisterMaterialProp();
+			M::InitMaterialPropDataLayout();
 		}
 		
 		);
 
+
 		MaterialRegistry::ForEach(
 			[]<typename M>() {
-			M::InitMaterialPropDataLayout();
+			ShaderResourceManager::RegisterMaterial<M>();
 		}
-
 		);
+
+		
+
 
 		std::vector<std::pair<vk::DescriptorType, BindingInfo>> vecDescriptors;
 
@@ -58,6 +62,14 @@ namespace LT {
 		}
 
 		ShaderResourceManager::CreateDescriptorPool(mapDescriptorCount);
+
+		// 为Material Prop 创建DescriptorSet
+		MaterialRegistry::ForEach(
+			[]<typename M>() {
+			M::InitMtlPropDescriptorSet();
+		}
+
+		);
 	}
 	IMPLEMENT_SINGLETON_MANAGER_INIT_END(MaterialManager)
 

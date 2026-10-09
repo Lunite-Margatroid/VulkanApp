@@ -1,14 +1,15 @@
 // 记录资源信息
 #pragma once
 #include <vector>
+#include <string>
 namespace LT {
 
 	// 与ShaderStage对应
-	enum class BindingSpace : int16_t{
-		eVertexShader = 0,
-		eFragmentShader,
-		eVertAndFragShader,
-		BindingSpaceCount
+	enum class ShaderStage : int16_t {
+		eVertexShader = (0x1),
+		eFragmentShader = (0x1 << 1),
+		ShaderStageCount,
+		eVertAndFragShader = eVertexShader | eFragmentShader,
 	};
 
 	enum class ShaderResSpace : int16_t {
@@ -17,19 +18,30 @@ namespace LT {
 		ShaderResSpaceCount
 	};
 
+	enum class ShaderSrcType {
+		eSrcCode,
+		ePath
+	};
+
+	struct ShaderModuleSrc {
+		ShaderSrcType eSrcType;
+		std::string strModuleName;
+		std::string strModulePath;
+		std::string strSrcCode;
+		std::vector<std::string> vecDepModule;
+	};
+
+	struct ShaderSrc {
+		std::vector<ShaderModuleSrc> vecShaderModuleSrc;
+	};
+
 	struct BindingInfo {
 		uint32_t nIndex;
-		BindingSpace eSpace;
+		ShaderStage eSpace;
 		// 该Binding所对应的Shader资源类型
 		// 默认eMtlProp：反射得到的BindingInfo无法确定资源类型，由材质侧显式指定
 		ShaderResSpace eResSpace;
-
-
-		BindingInfo(uint32_t index, uint32_t space, ShaderResSpace eResSpace) :
-			nIndex(index), eSpace(static_cast<BindingSpace>(space)), eResSpace(eResSpace)
-		{}
-
-		BindingInfo(uint32_t index, BindingSpace eSpace, ShaderResSpace eResSpace) :
+		BindingInfo(uint32_t index, ShaderStage eSpace, ShaderResSpace eResSpace) :
 			nIndex(index), eSpace(eSpace), eResSpace(eResSpace)
 		{
 		}

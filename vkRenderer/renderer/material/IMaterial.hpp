@@ -7,6 +7,7 @@
 
 #include "ShaderResourceManager.hpp"
 #include "SamplerManager.h"
+#include "ImageManager.h"
 
 namespace LT {
 	struct MaterialSlot {
@@ -18,7 +19,8 @@ namespace LT {
 		MaterialSlot(vk::DescriptorType desc, int64_t srcID)
 			: eDescType(desc)
 			, nSrcID(srcID)
-		{}
+		{
+		}
 
 		MaterialSlot()
 			: eDescType(vk::DescriptorType::eUniformBuffer)
@@ -37,18 +39,15 @@ namespace LT {
 
 	// 储存材质属性的Desc Set的结构体
 	struct MtlPropDescriptorSets {
-		using _DescSets = std::array<vk::DescriptorSet, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)>;
-
-		std::array<_DescSets, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_descriptorSets;
+		std::array<vk::DescriptorSet, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_descriptorSets;
 
 		MtlPropDescriptorSets();
 
-		void Init(const std::array<vk::DescriptorSetLayout, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)>& layouts);
+		void Init(const vk::DescriptorSetLayout& layout);
 
-		vk::DescriptorSet GetDescriptorSet(FlightFrameIndex nFlightIndex, ShaderResSpace eSpace);
+		void Release();
 
-		std::array<vk::DescriptorSet, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)> GetDescriptorSet(FlightFrameIndex nFlightIndex);
-
+		vk::DescriptorSet GetDescriptorSet(FlightFrameIndex nFlightIndex);
 		operator bool() const;
 	};
 
@@ -71,7 +70,7 @@ namespace LT {
 
 		virtual RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) = 0;
 		//virtual void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag) = 0;
-		
+
 		virtual EngineResult SetMtlProp(MtlProp eProp, const MtlPropVar& value) = 0;
 
 		EngineResult SetTransBuffer(ConstBufferHandle nHandle);
@@ -81,6 +80,32 @@ namespace LT {
 		EngineResult SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID);
 
 	};
+
+	//  ┌───────────────────────────────────┐    
+	//  │      Register Material Prop       │    
+	//  │     Called By MaterialManager     │    
+	//  │        Init Mtl Prop Desc         │    
+	//  └─────────────────┬─────────────────┘    
+	//                    │                      
+	//                    │                      
+	//┌───────────────────┴────────────────────┐ 
+	//│  Init Material Descriptor Set Layout   │ 
+	//│       Called By Material Manager       │ 
+	//│    vk::DescritporSetLayout Created     │ 
+	//└───────────────────┬────────────────────┘ 
+	//                    │                      
+	//                    │                      
+	//                    │                      
+	//    ┌───────────────┴────────────────┐     
+	//    │  Init Material Descritpor Set  │     
+	//    │   vk::DescritporSet Created    │     
+	//    └───────────────┬────────────────┘     
+	//                    │                      
+	//                    │                      
+	//┌───────────────────┴─────────────────────┐
+	//│When Drawing:                            │
+	//│Init RenderPass.PipelineLayout Created.  │
+	//└─────────────────────────────────────────┘
 
 	template<typename DerivedMaterial, MaterialType eTypeMaterial>
 	class BaseMaterial : public IMaterial
@@ -94,7 +119,11 @@ namespace LT {
 
 		BaseMaterial(MaterialID nID) :IMaterial(nID, eTypeMaterial)
 		{
-			m_nPropBufferHandle = ShaderResourceManager::CreateMtlPropBufferHandle<TBaseMaterial>();
+			m_nPropBufferHandle = INVALID_CONST_BUFFER_HANDLE;
+			if (GetPropBufferSize() > 0)
+			{
+				m_nPropBufferHandle = ShaderResourceManager::CreateMtlPropBufferHandle<TBaseMaterial>();
+			}
 			// Mtl Prop Buffer
 			m_mapSlots[BindingInfo(MTL_PROP_BINDING_INDEX, MTL_PROP_BINDING_SPACE, ShaderResSpace::eMtlProp)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, static_cast<int64_t>(m_nPropBufferHandle));
 			// Mtl Prop tex
@@ -146,7 +175,7 @@ namespace LT {
 				{
 					return EngineResult::eInvalidParam;
 				}
-				m_mapSlots[BindingInfo(iter->second, MTL_TEX_BINDING_SPACE, ShaderResSpace::eMtlProp)] = MaterialSlot(vk::DescriptorType::eSampledImage, std::get<ImageID>(value));
+				m_mapSlots[BindingInfo(iter->second, MTL_TEX_BINDING_SPACE, ShaderResSpace::eMtlProp)] = MaterialSlot(vk::DescriptorType::eCombinedImageSampler, std::get<ImageID>(value));
 			}
 			else
 			{
@@ -174,38 +203,40 @@ namespace LT {
 				bool bInvalidSrc = true;
 
 				switch (mtlSlot.eDescType) {
-				case vk::DescriptorType::eUniformBuffer:
-				{
-					BufferBinding binding = ShaderResourceManager::GetConstBufferBinding(mtlSlot.nSrcID);
-					Buffer* pBuffer = BufferManager::GetBuffer(binding.nBufferID);
+					case vk::DescriptorType::eUniformBuffer:
+					{
+						BufferBinding binding = ShaderResourceManager::GetConstBufferBinding(mtlSlot.nSrcID);
+						Buffer* pBuffer = BufferManager::GetBuffer(binding.nBufferID);
 
-					vk::DescriptorBufferInfo dbi = {};
-					dbi
-						.setBuffer(pBuffer->GetNativeBuffer())
-						.setOffset(binding.nOffset)
-						.setRange(binding.nSize)
-						;
+						RENDERER_ASSERT(pBuffer, "Invalid Const Buffer Handle");
+
+						vk::DescriptorBufferInfo dbi = {};
+						dbi
+							.setBuffer(pBuffer->GetNativeBuffer())
+							.setOffset(binding.nOffset)
+							.setRange(binding.nSize)
+							;
 
 
-					wds.setPBufferInfo(&dbi);
-				}
-				break;
-				case vk::DescriptorType::eCombinedImageSampler:
-				{
-					vk::DescriptorImageInfo ddi = {};
-
-					ddi
-						.setImageView(ImageManager::GetNativeDeviceImageView(mtlSlot.nSrcID))
-						.setSampler(SamplerManager::GetDefaultImageSampler()->GetNativeSampler())
-						.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-						;
-
-					wds.setPImageInfo(&ddi);
-				}
-				break;
-				default:
-					bInvalidSrc = false;
+						wds.setPBufferInfo(&dbi);
+					}
 					break;
+					case vk::DescriptorType::eCombinedImageSampler:
+					{
+						vk::DescriptorImageInfo ddi = {};
+
+						ddi
+							.setImageView(ImageManager::GetNativeDeviceImageView(mtlSlot.nSrcID))
+							.setSampler(SamplerManager::GetDefaultImageSampler()->GetNativeSampler())
+							.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+							;
+
+						wds.setPImageInfo(&ddi);
+					}
+					break;
+					default:
+						bInvalidSrc = false;
+						break;
 				}
 
 				if (bInvalidSrc)
@@ -219,18 +250,18 @@ namespace LT {
 
 					switch (bindings.eResSpace)
 					{
-					case ShaderResSpace::eTransBuffer:
+						case ShaderResSpace::eTransBuffer:
 						{
 							wds.setDstSet(ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex));
 							break;
 						}
-					case ShaderResSpace::eMtlProp:
+						case ShaderResSpace::eMtlProp:
 						{
-							wds.setDstSet(s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex, bindings.eSpace));
+							wds.setDstSet(s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex));
 							break;
 						}
-					default:
-						break;
+						default:
+							break;
 					}
 					vecWDS.push_back(std::move(wds));
 				}
@@ -292,7 +323,7 @@ namespace LT {
 		// 材质属性内存块的大小
 		static size_t s_nPropBufferSize;
 		// 材质属性相关的DescriptorSetLayout
-		static std::array<vk::DescriptorSetLayout, static_cast<size_t>(BindingSpace::BindingSpaceCount)> s_arrDescriptorSetLayout;
+		static vk::DescriptorSetLayout s_vkMtlPropDescriptorSetLayout;
 		// 材质属性相关的Desc Set
 		static MtlPropDescriptorSets s_sDescriptorSets;
 
@@ -301,11 +332,11 @@ namespace LT {
 		// 获取材质属性描述符的绑定索引
 		static void GetDescriptorBindings(std::vector<std::pair<vk::DescriptorType, BindingInfo>>& bindings) {
 			// Mtl Prop
-			bindings.emplace_back(vk::DescriptorType::eUniformBuffer, BindingInfo(MTL_PROP_BINDING_INDEX, MTL_PROP_BINDING_SPACE));
+			bindings.emplace_back(vk::DescriptorType::eUniformBuffer, BindingInfo(MTL_PROP_BINDING_INDEX, MTL_PROP_BINDING_SPACE, ShaderResSpace::eMtlProp));
 			// Mtl Prop Texture
 			for (const auto& [eProp, nBindingIndex] : s_setImage)
 			{
-				bindings.emplace_back(vk::DescriptorType::eCombinedImageSampler, BindingInfo(nBindingIndex, MTL_TEX_BINDING_SPACE));
+				bindings.emplace_back(vk::DescriptorType::eCombinedImageSampler, BindingInfo(nBindingIndex, MTL_TEX_BINDING_SPACE, ShaderResSpace::eMtlProp));
 			}
 		}
 
@@ -389,7 +420,7 @@ namespace LT {
 							nOffset += 4;
 						}
 					}
-				};
+					};
 
 				// 再塞vec3
 				for (MtlProp eProp : setd3)
@@ -454,48 +485,51 @@ namespace LT {
 			}
 		}
 
-		static std::array<vk::DescriptorSetLayout, static_cast<size_t>(BindingSpace::BindingSpaceCount)> GetMtlPropDescriptorSetLayout() {
+		static vk::DescriptorSetLayout GetMtlPropDescriptorSetLayout() {
 
-			for (const auto& layout : s_arrDescriptorSetLayout)
+			if (!s_vkMtlPropDescriptorSetLayout)
 			{
-				if (layout)
-					return s_arrDescriptorSetLayout;
-			}
 
-			std::vector<std::pair<vk::DescriptorType, BindingInfo>> vecDescriptors;
-			vk::Device& device = vkContext::GetVkDevice();
+				std::vector<std::pair<vk::DescriptorType, BindingInfo>> vecDescriptors;
+				vk::Device& device = vkContext::GetVkDevice();
 
-			// 收集MtlProp描述符
-			GetDescriptorBindings(vecDescriptors);
+				// 收集MtlProp描述符
+				GetDescriptorBindings(vecDescriptors);
 
-			std::array<std::vector<vk::DescriptorSetLayoutBinding>, static_cast<size_t>(BindingSpace::BindingSpaceCount)> arrLayoutBindings;
+				std::vector<vk::DescriptorSetLayoutBinding> vecLayoutBindings;
 
-			for (const auto& [eType, sBinding] : vecDescriptors)
-			{
-				vk::DescriptorSetLayoutBinding dslb = {};
-				dslb
-					.setBinding(sBinding.nIndex)
-					.setDescriptorType(eType)
-					.setStageFlags(GetShaderStageFlag(sBinding.eSpace))
-					.setDescriptorCount(1)
-					;
+				for (const auto& [eType, sBinding] : vecDescriptors)
+				{
+					vk::DescriptorSetLayoutBinding dslb = {};
+					dslb
+						.setBinding(sBinding.nIndex)
+						.setDescriptorType(eType)
+						.setStageFlags(GetShaderStageFlag(sBinding.eSpace))
+						.setDescriptorCount(1)
+						;
 
-				arrLayoutBindings[static_cast<size_t>(sBinding.eSpace)].push_back(dslb);
-			}
+					vecLayoutBindings.push_back(dslb);
+				}
 
 
-			for (int i = 0; i < arrLayoutBindings.size(); i++)
-			{
+
 				vk::DescriptorSetLayoutCreateInfo dslci = {};
-				dslci.setBindings(arrLayoutBindings[i]);
-				s_arrDescriptorSetLayout[i] = device.createDescriptorSetLayout(dslci);
-			}
+				dslci.setBindings(vecLayoutBindings);
+				s_vkMtlPropDescriptorSetLayout = device.createDescriptorSetLayout(dslci);
 
-			return s_arrDescriptorSetLayout;
+			}
+			return s_vkMtlPropDescriptorSetLayout;
 		}
 
 		static void InitMtlPropDescriptorSet() {
 			s_sDescriptorSets.Init(GetMtlPropDescriptorSetLayout());
+		}
+
+		static void UnresigterMaterial() {
+			s_sDescriptorSets.Release();
+
+			vk::Device& device = vkContext::GetVkDevice();
+			device.destroyDescriptorSetLayout(s_vkMtlPropDescriptorSetLayout);
 		}
 
 	public:
@@ -523,5 +557,5 @@ namespace LT {
 	MtlPropDescriptorSets BaseMaterial<DerivedMaterial, eTypeMaterial>::s_sDescriptorSets;
 
 	template<typename DerivedMaterial, MaterialType eTypeMaterial>
-	std::array<vk::DescriptorSetLayout, static_cast<size_t>(BindingSpace::BindingSpaceCount)> BaseMaterial<DerivedMaterial, eTypeMaterial>::s_arrDescriptorSetLayout;
+	vk::DescriptorSetLayout BaseMaterial<DerivedMaterial, eTypeMaterial>::s_vkMtlPropDescriptorSetLayout;
 } // namespace LT

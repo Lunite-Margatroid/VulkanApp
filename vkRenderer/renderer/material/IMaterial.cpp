@@ -7,55 +7,47 @@ namespace LT {
 
 	MtlPropDescriptorSets::MtlPropDescriptorSets()
 	{
-		for (_DescSets& sets : m_descriptorSets)
-		{
-			sets.fill(VK_NULL_HANDLE);
-		}
+		m_descriptorSets.fill(VK_NULL_HANDLE);
 	}
 
 	// 如果不存在任何有效的DescriptorSet 返回false
 	MtlPropDescriptorSets::operator bool() const {
-		for (const _DescSets& sets : m_descriptorSets)
+
+		for (const vk::DescriptorSet& descSet : m_descriptorSets)
 		{
-			for (const vk::DescriptorSet& descSet : sets)
+			if (descSet)
 			{
-				if (descSet)
-				{
-					return true;
-				}
+				return true;
 			}
 		}
+
 		return false;
 	}
 
-	void MtlPropDescriptorSets::Init(const std::array<vk::DescriptorSetLayout, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)>& layouts) {
+	void MtlPropDescriptorSets::Init(const vk::DescriptorSetLayout& layout) {
 		vk::Device& device = vkContext::GetVkDevice();
 
 		vk::DescriptorSetAllocateInfo dsai;
 		dsai
 			.setDescriptorPool(ShaderResourceManager::GetMtlPropDescriptorPool())
-			.setDescriptorSetCount(layouts.size())
-			.setPSetLayouts(layouts.data())
+			.setDescriptorSetCount(1)
+			.setPSetLayouts(&layout)
 			;
 
 		for (int i = 0; i < m_descriptorSets.size(); ++i)
 		{
 			std::vector<vk::DescriptorSet> sets = device.allocateDescriptorSets(dsai);
-			RENDERER_ASSERT(sets.size() == m_descriptorSets[i].size(), "out of bound.");
-			for (int j = 0; j < m_descriptorSets[i].size(); ++j)
-			{
-				m_descriptorSets[i][j] = sets[j];
-			}
+			m_descriptorSets[i] = sets[0];
 		}
 
 	}
 
-	vk::DescriptorSet MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex, ShaderResSpace eSpace)
-	{
-		return m_descriptorSets[nFlightIndex][static_cast<size_t>(eSpace)];
+	void MtlPropDescriptorSets::Release() {
+		vk::Device& device = vkContext::GetVkDevice();
+		device.freeDescriptorSets(ShaderResourceManager::GetMtlPropDescriptorPool(), m_descriptorSets);
 	}
 
-	std::array<vk::DescriptorSet, static_cast<size_t>(ShaderResSpace::ShaderResSpaceCount)> MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex)
+	vk::DescriptorSet MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex)
 	{
 		return m_descriptorSets[nFlightIndex];
 	}
@@ -64,7 +56,7 @@ namespace LT {
 		:m_nID(nID)
 		, m_eMtlType(eType)
 	{
-		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, BindingSpace::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
+		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, ShaderStage::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
 	}
 
 	IMaterial::~IMaterial()
@@ -83,7 +75,7 @@ namespace LT {
 
 	EngineResult IMaterial::SetTransBuffer(ConstBufferHandle nHandle)
 	{
-		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, BindingSpace::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nHandle);
+		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, ShaderStage::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nHandle);
 		return EngineResult::eSuccess;
 	}
 } // namespace
