@@ -40,6 +40,8 @@ using BYTE = uint8_t;
 
 #include "TypeDef.hpp"
 
+#include "MaterialPropDef.hpp"
+
 #include "logger.hpp"
 
 namespace LT {

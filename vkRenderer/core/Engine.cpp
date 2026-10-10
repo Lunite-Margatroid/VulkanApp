@@ -30,9 +30,14 @@
 
 // -- Component --
 #include "CompSprite3D.hpp"
+#include "CompTransform3D.hpp"
 
 
 namespace LT {
+	namespace EngineHelper {
+		
+	}
+
 
 	Renderer* Engine::s_pDefaultRenderer = nullptr;
 
@@ -134,27 +139,18 @@ namespace LT {
 		pImg->AssignMemory(img.GetDataPtr(), img.GetDepth() / 8 * img.GetPixelCount() * img.GetChannal());
 		m_nImageID = pImg->GetImageID();
 
-		MaterialRef refMtl = MaterialManager::CreateMaterial(MaterialType::eMainTexture);
+		MaterialID nMtlID = INVALID_MATERIAL_ID;
+		CreateMaterial(nMtlID, MaterialType::eMainTexture);
+		SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID);
 
-		MaterialMainTexture* pMtl = dynamic_cast<MaterialMainTexture*>(refMtl.GetPtr());
-		pMtl->SetMtlProp(MtlProp::eTexDiffuse, m_nImageID);
-
-		NodeMesh* pNode = dynamic_cast<NodeMesh*>(SceneManager::GetNode(m_nMainScene));
-		if (pNode)
+		for (int i = 0; i < 100; i++)
 		{
-			MeshRef cube = MeshManager::CreateCube(1.0f);
-
-			pNode->SetMesh(cube);
-
-			pNode->AddComponent<ComponentType::eSprite3D>();
-			CompSprite3D* pSprite = dynamic_cast<CompSprite3D*>(pNode->GetComponent(ComponentType::eSprite3D));
-			if (pSprite)
-			{
-				pSprite->SetMesh(cube);
-				pSprite->SetMaterial(refMtl);
-			}
+			NodeID nNode;
+			CreateCubeMeshNode(nNode, 1.f);
+			SetMaterial(nNode, nMtlID);
+			SceneNodeRebase(m_nMainScene, nNode);
+			SetSceneNodePosition(nNode, util::RandomGenerator::RandomSampleSphere(20.f));
 		}
-
 		pDisplayDivice->SetView(m_pView);
 	}
 
@@ -212,11 +208,105 @@ namespace LT {
 		}
 	}
 
+	EngineResult Engine::SceneNodeRebase(NodeID nParient, NodeID nChild)
+	{
+		Node* pParient = SceneManager::GetNode(nParient);
+		Node* pChild = SceneManager::GetNode(nChild);
+
+		if (!pParient || !pChild)
+		{
+			return EngineResult::eNoSceneNode;
+		}
+
+		if (Node* pTemp = pChild->GetParent())
+		{
+			pTemp->RemoveChild(pChild);
+		}
+
+		pParient->AddChild(pChild);
+
+		return EngineResult::eSuccess;
+	}
+
 	EngineResult Engine::DeleteSceneNode(NodeID nNodeID)
 	{
 		SceneManager::ReleaseNode(nNodeID);
 
 		return EngineResult::eSuccess;
+	}
+
+	EngineResult Engine::SetSceneNodePosition(NodeID nNodeID, const std::array<float, 3>& arrPosition)
+	{
+		Node* pNode = SceneManager::GetNode(nNodeID);
+		if (pNode)
+		{
+			if (auto* pTransform = pNode->GetComponent<CompTransform3D>())
+			{
+				pTransform->SetPosition(glm::vec3(arrPosition[0], arrPosition[1], arrPosition[2]));
+				return EngineResult::eSuccess;
+			}
+			else
+			{
+				return EngineResult::eNoComponent;
+			}
+		}
+		else
+			return EngineResult::eNoSceneNode;
+	}
+
+	EngineResult Engine::SetSceneNodeEulerRotation(NodeID nNodeID, const std::array<float, 3>& arrEulerRotation)
+	{
+		Node* pNode = SceneManager::GetNode(nNodeID);
+		if (pNode)
+		{
+			if (auto* pTransform = pNode->GetComponent<CompTransform3D>())
+			{
+				pTransform->SetEulerRotation(glm::vec3(arrEulerRotation[0], arrEulerRotation[1], arrEulerRotation[2]));
+				return EngineResult::eSuccess;
+			}
+			else
+			{
+				return EngineResult::eNoComponent;
+			}
+		}
+		else
+			return EngineResult::eNoSceneNode;
+	}
+
+	EngineResult Engine::SetSceneNodeScale(NodeID nNodeID, const std::array<float, 3>& arrScale)
+	{
+		Node* pNode = SceneManager::GetNode(nNodeID);
+		if (pNode)
+		{
+			if (auto* pTransform = pNode->GetComponent<CompTransform3D>())
+			{
+				pTransform->SetScale(glm::vec3(arrScale[0], arrScale[1], arrScale[2]));
+				return EngineResult::eSuccess;
+			}
+			else
+			{
+				return EngineResult::eNoComponent;
+			}
+		}
+		else
+			return EngineResult::eNoSceneNode;
+	}
+
+	EngineResult Engine::AddComponent(NodeID nNodeID, ComponentType eCompType)
+	{
+		if (Node* pNode = SceneManager::GetNode(nNodeID)) {
+			pNode->AddComponent(eCompType);
+			if (pNode->GetComponent(eCompType))
+			{
+				return EngineResult::eSuccess;
+			}
+			else
+			{
+				return EngineResult::eInvalidParam;
+			}
+		}
+		else
+			return EngineResult::eNoSceneNode;
 	}
 
 	Renderer* Engine::GetDefaultRenderer()
@@ -265,6 +355,69 @@ namespace LT {
 		}
 
 		return EngineResult::eFailed;
+	}
+
+	EngineResult Engine::CreateCubeMeshNode(NodeID& nOutNode, float fSideLength)
+	{
+		nOutNode = SceneManager::CreateNode(NodeType::eNodeMesh);
+		NodeMesh* pNode = reinterpret_cast<NodeMesh*>(SceneManager::GetNode(nOutNode));
+		pNode->SetMesh(MeshManager::CreateCube(fSideLength));
+		return EngineResult::eSuccess;
+	}
+
+	EngineResult Engine::CreateSphereMeshNode(NodeID& nOutNode, float fRadius, uint32_t nLongSubdivision, uint32_t nLatSubdivision)
+	{
+		nOutNode = SceneManager::CreateNode(NodeType::eNodeMesh);
+		NodeMesh* pNode = reinterpret_cast<NodeMesh*>(SceneManager::GetNode(nOutNode));
+		pNode->SetMesh(MeshManager::CreateSphere(fRadius, nLongSubdivision, nLatSubdivision));
+		return EngineResult::eSuccess;
+	}
+
+	EngineResult Engine::CreateMaterial(MaterialID& nOutMtlID, MaterialType eMtlType)
+	{
+		MaterialRef refMtl = MaterialManager::CreateMaterial(eMtlType);
+		refMtl.AddRef();
+		nOutMtlID = refMtl.GetID();
+		MaterialManager::GetInstance().RefIncrease(nOutMtlID);
+		return EngineResult::eSuccess;
+	}
+
+	EngineResult Engine::DeleteMaterial(MaterialID nMtlID)
+	{
+		if (MaterialManager::GetMaterial(nMtlID))
+		{
+			MaterialManager::GetInstance().RefDecrease(nMtlID);
+
+			return EngineResult::eSuccess;
+		}
+		else
+			return EngineResult::eNoMaterial;
+
+	}
+
+	EngineResult Engine::SetMaterialProp(MaterialID nMtlID, MtlProp eProp, const MtlPropVar& vVar)
+	{
+		if (IMaterial* pMtl = MaterialManager::GetMaterial(nMtlID))
+		{
+			return pMtl->SetMtlProp(eProp, vVar);
+		}
+		else
+			return EngineResult::eNoMaterial;
+	}
+
+	EngineResult Engine::SetMaterial(NodeID nNodeID, MaterialID nMtlID)
+	{
+		if (Node* pNode = SceneManager::GetNode(nNodeID))
+		{
+			if (auto* pSprite = pNode->GetComponent<CompSprite3D>()) {
+				pSprite->SetMaterial(MaterialRef(nMtlID));
+				return EngineResult::eSuccess;
+			}
+			else
+				return EngineResult::eNoComponent;
+		}
+		else
+			return EngineResult::eNoSceneNode;
 	}
 
 } // namespace LT

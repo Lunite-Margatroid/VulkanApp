@@ -3,18 +3,28 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 // 使用左手坐标系
 #define GLM_FORCE_LEFT_HANDED
+// 使用实验特性
+// 欧拉角支持
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include "glm/glm.hpp"
 #include "glm/matrix.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtc/type_ptr.hpp"
+// 扩展 欧拉角
+#include "glm/gtx/euler_angles.hpp"
 
 #include <string>
+#include <string_view>
 #include <filesystem>
 #include <fstream>
 #include <map>
 #include <variant>
+#include <array>
+
 
 #include "TypeDef.hpp"
+#include "MaterialPropDef.hpp"
 
 #include "logger.hpp"
 

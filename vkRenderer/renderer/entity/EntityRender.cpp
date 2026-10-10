@@ -5,7 +5,8 @@
 
 namespace LT {
 	EntityRender::EntityRender(EntityID nID)
-		:IEntity(nID)
+		: IEntity(nID)
+		, m_matModule(1.f)
 	{
 	}
 } // namespace LT

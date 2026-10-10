@@ -6,6 +6,8 @@ namespace LT {
 	using FrameIndex = int64_t;
 	using FlightFrameIndex = int64_t;
 
+	using FenceHandle = int64_t;
+	constexpr FenceHandle INVALID_FENCE_HANDLE = -1;
 
 	using BufferID = int64_t;
 	constexpr int64_t INVALID_BUFFER_ID = INVALID_ITEM_ID;
@@ -28,8 +30,8 @@ namespace LT {
 	// 这个枚举要作为索引
 	enum class ComponentType : int {
 		eUnknown = -1,
-		eSprite3D,
 		eTransform3D,
+		eSprite3D,
 		ComponentTypeCount,
 		eCustomedComponent = 8192, // 自定义组件类型起始值
 	};
@@ -62,7 +64,10 @@ namespace LT {
 	enum class EngineResult {
 		eSuccess,
 		eFailed,
-		eInvalidParam
+		eInvalidParam, // 无效参数
+		eNoComponent, // Component不存在
+		eNoSceneNode, // Node 不存在
+		eNoMaterial, // Mtl不存在
 	};
 
 	using ConstBufferHandle = int64_t;
@@ -75,5 +80,8 @@ namespace LT {
 		size_t nSize;
 	};
 
-	using MtlPropVar = std::variant<int, float, ImageID, std::array<float, 2>, std::array<float, 3>, std::array<float, 4>, std::array<int, 2>, std::array<int, 3>, std::array<int, 4>>;
+	using TPropVar = std::variant<int, float, ImageID, std::array<float, 2>, std::array<float, 3>, std::array<float, 4>, std::array<int, 2>, std::array<int, 3>, std::array<int, 4>>;
+
+	using MtlPropVar = TPropVar;
+	using SceneNodePropVar = TPropVar;
 }

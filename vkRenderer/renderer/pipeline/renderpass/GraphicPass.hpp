@@ -5,6 +5,8 @@
 
 #include "SlangCompiler.hpp"
 
+#include "DescriptorSetWrapper.hpp"
+
 namespace LT {
 
 	class SwapChain;
@@ -66,7 +68,7 @@ namespace LT {
 		ShaderModuleInfo m_sShaderModuleInfo;
 
 		// 临时 不由GraphicPass管理
-		std::vector<vk::DescriptorSet> m_vecDescriptorSets;
+		std::vector<DescriptorSetWrapper> m_vecDescriptorSets;
 
 		vk::PipelineLayout m_vkPipelineLayout;
 
@@ -85,7 +87,7 @@ namespace LT {
 
 		void Init(const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout);
 
-		void SetDescriptorSets(const std::vector<vk::DescriptorSet>& vecDescriptorSets);
+		void SetDescriptorSets(const std::vector<DescriptorSetWrapper>& vecDescriptorSets);
 
 		void AddShaderModule(const char* strShaderModule, const std::vector<std::string>& vecDepMod);
 		void AddShaderModule(const std::string& strName, const std::string& strCode, const std::vector<std::string>& vecDepMod);

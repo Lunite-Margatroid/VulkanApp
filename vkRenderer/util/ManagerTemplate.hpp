@@ -53,9 +53,18 @@ namespace LT {
 			return GetPtr();
 		}
 
+		// 慎用
+		// 每主动调用一次AddRef释放时都要主动调用一次Release
+		void AddRef() {
+			TypeRefIncrease{}(m_nID);
+		}
+		// 慎用
+		// 每主动调用一次AddRef释放时都要主动调用一次Release
 		void Release() {
-			TypeRefDecrease{}(m_nID);
-			m_nID = INVALID_ITEM_ID;
+			if (TypeRefDecrease{}(m_nID) == 0)
+			{
+				m_nID = INVALID_ITEM_ID;
+			}
 		}
 
 		operator bool() const {

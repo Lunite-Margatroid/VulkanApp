@@ -13,6 +13,10 @@ namespace LT {
 	}
 
 	void NodeMesh::SetMesh(const MeshRef& refMesh) {
+		if (CompSprite3D* pSprite = GetComponent<CompSprite3D>())
+		{
+			pSprite->SetMesh(refMesh);
+		}
 		m_refMesh = refMesh;
 	}
 

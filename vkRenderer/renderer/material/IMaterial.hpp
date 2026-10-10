@@ -3,11 +3,11 @@
 #include "IRenderStage.hpp"
 #include "RenderPass.hpp"
 
-#include "MaterialPropDef.hpp"
-
 #include "ShaderResourceManager.hpp"
 #include "SamplerManager.h"
 #include "ImageManager.h"
+
+#include "DescriptorSetWrapper.hpp"
 
 namespace LT {
 	struct MaterialSlot {
@@ -39,7 +39,7 @@ namespace LT {
 
 	// 储存材质属性的Desc Set的结构体
 	struct MtlPropDescriptorSets {
-		std::array<vk::DescriptorSet, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_descriptorSets;
+		std::array<DescriptorSetWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_descriptorSets;
 
 		MtlPropDescriptorSets();
 

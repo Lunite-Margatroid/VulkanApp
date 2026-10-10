@@ -65,7 +65,7 @@ namespace LT {
 
 	void ConstBuffer::UpdateConstBuffer(const void* pData, size_t nOffset, size_t nSize)
 	{
-		RENDERER_ASSERT(m_nSize - nOffset > nSize, "out of bounds");
+		RENDERER_ASSERT(m_nSize - nOffset >= nSize, "out of bounds");
 		memcpy(m_pBuffer + nOffset, pData, nSize);
 	}
 	void ConstBuffer::Bind(BindTarget nTarget)

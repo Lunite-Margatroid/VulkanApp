@@ -282,7 +282,7 @@ namespace LT {
 		m_vkPipeline = result.value;
 	}
 
-	void GraphicPass::SetDescriptorSets(const std::vector<vk::DescriptorSet>& vecDescriptorSets)
+	void GraphicPass::SetDescriptorSets(const std::vector<DescriptorSetWrapper>& vecDescriptorSets)
 	{
 		m_vecDescriptorSets = vecDescriptorSets;
 	}
@@ -443,11 +443,18 @@ namespace LT {
 		// 绑定
 		// const buffer
 		// texture resource
+
+		std::vector<vk::DescriptorSet> vecDescriptorSet;
+		for (auto& descSetWrapper : m_vecDescriptorSets)
+		{
+			vecDescriptorSet.push_back(descSetWrapper.GetNativeDescriptorSetWithoutWaiting());
+		}
+
 		cmdBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,
 			m_vkPipelineLayout,
 			0,
-			m_vecDescriptorSets,
+			vecDescriptorSet,
 			VK_NULL_HANDLE
 		);
 
@@ -524,11 +531,20 @@ namespace LT {
 			si.setSignalSemaphores(sSubmitInfo.vecSemToSignal);
 		}
 
+
+		std::vector<vk::Fence> vecFences;
+		for (auto& descSetWrapper : m_vecDescriptorSets)
+		{
+			vecFences.push_back(descSetWrapper.GetFenceDrawing());
+		}
+
 		if (sSubmitInfo.vkFenceToSet)
 		{
+			vecFences.push_back(sSubmitInfo.vkFenceToSet);
+
 			vkContext::GetCmdQueue().submit(
 				si,
-				sSubmitInfo.vkFenceToSet // 需要设置的Fence
+				vecFences // 需要设置的Fence
 			);
 		}
 		else

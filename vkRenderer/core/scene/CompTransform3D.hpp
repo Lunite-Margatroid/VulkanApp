@@ -12,6 +12,7 @@ namespace LT {
 		glm::vec3 m_vScale; // 缩放
 
 		glm::mat4 m_matLocal; // 局部变换矩阵
+		glm::mat4 m_matRelative; // m_matLocal * m_matRelative 即世界矩阵
 		bool m_bLocalDirty; // 局部变换矩阵是否需要重新计算
 
 	public:
@@ -26,9 +27,9 @@ namespace LT {
 		void SetPosition(const glm::vec3& vPosition);
 		const glm::vec3& GetPosition() const;
 
-		// 设置欧拉角旋转 XYZ内旋
+		// 设置欧拉角旋转 XYZ外旋
 		void SetEulerRotation(const glm::vec3& vEulerRotation);
-		// 获取欧拉角旋转 XYZ内旋
+		// 获取欧拉角旋转 XYZ外旋
 		glm::vec3 GetEulerRotation() const;
 
 		void SetRotation(const glm::quat& qRotation);
@@ -39,5 +40,10 @@ namespace LT {
 
 		// 获取局部变换矩阵
 		const glm::mat4& GetLocalMatrix();
+
+		// 获取全局变换矩阵
+		const glm::mat4& GetGlobalMatrix();
+		// 一般输入父节点的世界矩阵
+		void UpdateGlobalMatrix(const glm::mat4& mat);
 	};
 } // namespace LT

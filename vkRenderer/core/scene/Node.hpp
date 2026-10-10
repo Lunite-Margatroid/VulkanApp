@@ -5,7 +5,7 @@
 #include <array>
 #include "IComponent.hpp"
 #include "CompSprite3D.hpp"
-
+#include "CompTransform3D.hpp"
 namespace LT {
 	// 组件相关
 	// Component
@@ -16,6 +16,10 @@ namespace LT {
 		if constexpr (std::is_same<CompSprite3D, TComponent>{})
 		{
 			return ComponentType::eSprite3D;
+		}
+		else if constexpr (std::is_same<CompTransform3D, TComponent>{})
+		{
+			return ComponentType::eTransform3D;
 		}
 		else
 		{
@@ -29,8 +33,13 @@ namespace LT {
 	// 映射
 	// ---------------- 枚举->Type ---------------------
 	template<ComponentType eType>
-		requires(eType == ComponentType::eSprite3D)
-	struct ComponentTypeTraits { using type = CompSprite3D; };
+	struct ComponentTypeTraits;
+
+	template<>
+	struct ComponentTypeTraits<ComponentType::eTransform3D> { using type = CompTransform3D; };
+
+	template<>
+	struct ComponentTypeTraits<ComponentType::eSprite3D> { using type = CompSprite3D; };
 
 
 
@@ -81,10 +90,13 @@ namespace LT {
 			}
 		}
 
+		void AddComponent(ComponentType eType);
+
 		void EraseComponent(ComponentType eType);
 
 		// 遍历当前节点及其子节点
-		void ForEach(std::function<void(Node*)> func);
+		// 广度优先
+		void ForEachBFS_PreOrder(std::function<void(Node*)> func);
 
 		template<typename TComponent>
 		TComponent* GetComponent() {
@@ -93,6 +105,10 @@ namespace LT {
 
 
 		IComponent* GetComponent(ComponentType eType);
+
+		// 获取变换矩阵
+		// 如果没有Transform Component 将从它的父节点获取
+		glm::mat4 GetGlobalMat();
 	};
 
 } // namespace LT

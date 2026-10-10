@@ -8,6 +8,9 @@
 namespace LT {
 	void RenderStageOpaqueForward::Execute(const StageExecuteInfo& sExecuteInfo)
 	{
+		if (sExecuteInfo.vecRenderEntity.size() <= 0)
+			return;
+
 		EntityDrawInfo sDrawInfo;
 		sDrawInfo.nWidth = sExecuteInfo.nWidth;
 		sDrawInfo.nHeight = sExecuteInfo.nHeight;
@@ -17,15 +20,20 @@ namespace LT {
 		sDrawInfo.pRenderView = sExecuteInfo.pRenderView;
 		sDrawInfo.eRenderStage = GetRenderStageType();
 
-		if (!sExecuteInfo.vecSemSignal.empty())
-		{
-			sDrawInfo.vecSemSignal = sExecuteInfo.vecSemSignal;
-		}
-
 		if (!sExecuteInfo.vecSemWait.empty())
 		{
 			sDrawInfo.vecSemWait = sExecuteInfo.vecSemWait;
 			sDrawInfo.vecSemWaitMasks = sExecuteInfo.vecSemWaitMask;
+		}
+
+		for (int i = 0; i < sExecuteInfo.vecRenderEntity.size() - 1; i++)
+		{
+			sExecuteInfo.vecRenderEntity[i]->Draw(sDrawInfo);
+		}
+
+		if (!sExecuteInfo.vecSemSignal.empty())
+		{
+			sDrawInfo.vecSemSignal = sExecuteInfo.vecSemSignal;
 		}
 
 		if (sExecuteInfo.fenceSet)
@@ -33,9 +41,6 @@ namespace LT {
 			sDrawInfo.vkFenceSet = sExecuteInfo.fenceSet;
 		}
 
-		for (auto* pRenderEntity : sExecuteInfo.vecRenderEntity)
-		{
-			pRenderEntity->Draw(sDrawInfo);
-		}
+		sExecuteInfo.vecRenderEntity.back()->Draw(sDrawInfo);
 	}
 } // namespace LT

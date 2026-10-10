@@ -7,13 +7,12 @@ namespace LT {
 
 	MtlPropDescriptorSets::MtlPropDescriptorSets()
 	{
-		m_descriptorSets.fill(VK_NULL_HANDLE);
 	}
 
 	// 如果不存在任何有效的DescriptorSet 返回false
 	MtlPropDescriptorSets::operator bool() const {
 
-		for (const vk::DescriptorSet& descSet : m_descriptorSets)
+		for (const DescriptorSetWrapper& descSet : m_descriptorSets)
 		{
 			if (descSet)
 			{
@@ -44,12 +43,15 @@ namespace LT {
 
 	void MtlPropDescriptorSets::Release() {
 		vk::Device& device = vkContext::GetVkDevice();
-		device.freeDescriptorSets(ShaderResourceManager::GetMtlPropDescriptorPool(), m_descriptorSets);
+		for (auto& descriptorSet : m_descriptorSets)
+		{
+			descriptorSet.Destroy(ShaderResourceManager::GetMtlPropDescriptorPool());
+		}
 	}
 
 	vk::DescriptorSet MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex)
 	{
-		return m_descriptorSets[nFlightIndex];
+		return m_descriptorSets[nFlightIndex].GetNativeDescriptorSet();
 	}
 
 	IMaterial::IMaterial(MaterialID nID, MaterialType eType)

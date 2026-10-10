@@ -8,6 +8,7 @@ namespace LT {
 		, m_qRotation(glm::quat(1.f, 0.f, 0.f, 0.f))
 		, m_vScale(1.f)
 		, m_matLocal(glm::mat4(1.f))
+		, m_matRelative(1.f)
 		, m_bLocalDirty(false)
 	{
 	}
@@ -22,21 +23,18 @@ namespace LT {
 	}
 
 	void CompTransform3D::SetEulerRotation(const glm::vec3& vEulerRotation) {
-		// XYZ内旋: 依次绕局部X、Y、Z轴旋转 等价于R = Rx * Ry * Rz
-		glm::mat4 mRotation = glm::rotate(glm::mat4(1.f), vEulerRotation.x, VEC3_AXIS_X)
-			* glm::rotate(glm::mat4(1.f), vEulerRotation.y, VEC3_AXIS_Y)
-			* glm::rotate(glm::mat4(1.f), vEulerRotation.z, VEC3_AXIS_Z);
-		m_qRotation = glm::quat_cast(mRotation);
+
+		m_qRotation = glm::quat_cast(glm::eulerAngleZYX(vEulerRotation.z, vEulerRotation.y, vEulerRotation.x));
 		m_bLocalDirty = true;
 	}
 
 	glm::vec3 CompTransform3D::GetEulerRotation() const {
-		// XYZ内旋: R = Rx * Ry * Rz
-		glm::mat3 mRotation = glm::mat3_cast(m_qRotation);
-		float fRotX = glm::atan(-mRotation[2][1], mRotation[2][2]); // atan2(-R23, R33)
-		float fRotY = glm::asin(mRotation[2][0]); // asin(R13)
-		float fRotZ = glm::atan(-mRotation[1][0], mRotation[0][0]); // atan2(-R12, R11)
-		return glm::vec3(fRotX, fRotY, fRotZ);
+		glm::mat4 mRotation = glm::mat4_cast(m_qRotation);
+
+		glm::vec3 vEuler;
+		glm::extractEulerAngleXYZ(mRotation, vEuler.x, vEuler.y, vEuler.z);
+
+		return vEuler;
 	}
 
 	void CompTransform3D::SetRotation(const glm::quat& qRotation) {
@@ -66,5 +64,13 @@ namespace LT {
 			m_bLocalDirty = false;
 		}
 		return m_matLocal;
+	}
+	const glm::mat4& CompTransform3D::GetGlobalMatrix()
+	{
+		return GetLocalMatrix() * m_matRelative;
+	}
+	void CompTransform3D::UpdateGlobalMatrix(const glm::mat4& mat)
+	{
+		m_matRelative = mat;
 	}
 } // namespace LT

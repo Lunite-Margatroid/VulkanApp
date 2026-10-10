@@ -52,7 +52,7 @@ namespace LT {
 	}
 
 	void EntityRenderMesh::UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) {
-		sDrawInfo.pRenderView->SetModelMat(sDrawInfo.matModule);
+		sDrawInfo.pRenderView->SetModelMat(m_matModule);
 		if (RenderViewSingleCamera* pRenderView = dynamic_cast<RenderViewSingleCamera*>(sDrawInfo.pRenderView))
 		{
 			ShaderResourceManager::UpdateTransBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex], pRenderView->GetTransBuffer());
@@ -63,10 +63,15 @@ namespace LT {
 		}
 	}
 
+	void EntityRender::SetModuleMat(const glm::mat4& matMod)
+	{
+		m_matModule = matMod;
+	}
+
 	void EntityRenderMesh::Draw(const EntityDrawInfo& sDrawInfo)
 	{
 		// 设置变换矩阵
-		sDrawInfo.pRenderView->SetModelMat(sDrawInfo.matModule);
+		sDrawInfo.pRenderView->SetModelMat(m_matModule);
 		// TODO: 处理变换矩阵的更新
 		UpdateTransBuffer(sDrawInfo);
 		ShaderResourceManager::UpdateDeviceTransBuffer();

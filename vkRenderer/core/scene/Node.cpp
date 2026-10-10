@@ -10,6 +10,7 @@ namespace LT {
 		: m_id(id), m_pParent(nullptr)
 	{
 		m_arrComponents.fill(nullptr);
+		AddComponent<ComponentType::eTransform3D>();
 	}
 
 	Node::~Node() {
@@ -59,6 +60,20 @@ namespace LT {
 		return true;
 	}
 
+	void Node::AddComponent(ComponentType eType)
+	{
+		switch (eType) {
+			case ComponentType::eTransform3D:
+				AddComponent<ComponentType::eTransform3D>();
+				break;
+			case ComponentType::eSprite3D:
+				AddComponent<ComponentType::eSprite3D>();
+				break;
+			default:
+				break;
+		};
+	}
+
 	void Node::EraseComponent(ComponentType eType)
 	{
 		if (m_arrComponents[static_cast<int>(eType)])
@@ -68,12 +83,12 @@ namespace LT {
 		}
 	}
 
-	void Node::ForEach(std::function<void(Node*)> func)
+	void Node::ForEachBFS_PreOrder(std::function<void(Node*)> func)
 	{
 		func(this);
 		for (Node* pNode : m_listChildren)
 		{
-			pNode->ForEach(func);
+			pNode->ForEachBFS_PreOrder(func);
 		}
 	}
 
@@ -81,5 +96,18 @@ namespace LT {
 	{
 		RENDERER_ASSERT(IsValidCompnentType(eType), "Invalid Component Type.");
 		return m_arrComponents[static_cast<int>(eType)];
+	}
+	glm::mat4 Node::GetGlobalMat()
+	{
+		if (auto* pCompTrans = GetComponent<CompTransform3D>())
+		{
+			return pCompTrans->GetGlobalMatrix();
+		}
+		else if(GetParent())
+		{
+			return GetParent()->GetGlobalMat();
+		}
+
+		return glm::mat4(1.f);
 	}
 } // namespace LT
