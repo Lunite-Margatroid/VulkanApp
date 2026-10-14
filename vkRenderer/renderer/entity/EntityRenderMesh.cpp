@@ -68,56 +68,53 @@ namespace LT {
 		m_matModule = matMod;
 	}
 
-	void EntityRenderMesh::Draw(const EntityDrawInfo& sDrawInfo)
+	void EntityRenderMesh::Draw(EntityDrawInfo& sInOutDrawInfo)
 	{
 		// 设置变换矩阵
-		sDrawInfo.pRenderView->SetModelMat(m_matModule);
+		sInOutDrawInfo.pRenderView->SetModelMat(m_matModule);
 		// TODO: 处理变换矩阵的更新
-		UpdateTransBuffer(sDrawInfo);
+		UpdateTransBuffer(sInOutDrawInfo);
 		ShaderResourceManager::UpdateDeviceTransBuffer();
 
 		// TransBuffer绑定到ShaderResource
-		m_refMaterial->SetTransBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex]);
+		m_refMaterial->SetTransBuffer(m_arrConstBufferVertTrans[sInOutDrawInfo.nFlightFrameIndex]);
 
 		MaterialBindInfo sBindInfo;
-		sBindInfo.eStage = sDrawInfo.eRenderStage;
+		sBindInfo.eStage = sInOutDrawInfo.eRenderStage;
 		sBindInfo.nFlag = m_eRenderPassFlag;
-		sBindInfo.nFlightIndex = sDrawInfo.nFlightFrameIndex;
+		sBindInfo.nFlightIndex = sInOutDrawInfo.nFlightFrameIndex;
 
 		GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(m_refMaterial->Bind(sBindInfo));
 		if (pRenderPass)
 		{
 			RecordCommandInfo sRecordInfo;
-			sRecordInfo.nWidth = sDrawInfo.nWidth;
-			sRecordInfo.nHeight = sDrawInfo.nHeight;
-			sRecordInfo.nDepthStencilID = sDrawInfo.nDepthBuffer;
-			sRecordInfo.vecImageIDColor = sDrawInfo.vecRenderTargets;
+			sRecordInfo.nWidth = sInOutDrawInfo.nWidth;
+			sRecordInfo.nHeight = sInOutDrawInfo.nHeight;
+			sRecordInfo.nDepthStencilID = sInOutDrawInfo.nDepthBuffer;
+			sRecordInfo.vecImageIDColor = sInOutDrawInfo.vecRenderTargets;
 			sRecordInfo.vecVertexBufferID.push_back(m_pVertexBuffer->GetBufferID());
 			sRecordInfo.nIndexBufferID = m_pIndexBuffer->GetBufferID();
-			sRecordInfo.nFlightFrameIndex = sDrawInfo.nFlightFrameIndex;
+			sRecordInfo.nFlightFrameIndex = sInOutDrawInfo.nFlightFrameIndex;
 
 			pRenderPass->RecordCommand(sRecordInfo);
 
 			GraphicSubmitInfo sSubmitInfo;
-			sSubmitInfo.nFlightFrameIndex = sDrawInfo.nFlightFrameIndex;
+			sSubmitInfo.nFlightFrameIndex = sInOutDrawInfo.nFlightFrameIndex;
 
-			if (!sDrawInfo.vecSemWait.empty())
+			if (!sInOutDrawInfo.vecSemWait.empty())
 			{
-				sSubmitInfo.vecSemToWait = sDrawInfo.vecSemWait;
-				sSubmitInfo.vecSemWaitMasks = sDrawInfo.vecSemWaitMasks;
+				sSubmitInfo.vecSemToWait = sInOutDrawInfo.vecSemWait;
+				sSubmitInfo.vecSemWaitMasks = sInOutDrawInfo.vecSemWaitMasks;
 			}
 
-			if (!sDrawInfo.vecSemSignal.empty())
+			if (!sInOutDrawInfo.vecSemSignal.empty())
 			{
-				sSubmitInfo.vecSemToSignal = sDrawInfo.vecSemSignal;
-			}
-
-			if (sDrawInfo.vkFenceSet)
-			{
-				sSubmitInfo.vkFenceToSet = sDrawInfo.vkFenceSet;
+				sSubmitInfo.vecSemToSignal = sInOutDrawInfo.vecSemSignal;
 			}
 
 			pRenderPass->Submit(sSubmitInfo);
+
+			sInOutDrawInfo.refFence = sSubmitInfo.refFence;
 		}
 	}
 }

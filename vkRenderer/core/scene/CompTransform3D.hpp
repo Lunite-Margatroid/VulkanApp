@@ -42,7 +42,7 @@ namespace LT {
 		const glm::mat4& GetLocalMatrix();
 
 		// 获取全局变换矩阵
-		const glm::mat4& GetGlobalMatrix();
+		glm::mat4 GetGlobalMatrix();
 		// 一般输入父节点的世界矩阵
 		void UpdateGlobalMatrix(const glm::mat4& mat);
 	};

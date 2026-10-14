@@ -2,6 +2,7 @@
 #pragma once
 #include "DeviceImage.h"
 #include "renderView/RenderView.hpp"
+#include "FenceManager.hpp"
 
 namespace LT {
 	class EntityRender;
@@ -20,7 +21,9 @@ namespace LT {
 
 		std::vector<vk::Semaphore> vecSemSignal;
 
-		vk::Fence fenceSet;
+		// 当前Stage最后一次Submit的Fence
+		// 通常作为输出参数
+		FenceRef refFence;
 
 		StageExecuteInfo() 
 			: nWidth(0)
@@ -28,6 +31,7 @@ namespace LT {
 			, nFlightFrameIndex(-1)
 			, nDepthBufferID(INVALID_IMAGE_ID)
 			, pRenderView(nullptr)
+			, refFence(INVALID_FENCE_HANDLE)
 		{}
 	};
 
@@ -38,7 +42,7 @@ namespace LT {
 	
 
 		virtual RenderStageType GetRenderStageType() const = 0;
-		virtual void Execute(const StageExecuteInfo& sExecuteInfo) = 0;
+		virtual void Execute(StageExecuteInfo& sInOutExecuteInfo) = 0;
 	};
 
 } // namespace LT

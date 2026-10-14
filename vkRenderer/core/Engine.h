@@ -4,6 +4,8 @@
 
 #include "DisplaySurface.hpp"
 
+
+
 namespace LT {
 	class Renderer;
 	class View;
@@ -74,7 +76,7 @@ namespace LT {
 		EngineResult CreateDisplaySurface(DisplaySurface*& pOutSurface, vk::SurfaceKHR, uint32_t nWidth, uint32_t nHeight, DisplayDeviceFlag nFlag);
 		EngineResult DeleteDisplaySurface(DisplaySurface* pDiplaySurface);
 
-		// ----------------- build-in static Mesh --------------------
+		// ----------------- built-in static Mesh --------------------
 		EngineResult CreateCubeMeshNode(NodeID& nOutNode, float fSideLength);
 		EngineResult CreateSphereMeshNode(NodeID& nOutNode, float fRadius, uint32_t nLongSubdivision, uint32_t nLatSubdivision);
 

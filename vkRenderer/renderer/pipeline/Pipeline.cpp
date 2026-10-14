@@ -64,36 +64,33 @@ namespace LT {
 		}
 	}
 
-	void Pipeline::Execute(const FrameInfo& sFrameInfo)
+	void Pipeline::Execute(FrameInfo& sInOutFrameInfo)
 	{
 		RenderStageOpaqueForward stage;
 
 		StageExecuteInfo sStageInfo;
-		sStageInfo.vecRenderTarget = sFrameInfo.vecRenderTargets;
-		sStageInfo.nDepthBufferID = m_vecDepthBuffer[sFrameInfo.nFightFrameIndex]->GetImageID();
-		sStageInfo.vecRenderEntity = sFrameInfo.vecEntityRender;
-		sStageInfo.pRenderView = sFrameInfo.pRenderView;
-		sStageInfo.nFlightFrameIndex = sFrameInfo.nFightFrameIndex;
+		sStageInfo.vecRenderTarget = sInOutFrameInfo.vecRenderTargets;
+		sStageInfo.nDepthBufferID = m_vecDepthBuffer[sInOutFrameInfo.nFightFrameIndex]->GetImageID();
+		sStageInfo.vecRenderEntity = sInOutFrameInfo.vecEntityRender;
+		sStageInfo.pRenderView = sInOutFrameInfo.pRenderView;
+		sStageInfo.nFlightFrameIndex = sInOutFrameInfo.nFightFrameIndex;
 		sStageInfo.nWidth = m_nWidth;
 		sStageInfo.nHeight = m_nHeight;
 
-		if (sFrameInfo.semAcquiring)
+		if (sInOutFrameInfo.semAcquiring)
 		{
-			sStageInfo.vecSemWait.push_back(sFrameInfo.semAcquiring);
+			sStageInfo.vecSemWait.push_back(sInOutFrameInfo.semAcquiring);
 			sStageInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eColorAttachmentOutput);
 		}
 
-		if (sFrameInfo.semDrawing)
+		if (sInOutFrameInfo.semDrawing)
 		{
-			sStageInfo.vecSemSignal.push_back(sFrameInfo.semDrawing);
-		}
-
-		if (sFrameInfo.fenceDrawing)
-		{
-			sStageInfo.fenceSet = sFrameInfo.fenceDrawing;
+			sStageInfo.vecSemSignal.push_back(sInOutFrameInfo.semDrawing);
 		}
 		
 		stage.Execute(sStageInfo);
+
+		sInOutFrameInfo.fenceDrawing = sStageInfo.refFence;
 	}
 
 } //namespace LT

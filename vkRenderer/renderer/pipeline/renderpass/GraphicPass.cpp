@@ -508,9 +508,9 @@ namespace LT {
 
 	}
 
-	void GraphicPass::Submit(const GraphicSubmitInfo& sSubmitInfo) {
+	void GraphicPass::Submit(GraphicSubmitInfo& sInOutSubmitInfo) {
 		vk::Device& device = vkContext::GetVkDevice();
-		vk::CommandBuffer& cmdBuffer = vkContext::GetCmdBuffer(sSubmitInfo.nFlightFrameIndex);
+		vk::CommandBuffer& cmdBuffer = vkContext::GetCmdBuffer(sInOutSubmitInfo.nFlightFrameIndex);
 
 		// 提交信息
 		vk::SubmitInfo si = {};
@@ -520,36 +520,27 @@ namespace LT {
 			;
 
 		// 需要等待的信号量
-		if (sSubmitInfo.vecSemToWait.size() > 0)
+		if (sInOutSubmitInfo.vecSemToWait.size() > 0)
 		{
-			si.setWaitSemaphores(sSubmitInfo.vecSemToWait);
-			si.setWaitDstStageMask(sSubmitInfo.vecSemWaitMasks);
+			si.setWaitSemaphores(sInOutSubmitInfo.vecSemToWait);
+			si.setWaitDstStageMask(sInOutSubmitInfo.vecSemWaitMasks);
 		}
 		// 需要发射的信号量
-		if (sSubmitInfo.vecSemToSignal.size() > 0)
+		if (sInOutSubmitInfo.vecSemToSignal.size() > 0)
 		{
-			si.setSignalSemaphores(sSubmitInfo.vecSemToSignal);
+			si.setSignalSemaphores(sInOutSubmitInfo.vecSemToSignal);
 		}
 
+		// 本次Submit的Fence
+		sInOutSubmitInfo.refFence = FenceManager::CreateFence();
 
-		std::vector<vk::Fence> vecFences;
-		for (auto& descSetWrapper : m_vecDescriptorSets)
-		{
-			vecFences.push_back(descSetWrapper.GetFenceDrawing());
-		}
+		vkContext::GetCmdQueue().submit(
+			si,
+			sInOutSubmitInfo.refFence.GetNativeFence()
+		);
 
-		if (sSubmitInfo.vkFenceToSet)
-		{
-			vecFences.push_back(sSubmitInfo.vkFenceToSet);
+		// 为DescriptorSet设置一个Fence
+		m_vecDescriptorSets[sInOutSubmitInfo.nFlightFrameIndex].SetFenceDrawing(sInOutSubmitInfo.refFence);
 
-			vkContext::GetCmdQueue().submit(
-				si,
-				vecFences // 需要设置的Fence
-			);
-		}
-		else
-		{
-			vkContext::GetCmdQueue().submit(si);
-		}
 	}
 } // namespace LT

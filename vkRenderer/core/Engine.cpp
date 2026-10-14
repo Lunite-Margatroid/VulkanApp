@@ -11,6 +11,7 @@
 #include "SceneManager.hpp"
 #include "NodeMesh.hpp"
 
+// -- Resource Managers --
 #include "DeviceMemoryManager.h"
 #include "BufferManager.h"
 #include "MeshManager.hpp"
@@ -25,6 +26,8 @@
 
 #include "EntityManager.hpp"
 
+#include "FenceManager.hpp"
+
 // -- Image Process --
 #include "LunarImageIO.hpp"
 
@@ -32,6 +35,8 @@
 #include "CompSprite3D.hpp"
 #include "CompTransform3D.hpp"
 
+// -- Display Window --
+#include "DisplayWindowSurface.hpp"
 
 namespace LT {
 	namespace EngineHelper {
@@ -72,6 +77,7 @@ namespace LT {
 	{
 		vkContext::InitVulkanDevice(surface);
 
+		FenceManager::Init();
 
 		DeviceMemoryManager::Init();
 		BufferManager::Init();
@@ -112,6 +118,8 @@ namespace LT {
 		BufferManager::Release();
 
 		DeviceMemoryManager::Release();
+
+		FenceManager::Release();
 
 		vkContext::Release();
 	}
@@ -335,7 +343,7 @@ namespace LT {
 	}
 
 	EngineResult Engine::CreateDisplaySurface(DisplaySurface* & pOutDisplaySurface, vk::SurfaceKHR surface, uint32_t nWidth, uint32_t nHeight, DisplayDeviceFlag nFlag) {
-		pOutDisplaySurface = new DisplaySurface(surface, nWidth, nHeight);
+		pOutDisplaySurface = new DisplayWindowSurface(surface, nWidth, nHeight);
 
 		if (pOutDisplaySurface)
 		{

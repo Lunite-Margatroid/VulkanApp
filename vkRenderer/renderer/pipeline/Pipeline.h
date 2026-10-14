@@ -1,6 +1,5 @@
 #pragma once
 // material
-#include "MaterialMainTexture.hpp"
 #include "MaterialManager.hpp"
 // Mesh
 #include "MeshManager.hpp"
@@ -27,6 +26,9 @@
 
 // Render Stage
 #include "RenderStageOpaqueForward.hpp"
+
+// Fence Manager
+#include "FenceManager.hpp"
 
 namespace LT {
 
@@ -59,7 +61,10 @@ namespace LT {
 
 		// 渲染完成
 		vk::Semaphore semDrawing;
-		vk::Fence fenceDrawing;
+
+		// 当前帧最后一次Submit的Fence
+		// 通常作为输出参数
+		FenceRef fenceDrawing;
 
 		uint32_t nWidth;
 		uint32_t nHeight;
@@ -84,7 +89,7 @@ namespace LT {
 
 		void Resize(uint32_t nWidth, uint32_t nHeight);
 
-		void Execute(const FrameInfo& sFrameInfo);
+		void Execute(FrameInfo& sInOutFrameInfo);
 
 
 		uint32_t GetWidth() const { return m_nWidth; }

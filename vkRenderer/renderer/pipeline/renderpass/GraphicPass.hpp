@@ -7,6 +7,8 @@
 
 #include "DescriptorSetWrapper.hpp"
 
+#include "FenceManager.hpp"
+
 namespace LT {
 
 	class SwapChain;
@@ -34,10 +36,11 @@ namespace LT {
 		// size和vecSemToWait一致
 		std::vector<vk::PipelineStageFlags> vecSemWaitMasks;
 		std::vector<vk::Semaphore> vecSemToSignal;
-		vk::Fence vkFenceToSet;
+		FenceRef refFence;
 
 		GraphicSubmitInfo()
-			:nFlightFrameIndex(0)
+			: nFlightFrameIndex(0)
+			, refFence(INVALID_FENCE_HANDLE)
 		{}
 	};
 
@@ -96,7 +99,7 @@ namespace LT {
 
 		void RecordCommand(const RecordCommandInfo& sRecordInfo);
 
-		void Submit(const GraphicSubmitInfo& sSubmitInfo);
+		void Submit(GraphicSubmitInfo& sInOutSubmitInfo);
 
 	public:
 		static void GenVertexAttributeDesc(VertexChannelFlag nVertexChannelFlag, std::vector<vk::VertexInputBindingDescription>& vecInputBindDesc, std::vector<vk::VertexInputAttributeDescription>& vertDesc);

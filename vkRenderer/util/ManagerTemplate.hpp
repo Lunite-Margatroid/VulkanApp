@@ -4,6 +4,7 @@ namespace LT {
 
 	template<typename TypeID, typename T, typename TypeGetPtr, typename TypeRefIncrease, typename TypeRefDecrease>
 	class ResourceRef {
+	protected:
 		// 默认初始化为无效ID：即使某个构造函数漏写初始化列表，也不会读到未初始化值
 		TypeID m_nID = INVALID_ITEM_ID;
 	public:

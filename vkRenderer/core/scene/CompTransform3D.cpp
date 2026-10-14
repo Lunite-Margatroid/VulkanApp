@@ -65,7 +65,7 @@ namespace LT {
 		}
 		return m_matLocal;
 	}
-	const glm::mat4& CompTransform3D::GetGlobalMatrix()
+	glm::mat4 CompTransform3D::GetGlobalMatrix()
 	{
 		return GetLocalMatrix() * m_matRelative;
 	}

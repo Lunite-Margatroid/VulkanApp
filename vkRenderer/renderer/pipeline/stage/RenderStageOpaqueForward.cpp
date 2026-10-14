@@ -6,41 +6,39 @@
 #include "EntityRender.hpp"
 
 namespace LT {
-	void RenderStageOpaqueForward::Execute(const StageExecuteInfo& sExecuteInfo)
+	void RenderStageOpaqueForward::Execute(StageExecuteInfo& sInOutExecuteInfo)
 	{
-		if (sExecuteInfo.vecRenderEntity.size() <= 0)
+		if (sInOutExecuteInfo.vecRenderEntity.size() <= 0)
 			return;
 
 		EntityDrawInfo sDrawInfo;
-		sDrawInfo.nWidth = sExecuteInfo.nWidth;
-		sDrawInfo.nHeight = sExecuteInfo.nHeight;
-		sDrawInfo.nFlightFrameIndex = sExecuteInfo.nFlightFrameIndex;
-		sDrawInfo.nDepthBuffer = sExecuteInfo.nDepthBufferID;
-		sDrawInfo.vecRenderTargets = sExecuteInfo.vecRenderTarget;
-		sDrawInfo.pRenderView = sExecuteInfo.pRenderView;
+		sDrawInfo.nWidth = sInOutExecuteInfo.nWidth;
+		sDrawInfo.nHeight = sInOutExecuteInfo.nHeight;
+		sDrawInfo.nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
+		sDrawInfo.nDepthBuffer = sInOutExecuteInfo.nDepthBufferID;
+		sDrawInfo.vecRenderTargets = sInOutExecuteInfo.vecRenderTarget;
+		sDrawInfo.pRenderView = sInOutExecuteInfo.pRenderView;
 		sDrawInfo.eRenderStage = GetRenderStageType();
 
-		if (!sExecuteInfo.vecSemWait.empty())
+		if (!sInOutExecuteInfo.vecSemWait.empty())
 		{
-			sDrawInfo.vecSemWait = sExecuteInfo.vecSemWait;
-			sDrawInfo.vecSemWaitMasks = sExecuteInfo.vecSemWaitMask;
+			sDrawInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
+			sDrawInfo.vecSemWaitMasks = sInOutExecuteInfo.vecSemWaitMask;
 		}
 
-		for (int i = 0; i < sExecuteInfo.vecRenderEntity.size() - 1; i++)
+		// 前n-1个渲染实体
+		for (int i = 0; i < sInOutExecuteInfo.vecRenderEntity.size() - 1; i++)
 		{
-			sExecuteInfo.vecRenderEntity[i]->Draw(sDrawInfo);
+			sInOutExecuteInfo.vecRenderEntity[i]->Draw(sDrawInfo);
+		}
+		// 最后一个渲染实体
+		if (!sInOutExecuteInfo.vecSemSignal.empty())
+		{
+			sDrawInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
 		}
 
-		if (!sExecuteInfo.vecSemSignal.empty())
-		{
-			sDrawInfo.vecSemSignal = sExecuteInfo.vecSemSignal;
-		}
+		sInOutExecuteInfo.vecRenderEntity.back()->Draw(sDrawInfo);
+		sInOutExecuteInfo.refFence = sDrawInfo.refFence;
 
-		if (sExecuteInfo.fenceSet)
-		{
-			sDrawInfo.vkFenceSet = sExecuteInfo.fenceSet;
-		}
-
-		sExecuteInfo.vecRenderEntity.back()->Draw(sDrawInfo);
 	}
 } // namespace LT

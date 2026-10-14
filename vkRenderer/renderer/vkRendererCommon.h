@@ -46,6 +46,8 @@ using BYTE = uint8_t;
 
 namespace LT {
 
+	constexpr unsigned int RENDERER_DEFAULT_FLIGHT_FRAME_NUM = 2u;
+
 	enum class RenderStageType : int {
 		eUnknown = -1,
 		eOpaqueForward,

@@ -32,7 +32,7 @@ namespace LT {
 		void SetIndexBuffer(IndexBuffer* pIndex);
 
 		void UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) override;
-		void Draw(const EntityDrawInfo& sDrawInfo) override;
+		void Draw(EntityDrawInfo& sInOutDrawInfo) override;
 
 		void SetRenderPassFlag(RenderPassFlag nFlag) { m_eRenderPassFlag = nFlag; }
 	};

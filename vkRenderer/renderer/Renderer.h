@@ -32,6 +32,6 @@ namespace LT {
 		void SetProjectionMat(const glm::mat4& matProjection);
 		void SetCameraPos(const glm::vec4& vec4CameraPos);
 
-		void DrawFrame(const FrameInfo& sFrameInfo);
+		void DrawFrame(FrameInfo& sInOutFrameInfo);
 	};
 } // namespace LT

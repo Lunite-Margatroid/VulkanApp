@@ -20,7 +20,9 @@ namespace LT {
 
 		std::vector<vk::Semaphore> vecSemSignal;
 
-		vk::Fence vkFenceSet;
+		// 最后一次Submit的Fence
+		// 通常作为输出参数
+		FenceRef refFence;
 
 		EntityDrawInfo() 
 			: nWidth(0)
@@ -29,7 +31,7 @@ namespace LT {
 			, eRenderStage(RenderStageType::eUnknown)
 			, nDepthBuffer(INVALID_IMAGE_ID)
 			, pRenderView(nullptr)
-			, vkFenceSet(VK_NULL_HANDLE)
+			, refFence(INVALID_FENCE_HANDLE)
 		{
 			
 		}
@@ -49,7 +51,7 @@ namespace LT {
 		EntityRender& operator = (EntityRender&&) = delete;
 		EntityRender& operator = (const EntityRender&) = delete;
 
-		virtual void Draw(const EntityDrawInfo& sDrawInfo) = 0;
+		virtual void Draw(EntityDrawInfo& sInOutDrawInfo) = 0;
 
 		virtual void UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) = 0;
 

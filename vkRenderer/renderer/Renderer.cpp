@@ -51,10 +51,8 @@ namespace LT {
 		m_pRenderView->SetCameraPos(vec4CameraPos);
 	}
 
-	void Renderer::DrawFrame(const FrameInfo& sFrameInfo) {
+	void Renderer::DrawFrame(FrameInfo& sInOutFrameInfo) {
 		vk::Device& device = vkContext::GetVkDevice();		
-
-		FrameInfo sPipelineFrameInfo = sFrameInfo;
 
 		// Update RenderView
 		Camera* pCamera = m_pView->GetCamera();
@@ -65,12 +63,12 @@ namespace LT {
 		
 
 		// 收集RenderEntity
-		sPipelineFrameInfo.vecEntityRender = m_pView->GetRenderEntity();
-		sPipelineFrameInfo.pRenderView = m_pRenderView.get();
+		sInOutFrameInfo.vecEntityRender = m_pView->GetRenderEntity();
+		sInOutFrameInfo.pRenderView = m_pRenderView.get();
 
-		m_pPipeline->Resize(sFrameInfo.nWidth, sFrameInfo.nHeight);
+		m_pPipeline->Resize(sInOutFrameInfo.nWidth, sInOutFrameInfo.nHeight);
 
-		m_pPipeline->Execute(sPipelineFrameInfo);
+		m_pPipeline->Execute(sInOutFrameInfo);
 	}
 
 	void Renderer::SetDisplayDevice(DisplayDevice* pDisplayDevice) {

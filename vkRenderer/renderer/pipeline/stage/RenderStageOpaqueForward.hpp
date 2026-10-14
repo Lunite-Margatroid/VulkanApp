@@ -9,7 +9,7 @@ namespace LT {
 		RenderStageOpaqueForward() = default;
 		~RenderStageOpaqueForward() = default;
 
-		void Execute(const StageExecuteInfo& sExecuteInfo) override;
+		void Execute(StageExecuteInfo& sInOutExecuteInfo) override;
 
 		RenderStageType GetRenderStageType() const override { return RenderStageType::eOpaqueForward; }
 	};

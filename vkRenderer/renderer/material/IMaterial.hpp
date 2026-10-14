@@ -192,6 +192,7 @@ namespace LT {
 		}
 
 		void BindShaderResource(const MaterialBindInfo& sMtlBindInfo) {
+			s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex);
 			// 绑定资源
 			std::vector<vk::WriteDescriptorSet> vecWDS;
 			for (const auto& [bindings, mtlSlot] : m_mapSlots) {
