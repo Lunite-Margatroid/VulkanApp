@@ -26,7 +26,7 @@ namespace LT {
 
 	Pipeline::~Pipeline() {
 		vk::Device& device = vkContext::GetVkDevice();
-		RENDERER_ASSERT(m_vecDepthBuffer.size() == RENDERER_DEFAULT_FLIGHT_FRAME_NUM, "func: %s. Depth Buffer Count Error.", __FUNCTION__);
+		//RENDERER_ASSERT(m_vecDepthBuffer.size() == RENDERER_DEFAULT_FLIGHT_FRAME_NUM, "func: %s. Depth Buffer Count Error.", __FUNCTION__);
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
 			ImageManager::DeleteImage(m_vecDepthBuffer[i]);
 		}

@@ -7,7 +7,7 @@ namespace LT {
 
 	// ==================== FenceWithRefCount ===============================
 	void FenceManager::FenceWithRefCount::Init() {
-		if (m_vkFence)
+		if (!m_vkFence)
 		{
 			m_vkFence = vkContext::GetVkDevice().createFence(vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled));
 		}
@@ -28,7 +28,7 @@ namespace LT {
 		size_t i = index / FENCE_COUNT_PER_BLOCK;
 		size_t j = index % FENCE_COUNT_PER_BLOCK;
 
-		RENDERER_ASSERT(i < m_vkFences.size() && j < m_vkFences[i].size(), "FenceManager::FencePool. Out of bound.");
+		RENDERER_ASSERT(i < m_vkFences.size() && j < m_vkFences[i].size() && m_vkFences[i][j].m_vkFence, "FenceManager::FencePool. Out of bound.");
 		return m_vkFences[i][j];
 	}
 
@@ -57,9 +57,7 @@ namespace LT {
 				m_stkIdleFence.push(index);
 			}
 		}
-
 		size_t nFence = m_stkIdleFence.top();
-		RefIncrease(nFence);
 		m_stkIdleFence.pop();
 		return FenceRef(static_cast<FenceHandle>(nFence));
 	}
@@ -104,6 +102,28 @@ namespace LT {
 	{
 		return FenceManager::GetNativeFence(m_nID);
 	}
+	void FenceManager::_FenceRef::WaitFence()
+	{
+		vk::Device& device = vkContext::GetVkDevice();
+		vk::Fence fence = FenceManager::GetNativeFence(m_nID);
+		if (fence)
+		{
+			vk::Result result = device.waitForFences(1, &fence, vk::True, std::numeric_limits<uint64_t>::max());
+			RENDERER_ASSERT(result == vk::Result::eSuccess, "Fence Ref: Wait failed.");
+		}
+	}
+	void FenceManager::_FenceRef::WaitAndResetFence()
+	{
+		WaitFence();
+
+		vk::Device& device = vkContext::GetVkDevice();
+		vk::Fence fence = FenceManager::GetNativeFence(m_nID);
+		if (fence)
+		{
+			vk::Result result = device.resetFences(1, &fence);
+			RENDERER_ASSERT(result == vk::Result::eSuccess, "Fence Ref: Reset failed.");
+		}
+	}
 	vk::Fence* FenceManager::GetNativeFencePtr(FenceHandle hFence)
 	{
 		auto &mgr = GetInstance();
@@ -131,7 +151,9 @@ namespace LT {
 	FenceRef FenceManager::CreateFence()
 	{
 		auto& mgr = GetInstance();
-		return static_cast<FenceRef>(mgr.m_sFencePool.AllocateFence());
+		FenceRef fence = mgr.m_sFencePool.AllocateFence();
+		fence.WaitAndResetFence();
+		return fence;
 	}
 
 	FenceManager::FenceManager() {}

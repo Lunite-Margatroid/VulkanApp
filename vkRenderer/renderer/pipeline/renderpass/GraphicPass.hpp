@@ -24,6 +24,19 @@ namespace LT {
 		ImageID nDepthStencilID;
 		std::vector<ImageID> vecImageIDColor;
 		std::vector<BufferID> vecVertexBufferID;
+
+		vk::AttachmentLoadOp eColorLoadOp;
+		vk::AttachmentLoadOp eDepthLoadOp;
+
+		RecordCommandInfo() 
+			: nFlightFrameIndex(0)
+			, nWidth(0)
+			, nHeight(0)
+			, nIndexBufferID(INVALID_BUFFER_ID)
+			, nDepthStencilID(INVALID_IMAGE_ID)
+			, eColorLoadOp(vk::AttachmentLoadOp::eLoad)
+			, eDepthLoadOp(vk::AttachmentLoadOp::eLoad)
+		{}
 	};
 
 
@@ -71,7 +84,7 @@ namespace LT {
 		ShaderModuleInfo m_sShaderModuleInfo;
 
 		// 临时 不由GraphicPass管理
-		std::vector<DescriptorSetWrapper> m_vecDescriptorSets;
+		std::vector<DescriptorSetWrapper*> m_vecDescriptorSets;
 
 		vk::PipelineLayout m_vkPipelineLayout;
 
@@ -90,7 +103,7 @@ namespace LT {
 
 		void Init(const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout);
 
-		void SetDescriptorSets(const std::vector<DescriptorSetWrapper>& vecDescriptorSets);
+		void SetDescriptorSets(const std::vector<DescriptorSetWrapper*>& vecDescriptorSets);
 
 		void AddShaderModule(const char* strShaderModule, const std::vector<std::string>& vecDepMod);
 		void AddShaderModule(const std::string& strName, const std::string& strCode, const std::vector<std::string>& vecDepMod);

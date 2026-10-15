@@ -6,6 +6,7 @@
 #include "ShaderModuleInfo.hpp"
 
 #include "RenderPass.hpp"
+#include "DescriptorSetWrapper.hpp"
 
 namespace LT {
 	class ConstBuffer;
@@ -74,7 +75,7 @@ namespace LT {
 		// trans buffer desc layout
 		vk::DescriptorSetLayout m_vkTransBufferDescriptorSetLayout;
 		// trans buffer Desc set
-		std::array<vk::DescriptorSet, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrTransBufferDescriptorSet;
+		std::array<DescriptorSetWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrTransBufferDescriptorSet;
 
 		ShaderResourceManager();
 
@@ -120,7 +121,7 @@ namespace LT {
 
 
 		// 获取Trans Buffer描述符
-		static vk::DescriptorSet GetTransBufferDescriptorSet(FlightFrameIndex nFlightIndex);
+		static DescriptorSetWrapper& GetTransBufferDescriptorSet(FlightFrameIndex nFlightIndex);
 
 
 

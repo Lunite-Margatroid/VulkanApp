@@ -57,7 +57,7 @@ namespace LT {
 		}
 
 		BindShaderResource(sMtlBindInfo);
-		pPass->SetDescriptorSets({ ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) });
+		pPass->SetDescriptorSets({ &ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), &s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) });
 		return pPass;
 	}
 

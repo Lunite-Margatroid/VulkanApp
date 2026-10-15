@@ -8,12 +8,13 @@ namespace LT {
 		FenceRef m_refFenceDrawing;
 	public:
 		DescriptorSetWrapper();
-		DescriptorSetWrapper(vk::DescriptorSet vkDescriptorSet);
+		explicit DescriptorSetWrapper(vk::DescriptorSet vkDescriptorSet);
 		void Init(vk::DescriptorSet vkDescriptorSet);
 		void Destroy(vk::DescriptorPool vkDescriptorPool);
 		// 该函数会等待Fence
 		vk::DescriptorSet GetNativeDescriptorSet();
 		vk::DescriptorSet GetNativeDescriptorSetWithoutWaiting();
+		void WaitForFenceDrawing();
 		FenceRef GetFenceDrawing();
 		void SetFenceDrawing(const FenceRef& refFence);
 

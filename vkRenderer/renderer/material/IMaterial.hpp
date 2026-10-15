@@ -47,7 +47,7 @@ namespace LT {
 
 		void Release();
 
-		vk::DescriptorSet GetDescriptorSet(FlightFrameIndex nFlightIndex);
+		DescriptorSetWrapper& GetDescriptorSet(FlightFrameIndex nFlightIndex);
 		operator bool() const;
 	};
 
@@ -192,7 +192,8 @@ namespace LT {
 		}
 
 		void BindShaderResource(const MaterialBindInfo& sMtlBindInfo) {
-			s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex);
+			s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex).WaitForFenceDrawing();
+			ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex).WaitForFenceDrawing();
 			// 绑定资源
 			std::vector<vk::WriteDescriptorSet> vecWDS;
 			for (const auto& [bindings, mtlSlot] : m_mapSlots) {
@@ -253,12 +254,12 @@ namespace LT {
 					{
 						case ShaderResSpace::eTransBuffer:
 						{
-							wds.setDstSet(ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex));
+							wds.setDstSet(ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex).GetNativeDescriptorSetWithoutWaiting());
 							break;
 						}
 						case ShaderResSpace::eMtlProp:
 						{
-							wds.setDstSet(s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex));
+							wds.setDstSet(s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex).GetNativeDescriptorSetWithoutWaiting());
 							break;
 						}
 						default:

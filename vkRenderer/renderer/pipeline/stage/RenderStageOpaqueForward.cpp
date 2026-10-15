@@ -19,26 +19,50 @@ namespace LT {
 		sDrawInfo.vecRenderTargets = sInOutExecuteInfo.vecRenderTarget;
 		sDrawInfo.pRenderView = sInOutExecuteInfo.pRenderView;
 		sDrawInfo.eRenderStage = GetRenderStageType();
+		sDrawInfo.bClear = true;
 
-		if (!sInOutExecuteInfo.vecSemWait.empty())
+		if (sInOutExecuteInfo.vecRenderEntity.size() >= 2)
 		{
-			sDrawInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
-			sDrawInfo.vecSemWaitMasks = sInOutExecuteInfo.vecSemWaitMask;
-		}
+			// 第一个渲染实体
+			if (!sInOutExecuteInfo.vecSemWait.empty())
+			{
+				sDrawInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
+				sDrawInfo.vecSemWaitMasks = sInOutExecuteInfo.vecSemWaitMask;
+			}
+			sInOutExecuteInfo.vecRenderEntity.front()->Draw(sDrawInfo);
 
-		// 前n-1个渲染实体
-		for (int i = 0; i < sInOutExecuteInfo.vecRenderEntity.size() - 1; i++)
-		{
-			sInOutExecuteInfo.vecRenderEntity[i]->Draw(sDrawInfo);
-		}
-		// 最后一个渲染实体
-		if (!sInOutExecuteInfo.vecSemSignal.empty())
-		{
-			sDrawInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
-		}
+			sDrawInfo.vecSemWait.clear();
+			sDrawInfo.vecSemWaitMasks.clear();
 
-		sInOutExecuteInfo.vecRenderEntity.back()->Draw(sDrawInfo);
-		sInOutExecuteInfo.refFence = sDrawInfo.refFence;
+			sDrawInfo.bClear = false;
+			// 第2到n个渲染实体
+			for (int i = 1; i < sInOutExecuteInfo.vecRenderEntity.size() - 1; i++)
+			{
+				sInOutExecuteInfo.vecRenderEntity[i]->Draw(sDrawInfo);
+			}
+			// 最后一个渲染实体
+			if (!sInOutExecuteInfo.vecSemSignal.empty())
+			{
+				sDrawInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
+			}
+
+			sInOutExecuteInfo.vecRenderEntity.back()->Draw(sDrawInfo);
+			sInOutExecuteInfo.refFence = sDrawInfo.refFence;
+		}
+		else if(sInOutExecuteInfo.vecRenderEntity.size() > 0)
+		{
+			if (!sInOutExecuteInfo.vecSemWait.empty())
+			{
+				sDrawInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
+				sDrawInfo.vecSemWaitMasks = sInOutExecuteInfo.vecSemWaitMask;
+			}
+			if (!sInOutExecuteInfo.vecSemSignal.empty())
+			{
+				sDrawInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
+			}
+			sInOutExecuteInfo.vecRenderEntity.front()->Draw(sDrawInfo);
+			sInOutExecuteInfo.refFence = sDrawInfo.refFence;
+		}
 
 	}
 } // namespace LT

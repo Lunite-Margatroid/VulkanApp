@@ -72,11 +72,13 @@ namespace LT
 			~_FenceRef() = default;
 
 			vk::Fence GetNativeFence();
+
+			void WaitFence();
+			void WaitAndResetFence();
 		};
 
 	public:
 		static _FenceRef CreateFence();
-		static vk::Result WaitFence(const _FenceRef& refFence);
 	public:
 		// 引用计数器
 		struct FenceWithRefCount {

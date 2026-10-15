@@ -151,13 +151,17 @@ namespace LT {
 		CreateMaterial(nMtlID, MaterialType::eMainTexture);
 		SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID);
 
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 400; i++)
 		{
 			NodeID nNode;
 			CreateCubeMeshNode(nNode, 1.f);
 			SetMaterial(nNode, nMtlID);
 			SceneNodeRebase(m_nMainScene, nNode);
 			SetSceneNodePosition(nNode, util::RandomGenerator::RandomSampleSphere(20.f));
+			SetSceneNodeEulerRotation(nNode, 
+				{util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f),
+				util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f), 
+				util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f)});
 		}
 		pDisplayDivice->SetView(m_pView);
 	}
@@ -168,7 +172,7 @@ namespace LT {
 
 		const float tValue = static_cast<float>(m_nFrameIndex % 200) / 200.0f * glm::pi<float>() * 2.f;
 
-		const float fRadius = 4.f;
+		const float fRadius = 50.f;
 		const float fX = fRadius * glm::cos(tValue);
 		const float fZ = fRadius * glm::sin(tValue);
 		const float fY = 2.f;

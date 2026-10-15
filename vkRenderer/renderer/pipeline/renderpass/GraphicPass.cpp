@@ -282,7 +282,7 @@ namespace LT {
 		m_vkPipeline = result.value;
 	}
 
-	void GraphicPass::SetDescriptorSets(const std::vector<DescriptorSetWrapper>& vecDescriptorSets)
+	void GraphicPass::SetDescriptorSets(const std::vector<DescriptorSetWrapper*>& vecDescriptorSets)
 	{
 		m_vecDescriptorSets = vecDescriptorSets;
 	}
@@ -392,7 +392,7 @@ namespace LT {
 		rai
 			.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sRecordInfo.vecImageIDColor[0]))
 			.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
-			.setLoadOp(vk::AttachmentLoadOp::eClear)
+			.setLoadOp(sRecordInfo.eColorLoadOp)
 			.setStoreOp(vk::AttachmentStoreOp::eStore)
 			.setClearValue(clearColor)
 			;
@@ -403,7 +403,7 @@ namespace LT {
 		raiDepth
 			.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sRecordInfo.nDepthStencilID))
 			.setImageLayout(vk::ImageLayout::eDepthAttachmentOptimal)
-			.setLoadOp(vk::AttachmentLoadOp::eClear)
+			.setLoadOp(sRecordInfo.eDepthLoadOp)
 			.setStoreOp(vk::AttachmentStoreOp::eDontCare)
 			.setClearValue(clearDepth)
 			;
@@ -447,7 +447,7 @@ namespace LT {
 		std::vector<vk::DescriptorSet> vecDescriptorSet;
 		for (auto& descSetWrapper : m_vecDescriptorSets)
 		{
-			vecDescriptorSet.push_back(descSetWrapper.GetNativeDescriptorSetWithoutWaiting());
+			vecDescriptorSet.push_back(descSetWrapper->GetNativeDescriptorSetWithoutWaiting());
 		}
 
 		cmdBuffer.bindDescriptorSets(
@@ -540,7 +540,10 @@ namespace LT {
 		);
 
 		// 为DescriptorSet设置一个Fence
-		m_vecDescriptorSets[sInOutSubmitInfo.nFlightFrameIndex].SetFenceDrawing(sInOutSubmitInfo.refFence);
+		for (auto& pDescriptorSet : m_vecDescriptorSets)
+		{
+			pDescriptorSet->SetFenceDrawing(sInOutSubmitInfo.refFence);
+		}
 
 	}
 } // namespace LT

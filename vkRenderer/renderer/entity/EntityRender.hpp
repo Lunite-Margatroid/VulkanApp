@@ -24,6 +24,8 @@ namespace LT {
 		// 通常作为输出参数
 		FenceRef refFence;
 
+		bool bClear;
+
 		EntityDrawInfo() 
 			: nWidth(0)
 			, nHeight(0)
@@ -32,6 +34,7 @@ namespace LT {
 			, nDepthBuffer(INVALID_IMAGE_ID)
 			, pRenderView(nullptr)
 			, refFence(INVALID_FENCE_HANDLE)
+			, bClear(false)
 		{
 			
 		}

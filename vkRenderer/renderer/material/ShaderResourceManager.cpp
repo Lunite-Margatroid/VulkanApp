@@ -162,9 +162,12 @@ namespace LT {
 		}
 
 
-		if (m_arrTransBufferDescriptorSet[0])
+		for (int i = 0; i < m_arrTransBufferDescriptorSet.size(); ++i)
 		{
-			device.freeDescriptorSets(m_vkDescriptorPool, m_arrTransBufferDescriptorSet);
+			if (m_arrTransBufferDescriptorSet[i])
+			{
+				m_arrTransBufferDescriptorSet[i].Destroy(m_vkDescriptorPool);
+			}
 		}
 
 		if (m_vkTransBufferDescriptorSetLayout) {
@@ -344,7 +347,7 @@ namespace LT {
 
 
 	// 获取Trans Buffer描述符
-	vk::DescriptorSet ShaderResourceManager::GetTransBufferDescriptorSet(FlightFrameIndex nFlightIndex) {
+	DescriptorSetWrapper& ShaderResourceManager::GetTransBufferDescriptorSet(FlightFrameIndex nFlightIndex) {
 		ShaderResourceManager& mgr = GetInstance();
 
 		if (!mgr.m_arrTransBufferDescriptorSet[0])
@@ -361,7 +364,7 @@ namespace LT {
 			for (int i = 0; i < mgr.m_arrTransBufferDescriptorSet.size(); i++)
 			{
 				std::vector<vk::DescriptorSet> descSets = device.allocateDescriptorSets(dsai);
-				mgr.m_arrTransBufferDescriptorSet[i]= descSets[0];
+				mgr.m_arrTransBufferDescriptorSet[i]= DescriptorSetWrapper(descSets[0]);
 			}
 		}
 

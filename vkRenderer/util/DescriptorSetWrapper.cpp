@@ -27,20 +27,19 @@ namespace LT {
 
 	vk::DescriptorSet DescriptorSetWrapper::GetNativeDescriptorSet()
 	{
-		vk::Device& device = vkContext::GetVkDevice();
-		if (m_refFenceDrawing)
-		{
-			vk::Result result = device.waitForFences(m_refFenceDrawing.GetNativeFence(), vk::True, std::_Max_limit<uint64_t>());
-
-			RENDERER_ASSERT(result == vk::Result::eSuccess, "FenceDrawing of Descriptor: Wait failed.");
-			device.resetFences(m_refFenceDrawing.GetNativeFence());
-		}
-
+		WaitForFenceDrawing();
 		return m_vkDescriptorSet;
 	}
 	vk::DescriptorSet DescriptorSetWrapper::GetNativeDescriptorSetWithoutWaiting()
 	{
 		return m_vkDescriptorSet;
+	}
+	void DescriptorSetWrapper::WaitForFenceDrawing()
+	{
+		if (m_refFenceDrawing)
+		{
+			m_refFenceDrawing.WaitFence();
+		}
 	}
 	FenceRef DescriptorSetWrapper::GetFenceDrawing()
 	{

@@ -95,6 +95,8 @@ namespace LT {
 			sRecordInfo.vecVertexBufferID.push_back(m_pVertexBuffer->GetBufferID());
 			sRecordInfo.nIndexBufferID = m_pIndexBuffer->GetBufferID();
 			sRecordInfo.nFlightFrameIndex = sInOutDrawInfo.nFlightFrameIndex;
+			sRecordInfo.eColorLoadOp = sInOutDrawInfo.bClear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
+			sRecordInfo.eDepthLoadOp = sInOutDrawInfo.bClear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
 
 			pRenderPass->RecordCommand(sRecordInfo);
 

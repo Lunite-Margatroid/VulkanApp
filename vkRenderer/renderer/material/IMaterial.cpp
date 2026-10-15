@@ -36,7 +36,7 @@ namespace LT {
 		for (int i = 0; i < m_descriptorSets.size(); ++i)
 		{
 			std::vector<vk::DescriptorSet> sets = device.allocateDescriptorSets(dsai);
-			m_descriptorSets[i] = sets[0];
+			m_descriptorSets[i] = DescriptorSetWrapper(sets[0]);
 		}
 
 	}
@@ -49,9 +49,9 @@ namespace LT {
 		}
 	}
 
-	vk::DescriptorSet MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex)
+	DescriptorSetWrapper& MtlPropDescriptorSets::GetDescriptorSet(FlightFrameIndex nFlightIndex)
 	{
-		return m_descriptorSets[nFlightIndex].GetNativeDescriptorSet();
+		return m_descriptorSets[nFlightIndex];
 	}
 
 	IMaterial::IMaterial(MaterialID nID, MaterialType eType)
