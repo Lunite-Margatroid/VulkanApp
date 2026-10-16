@@ -84,7 +84,6 @@ namespace LT {
 			.setPImageMemoryBarriers(&barrier)
 			;
 
-		sInfo.vkCommandBuffer.pipelineBarrier2(di);
-
+		sInfo.pCmdBuffer->PipelineBarrier2(di);
 	}
 } // namespace LT

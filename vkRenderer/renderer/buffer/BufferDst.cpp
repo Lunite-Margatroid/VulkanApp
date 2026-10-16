@@ -26,7 +26,7 @@ namespace LT {
 		}
 
 		vk::CommandBuffer vkCmdBuffer = vkContext::BeginSingleTimeCmdBuffer();
-		vkCmdBuffer.copyBuffer(pStagingBuffer->GetNativeBuffer(), m_vkBuffer, vk::BufferCopy(nSrcOffset, nDstOffset, m_nSize));
+		vkCmdBuffer.copyBuffer(pStagingBuffer->GetNativeBuffer(), m_vkBuffer, vk::BufferCopy(nSrcOffset, nDstOffset, nSize));
 		vkContext::EndSingleTimeCmdBuffer(vkCmdBuffer);
 	}
 

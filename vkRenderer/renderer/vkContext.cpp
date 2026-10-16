@@ -21,7 +21,7 @@ namespace LT {
 		// 销毁Command Pool
 		m_vkDevice.destroyCommandPool(m_vkCommandPool);
 		// command buffer会跟随command pool 自动释放
-		m_vecCommandBuffers.clear();
+		//m_vecCommandBuffers.clear();
 
 		m_vkDevice.destroy();
 
@@ -262,12 +262,17 @@ do{\
 	{
 		RENDERER_ASSERT(m_vkCommandPool, "Command Pool did not Init.");
 
-		vk::CommandBufferAllocateInfo cbai;
-		cbai.setCommandPool(m_vkCommandPool)
-			.setLevel(vk::CommandBufferLevel::ePrimary)
-			.setCommandBufferCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM);	// 数量跟flight frame一致
+		//vk::CommandBufferAllocateInfo cbai;
+		//cbai.setCommandPool(m_vkCommandPool)
+		//	.setLevel(vk::CommandBufferLevel::ePrimary)
+		//	.setCommandBufferCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM);	// 数量跟flight frame一致
 
-		m_vecCommandBuffers = m_vkDevice.allocateCommandBuffers(cbai);
+		//m_vecCommandBuffers = m_vkDevice.allocateCommandBuffers(cbai);
+
+		for (int i = 0; i < m_arrGraphicCmdBuffer.size(); i++)
+		{
+			m_arrGraphicCmdBuffer[i].Init(m_vkDevice, GetCmdQueue(), m_vkCommandPool);
+		}
 
 	}
 
@@ -321,9 +326,9 @@ do{\
 		return GetInstance().m_vkCommandPool;
 	}
 
-	vk::CommandBuffer& vkContext::GetCmdBuffer(unsigned int nIndex)
+	CommandBufferWrapper& vkContext::GetCmdBuffer(FlightFrameIndex nIndex)
 	{
-		return GetInstance().m_vecCommandBuffers[nIndex];
+		return GetInstance().m_arrGraphicCmdBuffer[nIndex];
 	}
 
 	vk::CommandBuffer vkContext::BeginSingleTimeCmdBuffer()

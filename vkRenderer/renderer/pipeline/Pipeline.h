@@ -79,6 +79,8 @@ namespace LT {
 
 		std::vector<Image2DDepthBuffer*> m_vecDepthBuffer; // 深度缓冲
 
+		RenderStageOpaqueForward m_sStage;
+
 	public:
 		Pipeline();
 		~Pipeline();

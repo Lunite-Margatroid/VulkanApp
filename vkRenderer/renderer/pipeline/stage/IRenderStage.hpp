@@ -35,6 +35,27 @@ namespace LT {
 		{}
 	};
 
+	struct StageBeginInfo {
+		FlightFrameIndex nFlightFrameIndex;
+		// 需要Transition的Image
+		ImageID nDepthBufferID;
+		std::vector<ImageID> vecRenderTarget;
+		// 需要等待的Semaphore
+		std::vector<vk::Semaphore> vecSemWait;
+		std::vector<vk::PipelineStageFlags> vecSemWaitMask;
+		// 发射的Semaphore
+		std::vector<vk::Semaphore> vecSemSignal;
+		// 当前Submit的Fence
+		FenceRef refFence;
+		StageBeginInfo() 
+			: nFlightFrameIndex(0)
+			, nDepthBufferID(INVALID_IMAGE_ID)
+			, refFence(INVALID_FENCE_HANDLE)
+		{}
+	};
+
+	using StageEndInfo = StageBeginInfo;
+
 	class IRenderStage {
 	public:
 		IRenderStage() = default;
@@ -43,6 +64,9 @@ namespace LT {
 
 		virtual RenderStageType GetRenderStageType() const = 0;
 		virtual void Execute(StageExecuteInfo& sInOutExecuteInfo) = 0;
+
+		virtual void StageBegin(StageBeginInfo& sInOutBeginInfo) = 0;
+		virtual void StageEnd(StageEndInfo& sInOutEndInfo) = 0;
 	};
 
 } // namespace LT

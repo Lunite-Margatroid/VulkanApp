@@ -350,39 +350,39 @@ namespace LT {
 
 	void GraphicPass::RecordCommand(const RecordCommandInfo& sRecordInfo)
 	{
-		vk::CommandBuffer& cmdBuffer = vkContext::GetCmdBuffer(sRecordInfo.nFlightFrameIndex);
+		CommandBufferWrapper cmdBuffer = vkContext::GetCmdBuffer(sRecordInfo.nFlightFrameIndex);
 		vk::Extent2D extent = { sRecordInfo.nWidth , sRecordInfo.nHeight};
 		uint32_t nFlightFrameIndex = sRecordInfo.nFlightFrameIndex;
 
 
 		vk::CommandBufferBeginInfo cbbi = {};
-		cmdBuffer.begin(cbbi);
+		cmdBuffer.Begin(cbbi);
 
-		// 转换颜色缓冲
-		TransitionImageLayoutInfo sColorTransitionInfo;
-		sColorTransitionInfo.vkCommandBuffer = cmdBuffer;
-		sColorTransitionInfo.nImageID = sRecordInfo.vecImageIDColor[0];
-		sColorTransitionInfo.srcAccessFlag = vk::AccessFlagBits2::eNone;
-		sColorTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
-		sColorTransitionInfo.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-		sColorTransitionInfo.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-		sColorTransitionInfo.eOldLayout = vk::ImageLayout::eUndefined;
-		sColorTransitionInfo.eNewLayout = vk::ImageLayout::eColorAttachmentOptimal;
-		sColorTransitionInfo.eImageAspect = vk::ImageAspectFlagBits::eColor;
-		RenderPass::RecordTransitionImageLayout(sColorTransitionInfo);
+		//// 转换颜色缓冲
+		//TransitionImageLayoutInfo sColorTransitionInfo;
+		//sColorTransitionInfo.vkCommandBuffer = cmdBuffer;
+		//sColorTransitionInfo.nImageID = sRecordInfo.vecImageIDColor[0];
+		//sColorTransitionInfo.srcAccessFlag = vk::AccessFlagBits2::eNone;
+		//sColorTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
+		//sColorTransitionInfo.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+		//sColorTransitionInfo.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+		//sColorTransitionInfo.eOldLayout = vk::ImageLayout::eUndefined;
+		//sColorTransitionInfo.eNewLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		//sColorTransitionInfo.eImageAspect = vk::ImageAspectFlagBits::eColor;
+		//RenderPass::RecordTransitionImageLayout(sColorTransitionInfo);
 
-		// 深度缓冲
-		TransitionImageLayoutInfo sDepthTransitionInfo;
-		sDepthTransitionInfo.vkCommandBuffer = cmdBuffer;
-		sDepthTransitionInfo.nImageID = sRecordInfo.nDepthStencilID;
-		sDepthTransitionInfo.srcAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentWrite;
-		sDepthTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentRead;
-		sDepthTransitionInfo.srcStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
-		sDepthTransitionInfo.dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
-		sDepthTransitionInfo.eOldLayout = vk::ImageLayout::eUndefined;
-		sDepthTransitionInfo.eNewLayout = vk::ImageLayout::eDepthAttachmentOptimal;
-		sDepthTransitionInfo.eImageAspect = vk::ImageAspectFlagBits::eDepth;
-		RenderPass::RecordTransitionImageLayout(sDepthTransitionInfo);
+		//// 深度缓冲
+		//TransitionImageLayoutInfo sDepthTransitionInfo;
+		//sDepthTransitionInfo.vkCommandBuffer = cmdBuffer;
+		//sDepthTransitionInfo.nImageID = sRecordInfo.nDepthStencilID;
+		//sDepthTransitionInfo.srcAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentWrite;
+		//sDepthTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentRead;
+		//sDepthTransitionInfo.srcStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
+		//sDepthTransitionInfo.dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
+		//sDepthTransitionInfo.eOldLayout = vk::ImageLayout::eUndefined;
+		//sDepthTransitionInfo.eNewLayout = vk::ImageLayout::eDepthAttachmentOptimal;
+		//sDepthTransitionInfo.eImageAspect = vk::ImageAspectFlagBits::eDepth;
+		//RenderPass::RecordTransitionImageLayout(sDepthTransitionInfo);
 
 		// 绑定渲染目标
 
@@ -420,10 +420,10 @@ namespace LT {
 			.setPDepthAttachment(&raiDepth)
 			;
 
-		cmdBuffer.beginRendering(ri);
+		cmdBuffer.BeginRendering(ri);
 
 		// 绑定渲染管线
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
+		cmdBuffer.BindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
 
 		// 绑定顶点缓冲
 		std::vector<vk::Buffer> vecVertexBuffer;
@@ -435,10 +435,10 @@ namespace LT {
 			vecVertexBuffer.push_back(BufferManager::GetNativeDeviceBuffer(nID));
 			vecVertexBufferOffset.push_back(0);
 		}
-		cmdBuffer.bindVertexBuffers(0, vecVertexBuffer, vecVertexBufferOffset);
+		cmdBuffer.BindVertexBuffers(0, vecVertexBuffer, vecVertexBufferOffset);
 
 		// 绑定索引缓冲
-		cmdBuffer.bindIndexBuffer(BufferManager::GetNativeDeviceBuffer(sRecordInfo.nIndexBufferID), 0, vk::IndexType::eUint32);
+		cmdBuffer.BindIndexBuffer(BufferManager::GetNativeDeviceBuffer(sRecordInfo.nIndexBufferID), 0, vk::IndexType::eUint32);
 
 		// 绑定
 		// const buffer
@@ -450,12 +450,12 @@ namespace LT {
 			vecDescriptorSet.push_back(descSetWrapper->GetNativeDescriptorSetWithoutWaiting());
 		}
 
-		cmdBuffer.bindDescriptorSets(
+		cmdBuffer.BindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,
 			m_vkPipelineLayout,
 			0,
 			vecDescriptorSet,
-			VK_NULL_HANDLE
+			{}
 		);
 
 
@@ -479,70 +479,65 @@ namespace LT {
 			.setExtent(vk::Extent2D(sRecordInfo.nWidth, sRecordInfo.nHeight))
 			;
 
-		cmdBuffer.setViewport(0, viewport);
-		cmdBuffer.setScissor(0, scissor);
+		cmdBuffer.SetViewport(0, std::vector<vk::Viewport>{viewport});
+		cmdBuffer.SetScissor(0, std::vector<vk::Rect2D>{scissor});
 
 		
 		auto nIndexCount = BufferManager::GetIndexBuffer(sRecordInfo.nIndexBufferID)->GetIndexCount();
-		cmdBuffer.drawIndexed(nIndexCount, 1, 0, 0, 0);
+		cmdBuffer.DrawIndexed(nIndexCount, 1, 0, 0, 0);
 
-		cmdBuffer.endRendering();
+		cmdBuffer.EndRendering();
 
-		// 颜色缓冲转为交换缓冲
-		if (IsSwapChainImageID(sRecordInfo.vecImageIDColor[0]))
-		{
-			TransitionImageLayoutInfo sTransInfoForPresent;
-			sTransInfoForPresent.vkCommandBuffer = cmdBuffer;
-			sTransInfoForPresent.nImageID = sRecordInfo.vecImageIDColor[0];
-			sTransInfoForPresent.eOldLayout = vk::ImageLayout::eColorAttachmentOptimal;
-			sTransInfoForPresent.eNewLayout = vk::ImageLayout::ePresentSrcKHR;
-			sTransInfoForPresent.srcAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
-			sTransInfoForPresent.dstAccessFlag = vk::AccessFlagBits2::eNone;
-			sTransInfoForPresent.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-			sTransInfoForPresent.dstStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
-			sTransInfoForPresent.eImageAspect = vk::ImageAspectFlagBits::eColor;
-			RenderPass::RecordTransitionImageLayout(sTransInfoForPresent);
-		}
+		//// 颜色缓冲转为交换缓冲
+		//if (IsSwapChainImageID(sRecordInfo.vecImageIDColor[0]))
+		//{
+		//	TransitionImageLayoutInfo sTransInfoForPresent;
+		//	sTransInfoForPresent.vkCommandBuffer = cmdBuffer;
+		//	sTransInfoForPresent.nImageID = sRecordInfo.vecImageIDColor[0];
+		//	sTransInfoForPresent.eOldLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		//	sTransInfoForPresent.eNewLayout = vk::ImageLayout::ePresentSrcKHR;
+		//	sTransInfoForPresent.srcAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
+		//	sTransInfoForPresent.dstAccessFlag = vk::AccessFlagBits2::eNone;
+		//	sTransInfoForPresent.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
+		//	sTransInfoForPresent.dstStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
+		//	sTransInfoForPresent.eImageAspect = vk::ImageAspectFlagBits::eColor;
+		//	RenderPass::RecordTransitionImageLayout(sTransInfoForPresent);
+		//}
 
-		cmdBuffer.end();
+		cmdBuffer.End();
 
 	}
 
 	void GraphicPass::Submit(GraphicSubmitInfo& sInOutSubmitInfo) {
 		vk::Device& device = vkContext::GetVkDevice();
-		vk::CommandBuffer& cmdBuffer = vkContext::GetCmdBuffer(sInOutSubmitInfo.nFlightFrameIndex);
+		CommandBufferWrapper & cmdBuffer = vkContext::GetCmdBuffer(sInOutSubmitInfo.nFlightFrameIndex);
 
-		// 提交信息
-		vk::SubmitInfo si = {};
-		si
-			.setCommandBufferCount(1)
-			.setPCommandBuffers(&cmdBuffer)
-			;
+		CmdSubmitInfo sCmdSubmitInfo;
 
+		
 		// 需要等待的信号量
 		if (sInOutSubmitInfo.vecSemToWait.size() > 0)
 		{
-			si.setWaitSemaphores(sInOutSubmitInfo.vecSemToWait);
-			si.setWaitDstStageMask(sInOutSubmitInfo.vecSemWaitMasks);
+			sCmdSubmitInfo.vecSemToWait = sInOutSubmitInfo.vecSemToWait;
+			sCmdSubmitInfo.vecSemWaitMasks = sInOutSubmitInfo.vecSemWaitMasks;
 		}
 		// 需要发射的信号量
 		if (sInOutSubmitInfo.vecSemToSignal.size() > 0)
 		{
-			si.setSignalSemaphores(sInOutSubmitInfo.vecSemToSignal);
+			sCmdSubmitInfo.vecSemToSignal = sInOutSubmitInfo.vecSemToSignal;
 		}
 
-		// 本次Submit的Fence
-		sInOutSubmitInfo.refFence = FenceManager::CreateFence();
 
-		vkContext::GetCmdQueue().submit(
-			si,
-			sInOutSubmitInfo.refFence.GetNativeFence()
-		);
+		FenceRef fence = cmdBuffer.Submit(sCmdSubmitInfo);
+
+
+		// 本次Submit的Fence
+		sInOutSubmitInfo.refFence = fence;
 
 		// 为DescriptorSet设置一个Fence
 		for (auto& pDescriptorSet : m_vecDescriptorSets)
 		{
-			pDescriptorSet->SetFenceDrawing(sInOutSubmitInfo.refFence);
+			pDescriptorSet->SetFenceDrawing(fence);
 		}
 
 	}

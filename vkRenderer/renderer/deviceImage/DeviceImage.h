@@ -6,7 +6,7 @@
 namespace LT {
 
 	inline bool IsSwapChainImageID(ImageID id) {
-		return  id >= SWAPCHAIN_IMAGE_ID_MAX && id >= SWAPCHAIN_IMAGE_ID_MIN;
+		return  id >= SWAPCHAIN_IMAGE_ID_MAX && id <= SWAPCHAIN_IMAGE_ID_MIN;
 	}
 
 	inline bool IsValidImageID(ImageID id) {

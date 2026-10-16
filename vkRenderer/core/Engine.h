@@ -31,7 +31,7 @@ namespace LT {
 		CameraID m_nCameraID;
 		NodeID m_nMainScene;
 		ImageID m_nImageID;
-		MaterialID m_nMtlID;
+		std::vector<MaterialID> m_vecMtlID;
 		View* m_pView;
 
 	private:

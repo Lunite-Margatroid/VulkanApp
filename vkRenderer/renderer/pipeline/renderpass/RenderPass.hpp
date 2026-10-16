@@ -76,7 +76,7 @@ namespace LT {
 
 	struct TransitionImageLayoutInfo {
 		ImageID nImageID;
-		vk::CommandBuffer vkCommandBuffer;
+		CommandBufferWrapper* pCmdBuffer;
 		vk::ImageLayout eOldLayout;
 		vk::ImageLayout eNewLayout;
 		vk::PipelineStageFlags2 srcStageMask;

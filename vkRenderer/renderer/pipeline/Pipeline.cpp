@@ -66,7 +66,6 @@ namespace LT {
 
 	void Pipeline::Execute(FrameInfo& sInOutFrameInfo)
 	{
-		RenderStageOpaqueForward stage;
 
 		StageExecuteInfo sStageInfo;
 		sStageInfo.vecRenderTarget = sInOutFrameInfo.vecRenderTargets;
@@ -88,7 +87,7 @@ namespace LT {
 			sStageInfo.vecSemSignal.push_back(sInOutFrameInfo.semDrawing);
 		}
 		
-		stage.Execute(sStageInfo);
+		m_sStage.Execute(sStageInfo);
 
 		sInOutFrameInfo.fenceDrawing = sStageInfo.refFence;
 	}

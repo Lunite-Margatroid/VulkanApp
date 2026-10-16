@@ -151,6 +151,8 @@ namespace LT {
 		CreateMaterial(nMtlID, MaterialType::eMainTexture);
 		SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID);
 
+		m_vecMtlID.push_back(nMtlID);
+
 		for (int i = 0; i < 400; i++)
 		{
 			NodeID nNode;
@@ -202,6 +204,11 @@ namespace LT {
 #define SAFE_DELETE(ptr) do{if(ptr){delete (ptr); (ptr) = nullptr;}} while(false)
 
 		SAFE_DELETE(m_pView);
+
+		for (ImageID nID : m_vecMtlID) {
+			DeleteMaterial(nID);
+		}
+
 		SceneManager::ReleaseNode(m_nMainScene);
 		ImageManager::DeleteImage(m_nImageID);
 	}
@@ -388,7 +395,7 @@ namespace LT {
 	EngineResult Engine::CreateMaterial(MaterialID& nOutMtlID, MaterialType eMtlType)
 	{
 		MaterialRef refMtl = MaterialManager::CreateMaterial(eMtlType);
-		refMtl.AddRef();
+		//refMtl.AddRef();
 		nOutMtlID = refMtl.GetID();
 		MaterialManager::GetInstance().RefIncrease(nOutMtlID);
 		return EngineResult::eSuccess;

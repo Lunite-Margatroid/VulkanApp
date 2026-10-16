@@ -1,4 +1,6 @@
 #pragma once
+#include "CommandBufferWrapper.hpp"
+
 
 namespace LT {
 	static uint32_t GetLastFlightFrameIndex(uint32_t nIndex) {
@@ -26,7 +28,9 @@ namespace LT {
 
 		// Command Pool
 		vk::CommandPool m_vkCommandPool;
-		std::vector<vk::CommandBuffer> m_vecCommandBuffers;
+		//std::vector<vk::CommandBuffer> m_vecCommandBuffers;
+		std::array<CommandBufferWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrGraphicCmdBuffer;
+		std::array<CommandBufferWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrSurfaceCmdBuffer;
 
 		// 获取的命令队列的索引 来自物理设备
 		std::optional<uint32_t> m_nQueueFamilyIndex; // 支持图形的命令队列
@@ -80,7 +84,7 @@ namespace LT {
 		static vk::Queue& GetCmdQueueForSurface();
 		static vk::CommandPool& GetCmdPool();
 
-		static vk::CommandBuffer& GetCmdBuffer(unsigned int nIndex);
+		static CommandBufferWrapper& GetCmdBuffer(FlightFrameIndex nIndex);
 
 		static vk::CommandBuffer BeginSingleTimeCmdBuffer();
 

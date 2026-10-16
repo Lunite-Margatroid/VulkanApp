@@ -92,6 +92,8 @@ namespace LT {
 			pRenderer->SetView(m_pView);
 			pRenderer->SetDisplayDevice(this);
 			pRenderer->DrawFrame(sFrameInfo);
+
+			m_fences[nFlightFrameIndex] = sFrameInfo.fenceDrawing;
 		}
 
 		FrameEnd();
@@ -110,7 +112,7 @@ namespace LT {
 			vk::Result resultWaitFence = device.waitForFences(m_fences[nFlightFrameIndex].GetNativeFence(), vk::True, std::_Max_limit<uint64_t>());
 			RENDERER_ASSERT(resultWaitFence == vk::Result::eSuccess, "Wait for FenceDrawing Failed.");
 			// 重置Fence
-			device.resetFences(m_fences[nFlightFrameIndex].GetNativeFence());
+			//device.resetFences(m_fences[nFlightFrameIndex].GetNativeFence());
 		}
 		// acquire swapchain image
 		m_nSwapChainImageIndex = m_pSwapChain->AcquireNextImage(UINT64_MAX, m_vecSemAcquiring[nFlightFrameIndex], vk::Fence());
