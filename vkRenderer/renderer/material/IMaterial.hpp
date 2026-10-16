@@ -192,10 +192,9 @@ namespace LT {
 		}
 
 		void BindShaderResource(const MaterialBindInfo& sMtlBindInfo) {
-			s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex).WaitForFenceDrawing();
-			ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex).WaitForFenceDrawing();
 			// 绑定资源
-			std::vector<vk::WriteDescriptorSet> vecWDS;
+			std::vector<vk::WriteDescriptorSet> vecWDSMtlProp;
+			std::vector<vk::WriteDescriptorSet> vecWDSTrans;
 			for (const auto& [bindings, mtlSlot] : m_mapSlots) {
 
 				if (mtlSlot.nSrcID == INVALID_ITEM_ID)
@@ -254,24 +253,33 @@ namespace LT {
 					{
 						case ShaderResSpace::eTransBuffer:
 						{
-							wds.setDstSet(ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex).GetNativeDescriptorSetWithoutWaiting());
+							vecWDSTrans.push_back(std::move(wds));
 							break;
 						}
 						case ShaderResSpace::eMtlProp:
 						{
-							wds.setDstSet(s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex).GetNativeDescriptorSetWithoutWaiting());
+							vecWDSMtlProp.push_back(std::move(wds));
 							break;
 						}
 						default:
 							break;
 					}
-					vecWDS.push_back(std::move(wds));
 				}
 			}
 
-			if (!vecWDS.empty())
+			DescriptorSetWrapper& descriptorSetMtlProp = s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex);
+			DescriptorSetWrapper& descriptorSetTrans = ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex);
+
+			if(!vecWDSMtlProp.empty())
 			{
-				vkContext::GetVkDevice().updateDescriptorSets(vecWDS, {});
+				descriptorSetMtlProp.WaitForFenceDrawing();
+				descriptorSetMtlProp.UpdateDescriptorSets(vecWDSMtlProp);
+			}
+
+			if(!vecWDSTrans.empty())
+			{
+				descriptorSetTrans.WaitForFenceDrawing();
+				descriptorSetTrans.UpdateDescriptorSets(vecWDSTrans);
 			}
 		}
 

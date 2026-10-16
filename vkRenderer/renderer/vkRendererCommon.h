@@ -49,6 +49,7 @@ namespace LT {
 
 	constexpr unsigned int RENDERER_DEFAULT_FLIGHT_FRAME_NUM = 2u;
 	constexpr unsigned int RENDERER_COMMAND_BUFFER_COUNT = 4u;
+	constexpr unsigned int RENDERER_DESCRIPTOR_SET_COUNT = 4u;
 	enum class RenderStageType : int {
 		eUnknown = -1,
 		eOpaqueForward,

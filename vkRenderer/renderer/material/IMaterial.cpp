@@ -24,21 +24,11 @@ namespace LT {
 	}
 
 	void MtlPropDescriptorSets::Init(const vk::DescriptorSetLayout& layout) {
-		vk::Device& device = vkContext::GetVkDevice();
 
-		vk::DescriptorSetAllocateInfo dsai;
-		dsai
-			.setDescriptorPool(ShaderResourceManager::GetMtlPropDescriptorPool())
-			.setDescriptorSetCount(1)
-			.setPSetLayouts(&layout)
-			;
-
-		for (int i = 0; i < m_descriptorSets.size(); ++i)
+		for(int i =0; i < m_descriptorSets.size(); i++)
 		{
-			std::vector<vk::DescriptorSet> sets = device.allocateDescriptorSets(dsai);
-			m_descriptorSets[i] = DescriptorSetWrapper(sets[0]);
+			m_descriptorSets[i].Init(ShaderResourceManager::GetMtlPropDescriptorPool(), layout);
 		}
-
 	}
 
 	void MtlPropDescriptorSets::Release() {

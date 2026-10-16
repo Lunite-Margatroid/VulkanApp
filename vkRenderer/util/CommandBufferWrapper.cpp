@@ -115,10 +115,18 @@ namespace LT {
 		vk::PipelineBindPoint pipelineBindPoint,
 		const vk::PipelineLayout& layout,
 		uint32_t firstSet,
-		const std::vector<vk::DescriptorSet>& descriptorSets,
+		const std::vector<DescriptorSetWrapper*>& descriptorSets,
 		const std::vector<uint32_t>& dynamicOffsets)
 	{
-		m_qCmdBuffers.front()->cmdBuffer.bindDescriptorSets(pipelineBindPoint, layout, firstSet, descriptorSets, dynamicOffsets);
+		std::vector<vk::DescriptorSet> vecDescriptorSets;
+		for (DescriptorSetWrapper* pDescriptorSet : descriptorSets)
+		{
+			vecDescriptorSets.push_back(pDescriptorSet->GetNativeDescriptorSetWithoutWaiting());
+			pDescriptorSet->SetFenceDrawing(m_qCmdBuffers.front()->refFence);
+			pDescriptorSet->PopFrontAndPushBack();
+		}
+
+		m_qCmdBuffers.front()->cmdBuffer.bindDescriptorSets(pipelineBindPoint, layout, firstSet, vecDescriptorSets, dynamicOffsets);
 	}
 	void CommandBufferWrapper::SetViewport(uint32_t firstViewport, const std::vector<vk::Viewport>& viewports)
 	{

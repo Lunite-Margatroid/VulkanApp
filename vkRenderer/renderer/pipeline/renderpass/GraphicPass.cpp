@@ -444,17 +444,11 @@ namespace LT {
 		// const buffer
 		// texture resource
 
-		std::vector<vk::DescriptorSet> vecDescriptorSet;
-		for (auto& descSetWrapper : m_vecDescriptorSets)
-		{
-			vecDescriptorSet.push_back(descSetWrapper->GetNativeDescriptorSetWithoutWaiting());
-		}
-
 		cmdBuffer.BindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,
 			m_vkPipelineLayout,
 			0,
-			vecDescriptorSet,
+			m_vecDescriptorSets,
 			{}
 		);
 

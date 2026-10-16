@@ -204,21 +204,25 @@ namespace LT {
 		
 		// 材质属性描述符
 		{
+			// 每个材质 每个FlightFrame有ShaderResSpace::ShaderResSpaceCount个DscriptorSetWrapper 
+			// 每个Wrapper有 RENDERER_DESCRIPTOR_SET_COUNT个DescriptorSet
+		
 			std::vector<vk::DescriptorPoolSize> vecDPS;
 			for (const auto& [eType, nCount] : mapDescriptorCount)
 			{
+				// nCount 每个材质的Descriptor数量
 				vk::DescriptorPoolSize dps;
 				dps
 					.setType(eType)
-					.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * nCount)
+					.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * nCount * RENDERER_DESCRIPTOR_SET_COUNT)
 					;
 				vecDPS.push_back(dps);
 			}
-
+			
 			vk::DescriptorPoolCreateInfo dpci;
 			dpci
 				.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * static_cast<int>(ShaderResSpace::ShaderResSpaceCount) * static_cast<int>(MaterialType::MaterialTypeCount))
+				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT * static_cast<int>(ShaderResSpace::ShaderResSpaceCount) * static_cast<int>(MaterialType::MaterialTypeCount))
 				.setPoolSizeCount(vecDPS.size())
 				.setPPoolSizes(vecDPS.data())
 				;
@@ -232,12 +236,12 @@ namespace LT {
 			vk::DescriptorPoolSize dps = {};
 			dps
 				.setType(vk::DescriptorType::eUniformBuffer)
-				.setDescriptorCount(1)
+				.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT)
 				;
 			vk::DescriptorPoolCreateInfo dpci;
 			dpci
 				.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM)
+				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT)
 				.setPoolSizeCount(1)
 				.setPPoolSizes(&dps)
 				;
@@ -352,19 +356,9 @@ namespace LT {
 
 		if (!mgr.m_arrTransBufferDescriptorSet[0])
 		{
-			vk::Device& device = vkContext::GetVkDevice();
-
-			vk::DescriptorSetAllocateInfo dsai = {};
-			dsai
-				.setDescriptorPool(mgr.m_vkDescriptorPool)
-				.setDescriptorSetCount(1)
-				.setPSetLayouts(&mgr.m_vkTransBufferDescriptorSetLayout)
-				;
-
 			for (int i = 0; i < mgr.m_arrTransBufferDescriptorSet.size(); i++)
 			{
-				std::vector<vk::DescriptorSet> descSets = device.allocateDescriptorSets(dsai);
-				mgr.m_arrTransBufferDescriptorSet[i]= DescriptorSetWrapper(descSets[0]);
+				mgr.m_arrTransBufferDescriptorSet[i].Init(mgr.m_vkDescriptorPool, mgr.m_vkTransBufferDescriptorSetLayout);
 			}
 		}
 

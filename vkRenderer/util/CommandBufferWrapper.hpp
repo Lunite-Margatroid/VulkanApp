@@ -1,5 +1,6 @@
 #pragma once
 #include "FenceManager.hpp"
+#include "DescriptorSetWrapper.hpp"
 namespace LT {
 	struct CmdSubmitInfo {
 		std::vector<vk::Semaphore> vecSemToWait;
@@ -48,7 +49,7 @@ namespace LT {
 			vk::PipelineBindPoint pipelineBindPoint,
 			const vk::PipelineLayout& layout,
 			uint32_t firstSet,
-			const std::vector<vk::DescriptorSet>& descriptorSets,
+			const std::vector<DescriptorSetWrapper*>& descriptorSets,
 			const std::vector<uint32_t>& dynamicOffsets);
 
 		void SetViewport(uint32_t firstViewport,const std::vector<vk::Viewport> & viewports);
