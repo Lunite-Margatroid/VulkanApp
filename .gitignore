@@ -1,5 +1,5 @@
 /build
-/doc/*.bkp
+/doc/.$*
 /vendor
 
 *.bat
