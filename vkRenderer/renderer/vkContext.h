@@ -30,6 +30,7 @@ namespace LT {
 		vk::CommandPool m_vkCommandPool;
 		//std::vector<vk::CommandBuffer> m_vecCommandBuffers;
 		std::array<CommandBufferWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrGraphicCmdBuffer;
+		// 没有使用
 		std::array<CommandBufferWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrSurfaceCmdBuffer;
 
 		// 获取的命令队列的索引 来自物理设备
@@ -70,6 +71,8 @@ namespace LT {
 	public:
 		static void InitVulkanInstance(const std::vector<const char* >& extensions);
 		static void InitVulkanDevice(vk::SurfaceKHR surface);
+		static void InitCommandBuffers();
+		static void ReleaseCommandBuffers();
 		static void Release();
 		static vkContext& GetInstance();
 		static vk::Device& GetVkDevice();

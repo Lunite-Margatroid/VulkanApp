@@ -24,7 +24,7 @@ namespace LT{
 	void TransitionPass::Submit(TransitionSubmitInfo& sInOutSubmitInfo)
 	{
 		vk::Device& device = vkContext::GetVkDevice();
-		CommandBufferWrapper cmdBuffer = vkContext::GetCmdBuffer(sInOutSubmitInfo.nFlightFrameIndex);
+		CommandBufferWrapper& cmdBuffer = vkContext::GetCmdBuffer(sInOutSubmitInfo.nFlightFrameIndex);
 
 		CmdSubmitInfo sCmdSubmitInfo;
 		// 需要发射的信号量

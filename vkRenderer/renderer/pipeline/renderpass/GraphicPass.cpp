@@ -350,7 +350,7 @@ namespace LT {
 
 	void GraphicPass::RecordCommand(const RecordCommandInfo& sRecordInfo)
 	{
-		CommandBufferWrapper cmdBuffer = vkContext::GetCmdBuffer(sRecordInfo.nFlightFrameIndex);
+		CommandBufferWrapper& cmdBuffer = vkContext::GetCmdBuffer(sRecordInfo.nFlightFrameIndex);
 		vk::Extent2D extent = { sRecordInfo.nWidth , sRecordInfo.nHeight};
 		uint32_t nFlightFrameIndex = sRecordInfo.nFlightFrameIndex;
 

@@ -24,10 +24,16 @@ namespace LT {
 		};
 
 	private:
-		std::queue<CmdBufferWithFence> m_qCmdBuffers;
+		std::array<CmdBufferWithFence, RENDERER_COMMAND_BUFFER_COUNT> m_arrCmdBuffers;
+		std::queue<CmdBufferWithFence*> m_qCmdBuffers;
 		vk::Queue m_queue;
 	public:
 		CommandBufferWrapper();
+		CommandBufferWrapper(const CommandBufferWrapper&) = delete;
+		CommandBufferWrapper(CommandBufferWrapper&&) = default;
+		CommandBufferWrapper& operator=(const CommandBufferWrapper&) = delete;
+		CommandBufferWrapper& operator=(CommandBufferWrapper&&) = default;
+
 		void Init(vk::Device device, vk::Queue cmdQueue, vk::CommandPool vkCmdPool);
 		void Destroy(vk::Device device, vk::CommandPool vkCmdPool);
 		FenceRef Submit(const CmdSubmitInfo& sSubmitInfo);

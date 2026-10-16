@@ -20,8 +20,6 @@ namespace LT {
 
 		// 销毁Command Pool
 		m_vkDevice.destroyCommandPool(m_vkCommandPool);
-		// command buffer会跟随command pool 自动释放
-		//m_vecCommandBuffers.clear();
 
 		m_vkDevice.destroy();
 
@@ -446,7 +444,20 @@ do{\
 		SlangCompiler::Init();
 
 		s_pVkContext->CreateCommandPool();
+	}
+
+	void vkContext::InitCommandBuffers()
+	{
 		s_pVkContext->CreateCommandBuffer();
+	}
+
+	void vkContext::ReleaseCommandBuffers()
+	{
+		for (CommandBufferWrapper& cmdBuffer : s_pVkContext->m_arrGraphicCmdBuffer) {
+			cmdBuffer.Destroy(GetVkDevice(), GetCmdPool());
+		}
+		// 没有使用
+		s_pVkContext->m_arrSurfaceCmdBuffer;
 	}
 
 } // namespace LT

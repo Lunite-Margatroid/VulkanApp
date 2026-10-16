@@ -79,6 +79,10 @@ namespace LT {
 
 		FenceManager::Init();
 
+		// CommandBufferWrapper用到了FenceRef
+		// 初始化要在FenceManager之后
+		vkContext::InitCommandBuffers();
+
 		DeviceMemoryManager::Init();
 		BufferManager::Init();
 		ImageManager::Init();
@@ -118,6 +122,8 @@ namespace LT {
 		BufferManager::Release();
 
 		DeviceMemoryManager::Release();
+
+		vkContext::ReleaseCommandBuffers();
 
 		FenceManager::Release();
 

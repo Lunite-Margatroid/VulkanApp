@@ -17,17 +17,27 @@ namespace LT {
 			.setCommandPool(vkCmdPool)
 			;
 		std::vector<vk::CommandBuffer> cmdBuffers = device.allocateCommandBuffers(cbai);
-		for (vk::CommandBuffer& cmdBuffer : cmdBuffers)
+
+		for (int i = 0; i < RENDERER_COMMAND_BUFFER_COUNT; ++i)
 		{
-			m_qCmdBuffers.emplace(cmdBuffer, FenceRef(INVALID_FENCE_HANDLE));
+			m_arrCmdBuffers[i] = CmdBufferWithFence(cmdBuffers[i], FenceRef(INVALID_FENCE_HANDLE));
+		}
+
+		for (CmdBufferWithFence& cmdBufferWithFence : m_arrCmdBuffers)
+		{
+			m_qCmdBuffers.push(&cmdBufferWithFence);
 		}
 	}
 	void CommandBufferWrapper::Destroy(vk::Device device, vk::CommandPool vkCmdPool)
 	{
 		std::vector<vk::CommandBuffer> cmdBuffers;
-		while (!m_qCmdBuffers.empty())
+		for(int i =0;i < m_arrCmdBuffers.size();++i)
 		{
-			cmdBuffers.push_back(m_qCmdBuffers.front().cmdBuffer);
+			cmdBuffers.push_back(m_arrCmdBuffers[i].cmdBuffer);
+			m_arrCmdBuffers[i] = CmdBufferWithFence();
+		}
+		while(!m_qCmdBuffers.empty())
+		{
 			m_qCmdBuffers.pop();
 		}
 
@@ -35,12 +45,12 @@ namespace LT {
 	}
 	FenceRef CommandBufferWrapper::Submit(const CmdSubmitInfo& sSubmitInfo)
 	{
-		CmdBufferWithFence cmdBufferWithFence = m_qCmdBuffers.front();
+		CmdBufferWithFence* cmdBufferWithFence = m_qCmdBuffers.front();
 
 		vk::SubmitInfo si = {};
 		si
 			.setCommandBufferCount(1)
-			.setPCommandBuffers(&cmdBufferWithFence.cmdBuffer)
+			.setPCommandBuffers(&cmdBufferWithFence->cmdBuffer)
 			;
 
 		// 需要等待的Semaphore
@@ -59,47 +69,47 @@ namespace LT {
 
 		m_queue.submit(
 			si,
-			cmdBufferWithFence.refFence.GetNativeFence()
+			cmdBufferWithFence->refFence.GetNativeFence()
 		);
 
 		m_qCmdBuffers.pop();
-		m_qCmdBuffers.push(std::move(cmdBufferWithFence));
+		m_qCmdBuffers.push(cmdBufferWithFence);
 
-		return cmdBufferWithFence.refFence;
+		return cmdBufferWithFence->refFence;
 	}
 	void CommandBufferWrapper::PipelineBarrier2(const vk::DependencyInfo sDependencyInfo)
 	{
-		m_qCmdBuffers.front().cmdBuffer.pipelineBarrier2(sDependencyInfo);
+		m_qCmdBuffers.front()->cmdBuffer.pipelineBarrier2(sDependencyInfo);
 	}
 	void CommandBufferWrapper::Begin(const vk::CommandBufferBeginInfo& sBeginInfo)
 	{
 		// 等待上一次提交的Fence
-		if (!m_qCmdBuffers.front().refFence)
+		if (!m_qCmdBuffers.front()->refFence)
 		{
-			m_qCmdBuffers.front().refFence = FenceManager::CreateFence();
+			m_qCmdBuffers.front()->refFence = FenceManager::CreateFence();
 		}
 		else
 		{
-			m_qCmdBuffers.front().refFence.WaitAndResetFence();
+			m_qCmdBuffers.front()->refFence.WaitAndResetFence();
 		}
 		
-		m_qCmdBuffers.front().cmdBuffer.begin(sBeginInfo);
+		m_qCmdBuffers.front()->cmdBuffer.begin(sBeginInfo);
 	}
 	void CommandBufferWrapper::BeginRendering(const vk::RenderingInfo& sRenderingInfo)
 	{
-		m_qCmdBuffers.front().cmdBuffer.beginRendering(sRenderingInfo);
+		m_qCmdBuffers.front()->cmdBuffer.beginRendering(sRenderingInfo);
 	}
 	void CommandBufferWrapper::BindPipeline(const vk::PipelineBindPoint& pipelineBindPoint, const vk::Pipeline pipeline)
 	{
-		m_qCmdBuffers.front().cmdBuffer.bindPipeline(pipelineBindPoint, pipeline);
+		m_qCmdBuffers.front()->cmdBuffer.bindPipeline(pipelineBindPoint, pipeline);
 	}
 	void CommandBufferWrapper::BindVertexBuffers(uint32_t firstBinding, const std::vector<vk::Buffer> buffers, const std::vector<vk::DeviceSize>& offsets)
 	{
-		m_qCmdBuffers.front().cmdBuffer.bindVertexBuffers(firstBinding, buffers, offsets);
+		m_qCmdBuffers.front()->cmdBuffer.bindVertexBuffers(firstBinding, buffers, offsets);
 	}
 	void CommandBufferWrapper::BindIndexBuffer(vk::Buffer buffer, vk::DeviceSize offset, vk::IndexType indexType)
 	{
-		m_qCmdBuffers.front().cmdBuffer.bindIndexBuffer(buffer, offset, indexType);
+		m_qCmdBuffers.front()->cmdBuffer.bindIndexBuffer(buffer, offset, indexType);
 	}
 	void CommandBufferWrapper::BindDescriptorSets(
 		vk::PipelineBindPoint pipelineBindPoint,
@@ -108,15 +118,15 @@ namespace LT {
 		const std::vector<vk::DescriptorSet>& descriptorSets,
 		const std::vector<uint32_t>& dynamicOffsets)
 	{
-		m_qCmdBuffers.front().cmdBuffer.bindDescriptorSets(pipelineBindPoint, layout, firstSet, descriptorSets, dynamicOffsets);
+		m_qCmdBuffers.front()->cmdBuffer.bindDescriptorSets(pipelineBindPoint, layout, firstSet, descriptorSets, dynamicOffsets);
 	}
 	void CommandBufferWrapper::SetViewport(uint32_t firstViewport, const std::vector<vk::Viewport>& viewports)
 	{
-		m_qCmdBuffers.front().cmdBuffer.setViewport(firstViewport, viewports);
+		m_qCmdBuffers.front()->cmdBuffer.setViewport(firstViewport, viewports);
 	}
 	void CommandBufferWrapper::SetScissor(uint32_t firstScissor, const std::vector<vk::Rect2D>& scissors)
 	{
-		m_qCmdBuffers.front().cmdBuffer.setScissor(firstScissor, scissors);
+		m_qCmdBuffers.front()->cmdBuffer.setScissor(firstScissor, scissors);
 	}
 	void CommandBufferWrapper::DrawIndexed(
 		uint32_t         indexCount,
@@ -125,14 +135,14 @@ namespace LT {
 		int32_t          vertexOffset,
 		uint32_t         firstInstance)
 	{
-		m_qCmdBuffers.front().cmdBuffer.drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+		m_qCmdBuffers.front()->cmdBuffer.drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 	void CommandBufferWrapper::EndRendering()
 	{
-		m_qCmdBuffers.front().cmdBuffer.endRendering();
+		m_qCmdBuffers.front()->cmdBuffer.endRendering();
 	}
 	void CommandBufferWrapper::End()
 	{
-		m_qCmdBuffers.front().cmdBuffer.end();
+		m_qCmdBuffers.front()->cmdBuffer.end();
 	}
 }
