@@ -66,11 +66,14 @@ namespace LT {
 
 	void Pipeline::Execute(FrameInfo& sInOutFrameInfo)
 	{
+		ShaderResourceManager::UpdateTransBuffer(
+			sInOutFrameInfo.pRenderView->GetTransBufferHandle(sInOutFrameInfo.nFightFrameIndex), sInOutFrameInfo.pRenderView->GetTransBuffer());
+		ShaderResourceManager::UpdateDeviceTransBuffer();
 
 		StageExecuteInfo sStageInfo;
 		sStageInfo.vecRenderTarget = sInOutFrameInfo.vecRenderTargets;
 		sStageInfo.nDepthBufferID = m_vecDepthBuffer[sInOutFrameInfo.nFightFrameIndex]->GetImageID();
-		sStageInfo.vecRenderEntity = sInOutFrameInfo.vecEntityRender;
+		//sStageInfo.vecRenderEntity = sInOutFrameInfo.vecEntityRender;
 		sStageInfo.pRenderView = sInOutFrameInfo.pRenderView;
 		sStageInfo.nFlightFrameIndex = sInOutFrameInfo.nFightFrameIndex;
 		sStageInfo.nWidth = m_nWidth;
@@ -87,6 +90,12 @@ namespace LT {
 			sStageInfo.vecSemSignal.push_back(sInOutFrameInfo.semDrawing);
 		}
 		
+		// 遍历RenderEntity
+		// 按照Material分类
+		for (EntityRender* pEntity : sInOutFrameInfo.vecEntityRender) {
+			sStageInfo.mapRenderEntity[pEntity->GetMaterialID()].push_back(pEntity);
+		}
+
 		m_sStage.Execute(sStageInfo);
 
 		sInOutFrameInfo.fenceDrawing = sStageInfo.refFence;

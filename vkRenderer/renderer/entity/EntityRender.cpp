@@ -6,7 +6,7 @@
 namespace LT {
 	EntityRender::EntityRender(EntityID nID)
 		: IEntity(nID)
-		, m_matModule(1.f)
+		, m_matModel(1.f)
 	{
 	}
 } // namespace LT

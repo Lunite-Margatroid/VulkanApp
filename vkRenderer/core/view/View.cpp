@@ -10,7 +10,11 @@ namespace LT {
 		: m_nMainScene(INVALID_NODE_ID)
 		, m_pCamera(nullptr)
 	{
-		
+	}
+
+	View::~View()
+	{
+
 	}
 
 	std::vector<EntityRender*> View::GetRenderEntity() const {

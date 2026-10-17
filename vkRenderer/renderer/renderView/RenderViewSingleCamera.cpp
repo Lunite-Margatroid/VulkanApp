@@ -4,43 +4,45 @@
 #include "RenderViewSingleCamera.hpp"
 #include "BufferManager.h"
 
+#include "ShaderResourceManager.hpp"
 
 namespace LT{
 	RenderViewSingleCamera::RenderViewSingleCamera()
 	{
+		for (auto& nBufferHandle : m_arrConstBufferVertTrans)
+		{
+			nBufferHandle = ShaderResourceManager::CreateTransBufferHandle();
+		}
 	}
 	RenderViewSingleCamera::~RenderViewSingleCamera()
 	{
-	}
-	void RenderViewSingleCamera::SetModelMat(const glm::mat4& matModel)
-	{
-		m_MVPMatBuf.modelMat = matModel;
+		for (ConstBufferHandle& hBuffer : m_arrConstBufferVertTrans)
+		{
+			ShaderResourceManager::ReleaseTransBufferHandle(hBuffer);
+			hBuffer = INVALID_CONST_BUFFER_HANDLE;
+		}
 	}
 	void RenderViewSingleCamera::SetProjectionMat(const glm::mat4& matProjection)
 	{
-		m_MVPMatBuf.projectionMat = matProjection;
+		m_VPMatBuf.projectionMat = matProjection;
 	}
 	void RenderViewSingleCamera::SetViewMat(const glm::mat4& matView)
 	{
-		m_MVPMatBuf.viewMat = matView;
+		m_VPMatBuf.viewMat = matView;
 	}
 	void RenderViewSingleCamera::SetCameraPos(const glm::vec3& vec3CameraPos)
 	{
-		m_MVPMatBuf.cameraPos = glm::vec4(vec3CameraPos, 1.f);
+		m_VPMatBuf.cameraPos = glm::vec4(vec3CameraPos, 1.f);
 	}
-	const MVPMatrixBuffer* RenderViewSingleCamera::GetTransBuffer()
+	const VPMatrixBuffer* RenderViewSingleCamera::GetTransBuffer()
 	{
-		m_MVPMatBuf.mvpMat = m_MVPMatBuf.projectionMat * m_MVPMatBuf.viewMat * m_MVPMatBuf.modelMat;
+		m_VPMatBuf.vpMat = m_VPMatBuf.projectionMat * m_VPMatBuf.viewMat;
+		return &m_VPMatBuf;
+	}
 
-		glm::mat3 noramlMat = m_MVPMatBuf.modelMat;
-
-		noramlMat = glm::transpose(glm::inverse(noramlMat));
-
-		m_MVPMatBuf.normalMatCol[0] = glm::vec4(noramlMat[0], 0.f);
-		m_MVPMatBuf.normalMatCol[1] = glm::vec4(noramlMat[1], 0.f);
-		m_MVPMatBuf.normalMatCol[2] = glm::vec4(noramlMat[2], 0.f);
-
-		return &m_MVPMatBuf;
+	ConstBufferHandle RenderViewSingleCamera::GetTransBufferHandle(FlightFrameIndex nFlightIndex) const {
+		RENDERER_ASSERT(nFlightIndex < RENDERER_DEFAULT_FLIGHT_FRAME_NUM, "Out of bound.");
+		return m_arrConstBufferVertTrans[nFlightIndex];
 	}
 } // namespace LT
 

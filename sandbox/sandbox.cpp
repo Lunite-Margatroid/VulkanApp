@@ -9,6 +9,7 @@
 #include "vulkan/vulkan_raii.hpp"
 
 #include "vkRendererUtil.hpp"
+#include "Timer.hpp"
 
 #include <glm/glm.hpp>
 #include <SDL3/SDL.h>
@@ -73,6 +74,13 @@ int main() {
 
 	pEngine->CreateDebugScene(pDisplaySurface);
 
+	// 统计FPS
+	LT::util::Timer timer;
+	double dOneSecond = 1000.0;
+	double dDeltaTime = 1.0;
+	double dLastTime = timer.GetTick();
+	int64_t nFrameCount = 0;
+
 	// Poll for user input.
 	bool stillRunning = true;
 	while (stillRunning) {
@@ -96,7 +104,18 @@ int main() {
 		}
 		pEngine->UpdateDebugScene();
 		pDisplaySurface->Present();
-		SDL_Delay(10);
+		//SDL_Delay(10);
+		// Frame Count
+		nFrameCount += 1;
+		dDeltaTime = timer.GetTick() - dLastTime;
+		dLastTime = timer.GetTick();
+		dOneSecond += dDeltaTime;
+		if (dOneSecond >= 1000.0)
+		{
+			LOG_INFO("FPS: %lld", nFrameCount);
+			nFrameCount = 0;
+			dOneSecond -= 1000.0;
+		}
 	}
 	// 等待空闲
 	pEngine->WaitIdel();

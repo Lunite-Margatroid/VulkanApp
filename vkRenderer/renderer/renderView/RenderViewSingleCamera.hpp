@@ -11,7 +11,9 @@ namespace LT {
 	{
 	private:
 		// std130
-		MVPMatrixBuffer m_MVPMatBuf;
+		VPMatrixBuffer m_VPMatBuf;
+
+		std::array<ConstBufferHandle, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrConstBufferVertTrans;
 	public:
 		RenderViewSingleCamera();
 		~RenderViewSingleCamera();
@@ -22,11 +24,13 @@ namespace LT {
 		RenderViewSingleCamera(RenderViewSingleCamera&&) = delete;
 		RenderViewSingleCamera& operator=(RenderViewSingleCamera&&) = delete;
 
-		void SetModelMat(const glm::mat4& matModel) override;
 		void SetProjectionMat(const glm::mat4& matProjection);
 		void SetViewMat(const glm::mat4& matView);
 		void SetCameraPos(const glm::vec3& vec3CameraPos);
 
-		const MVPMatrixBuffer* GetTransBuffer();
+		const VPMatrixBuffer* GetTransBuffer();
+
+
+		ConstBufferHandle GetTransBufferHandle(FlightFrameIndex nFlightIndex) const;
 	};
 } // namespace LT

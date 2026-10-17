@@ -33,5 +33,9 @@ namespace LT {
 		void StageBegin(StageBeginInfo& sInOutBeginInfo) override;
 		// 主要进行Transition
 		void StageEnd(StageEndInfo& sInOutEndInfo) override;
+
+		void DrawBegin(const StageDrawBeginInfo& sBeginInfo);
+
+		void DrawEnd(StageDrawEndInfo& sEndInfo);
 	};
 } // namespace LT

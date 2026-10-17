@@ -22,26 +22,34 @@ namespace LT {
 		SetBlendEnable(m_eRenderPassFlag, true);
 		SetPolygonMode(m_eRenderPassFlag, vk::PolygonMode::eFill);
 
-		MVPMatrixBuffer tMVPBuf;
-
-		for (auto& nBufferHandle : m_arrConstBufferVertTrans)
-		{
-			nBufferHandle = ShaderResourceManager::CreateTransBufferHandle();
-		}
+		//for (auto& nBufferHandle : m_arrConstBufferVertTrans)
+		//{
+		//	nBufferHandle = ShaderResourceManager::CreateTransBufferHandle();
+		//}
 
 	}
 	EntityRenderMesh::~EntityRenderMesh()
 	{
-		for (ConstBufferHandle& hBuffer : m_arrConstBufferVertTrans)
-		{
-			ShaderResourceManager::ReleaseTransBufferHandle(hBuffer);
-			hBuffer = INVALID_CONST_BUFFER_HANDLE;
+		//for (ConstBufferHandle& hBuffer : m_arrConstBufferVertTrans)
+		//{
+		//	ShaderResourceManager::ReleaseTransBufferHandle(hBuffer);
+		//	hBuffer = INVALID_CONST_BUFFER_HANDLE;
 
-		}
+		//}
 	}
 
 	void EntityRenderMesh::SetMaterial(const MaterialRef& refMtl) {
 		m_refMaterial = refMtl;
+	}
+
+	MaterialRef EntityRenderMesh::GetMaterial() const
+	{
+		return m_refMaterial;
+	}
+
+	MaterialID EntityRenderMesh::GetMaterialID() const
+	{
+		return m_refMaterial.GetID();
 	}
 
 	void EntityRenderMesh::SetVertexBuffer(VertexBuffer* pVertex) {
@@ -52,71 +60,87 @@ namespace LT {
 	}
 
 	void EntityRenderMesh::UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) {
-		sDrawInfo.pRenderView->SetModelMat(m_matModule);
-		if (RenderViewSingleCamera* pRenderView = dynamic_cast<RenderViewSingleCamera*>(sDrawInfo.pRenderView))
-		{
-			ShaderResourceManager::UpdateTransBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex], pRenderView->GetTransBuffer());
-		}
-		else
-		{
-			RENDERER_ASSERT(false, "Unsupport Render View.");
-		}
+		//sDrawInfo.pRenderView->SetModelMat(m_matModel);
+		//if (RenderViewSingleCamera* pRenderView = dynamic_cast<RenderViewSingleCamera*>(sDrawInfo.pRenderView))
+		//{
+		//	ShaderResourceManager::UpdateTransBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex], pRenderView->GetTransBuffer());
+		//}
+		//else
+		//{
+		//	RENDERER_ASSERT(false, "Unsupport Render View.");
+		//}
 	}
 
 	void EntityRender::SetModuleMat(const glm::mat4& matMod)
 	{
-		m_matModule = matMod;
+		m_matModel = matMod;
+
+		m_sModelNormalMat.modelMat = m_matModel;
+		glm::mat4 matNormal = glm::transpose(glm::inverse(m_matModel));
+
+		memcpy(&m_sModelNormalMat.normalMatCol, glm::value_ptr(matNormal), sizeof(m_sModelNormalMat.normalMatCol));
 	}
 
 	void EntityRenderMesh::Draw(EntityDrawInfo& sInOutDrawInfo)
 	{
-		// 设置变换矩阵
-		sInOutDrawInfo.pRenderView->SetModelMat(m_matModule);
-		// TODO: 处理变换矩阵的更新
-		UpdateTransBuffer(sInOutDrawInfo);
-		ShaderResourceManager::UpdateDeviceTransBuffer();
+		CommandBufferWrapper* pCmdBuffer = sInOutDrawInfo.pCommandBuffer;
 
-		// TransBuffer绑定到ShaderResource
-		m_refMaterial->SetTransBuffer(m_arrConstBufferVertTrans[sInOutDrawInfo.nFlightFrameIndex]);
+		pCmdBuffer->BindIndexBuffer(m_pIndexBuffer->GetNativeBuffer(), 0, vk::IndexType::eUint32);
+		std::vector<vk::Buffer> vertexBuffers{ m_pVertexBuffer->GetNativeBuffer() };
+		std::vector<vk::DeviceSize> vertexOffsets{ 0 };
+		pCmdBuffer->BindVertexBuffers(0, vertexBuffers, vertexOffsets);
+		
+		pCmdBuffer->PushConstants(sInOutDrawInfo.vkLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(ModelNormalMat), &m_sModelNormalMat);
 
-		MaterialBindInfo sBindInfo;
-		sBindInfo.eStage = sInOutDrawInfo.eRenderStage;
-		sBindInfo.nFlag = m_eRenderPassFlag;
-		sBindInfo.nFlightIndex = sInOutDrawInfo.nFlightFrameIndex;
+		pCmdBuffer->DrawIndexed(m_pIndexBuffer->GetIndexCount(), 1, 0, 0, 0);
 
-		GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(m_refMaterial->Bind(sBindInfo));
-		if (pRenderPass)
-		{
-			RecordCommandInfo sRecordInfo;
-			sRecordInfo.nWidth = sInOutDrawInfo.nWidth;
-			sRecordInfo.nHeight = sInOutDrawInfo.nHeight;
-			sRecordInfo.nDepthStencilID = sInOutDrawInfo.nDepthBuffer;
-			sRecordInfo.vecImageIDColor = sInOutDrawInfo.vecRenderTargets;
-			sRecordInfo.vecVertexBufferID.push_back(m_pVertexBuffer->GetBufferID());
-			sRecordInfo.nIndexBufferID = m_pIndexBuffer->GetBufferID();
-			sRecordInfo.nFlightFrameIndex = sInOutDrawInfo.nFlightFrameIndex;
-			sRecordInfo.eColorLoadOp = sInOutDrawInfo.bClear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
-			sRecordInfo.eDepthLoadOp = sInOutDrawInfo.bClear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
+		//// 设置变换矩阵
+		//sInOutDrawInfo.pRenderView->SetModelMat(m_matModel);
+		//// TODO: 处理变换矩阵的更新
+		//UpdateTransBuffer(sInOutDrawInfo);
+		//ShaderResourceManager::UpdateDeviceTransBuffer();
 
-			pRenderPass->RecordCommand(sRecordInfo);
+		//// TransBuffer绑定到ShaderResource
+		//m_refMaterial->SetTransBuffer(m_arrConstBufferVertTrans[sInOutDrawInfo.nFlightFrameIndex]);
 
-			GraphicSubmitInfo sSubmitInfo;
-			sSubmitInfo.nFlightFrameIndex = sInOutDrawInfo.nFlightFrameIndex;
+		//MaterialBindInfo sBindInfo;
+		//sBindInfo.eStage = sInOutDrawInfo.eRenderStage;
+		//sBindInfo.nFlag = m_eRenderPassFlag;
+		//sBindInfo.nFlightIndex = sInOutDrawInfo.nFlightFrameIndex;
 
-			if (!sInOutDrawInfo.vecSemWait.empty())
-			{
-				sSubmitInfo.vecSemToWait = sInOutDrawInfo.vecSemWait;
-				sSubmitInfo.vecSemWaitMasks = sInOutDrawInfo.vecSemWaitMasks;
-			}
+		//GraphicPass* pRenderPass = dynamic_cast<GraphicPass*>(m_refMaterial->Bind(sBindInfo));
+		//if (pRenderPass)
+		//{
+		//	RecordCommandInfo sRecordInfo;
+		//	sRecordInfo.nWidth = sInOutDrawInfo.nWidth;
+		//	sRecordInfo.nHeight = sInOutDrawInfo.nHeight;
+		//	sRecordInfo.nDepthStencilID = sInOutDrawInfo.nDepthBuffer;
+		//	sRecordInfo.vecImageIDColor = sInOutDrawInfo.vecRenderTargets;
+		//	sRecordInfo.vecVertexBufferID.push_back(m_pVertexBuffer->GetBufferID());
+		//	sRecordInfo.nIndexBufferID = m_pIndexBuffer->GetBufferID();
+		//	sRecordInfo.nFlightFrameIndex = sInOutDrawInfo.nFlightFrameIndex;
+		//	sRecordInfo.eColorLoadOp = sInOutDrawInfo.bClear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
+		//	sRecordInfo.eDepthLoadOp = sInOutDrawInfo.bClear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
 
-			if (!sInOutDrawInfo.vecSemSignal.empty())
-			{
-				sSubmitInfo.vecSemToSignal = sInOutDrawInfo.vecSemSignal;
-			}
+		//	pRenderPass->RecordCommand(sRecordInfo);
 
-			pRenderPass->Submit(sSubmitInfo);
+		//	GraphicSubmitInfo sSubmitInfo;
+		//	sSubmitInfo.nFlightFrameIndex = sInOutDrawInfo.nFlightFrameIndex;
 
-			sInOutDrawInfo.refFence = sSubmitInfo.refFence;
-		}
+		//	if (!sInOutDrawInfo.vecSemWait.empty())
+		//	{
+		//		sSubmitInfo.vecSemToWait = sInOutDrawInfo.vecSemWait;
+		//		sSubmitInfo.vecSemWaitMasks = sInOutDrawInfo.vecSemWaitMasks;
+		//	}
+
+		//	if (!sInOutDrawInfo.vecSemSignal.empty())
+		//	{
+		//		sSubmitInfo.vecSemToSignal = sInOutDrawInfo.vecSemSignal;
+		//	}
+
+		//	pRenderPass->Submit(sSubmitInfo);
+
+		//	sInOutDrawInfo.refFence = sSubmitInfo.refFence;
+		//}
 	}
 }

@@ -19,11 +19,11 @@ namespace LT {
 		uint32_t nWidth;
 		uint32_t nHeight;
 
-
-		BufferID nIndexBufferID;
 		ImageID nDepthStencilID;
 		std::vector<ImageID> vecImageIDColor;
-		std::vector<BufferID> vecVertexBufferID;
+		std::vector<std::vector<BufferID>> vecVertexBufferID;
+		std::vector<BufferID> vecIndexBufferID;
+
 
 		vk::AttachmentLoadOp eColorLoadOp;
 		vk::AttachmentLoadOp eDepthLoadOp;
@@ -32,7 +32,6 @@ namespace LT {
 			: nFlightFrameIndex(0)
 			, nWidth(0)
 			, nHeight(0)
-			, nIndexBufferID(INVALID_BUFFER_ID)
 			, nDepthStencilID(INVALID_IMAGE_ID)
 			, eColorLoadOp(vk::AttachmentLoadOp::eLoad)
 			, eDepthLoadOp(vk::AttachmentLoadOp::eLoad)
@@ -101,7 +100,10 @@ namespace LT {
 		GraphicPass(GraphicPass&&) = delete;
 		GraphicPass(const GraphicPass&) = delete;
 
-		void Init(const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout);
+		void Init(
+			const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout,
+			bool bCreateModelMatPushConst = true
+			);
 
 		void SetDescriptorSets(const std::vector<DescriptorSetWrapper*>& vecDescriptorSets);
 
@@ -113,6 +115,10 @@ namespace LT {
 		void RecordCommand(const RecordCommandInfo& sRecordInfo);
 
 		void Submit(GraphicSubmitInfo& sInOutSubmitInfo);
+
+		void Bind(CommandBufferWrapper* pCmdBuffer);
+
+		vk::PipelineLayout GetPipelineLayout() const;
 
 	public:
 		static void GenVertexAttributeDesc(VertexChannelFlag nVertexChannelFlag, std::vector<vk::VertexInputBindingDescription>& vecInputBindDesc, std::vector<vk::VertexInputAttributeDescription>& vertDesc);

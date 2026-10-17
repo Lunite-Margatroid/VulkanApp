@@ -12,7 +12,7 @@ namespace LT {
 	class ConstBuffer;
 
 	constexpr uint32_t BLOCK_COUNT_PER_BUFFER_HEAP = 128;
-
+	constexpr uint32_t CONST_BUFFER_OFFSET_ALIGNMENT = 64;
 
 	// Trans Buffer的binding index
 	constexpr uint32_t MTL_TRANS_BUFFER_BINDING_INDEX = 0u;
@@ -39,6 +39,7 @@ namespace LT {
 		struct ConstBufferPool {
 			std::vector<BufferWithCounter> m_buffers;
 			const size_t m_nSizePerBlock;
+			const size_t m_nSizePerBlockAligned;
 
 			ConstBufferPool(size_t nSizePerBlock);
 			ConstBufferPool(const ConstBufferPool&) = delete;

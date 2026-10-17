@@ -2,31 +2,39 @@
 #include "CommonVertexOutput.slang"
 
 
-struct MVPMatrix{
+
+struct ModelNormalMat {
 	float4x4 modelMat;
+	float3x3 normalMat;
+};
+
+struct VPMatrix{
 	float4x4 viewMat;
 	float4x4 projectiondMat;
-	float4x4 mvpMat;
-	float3x3 normalMat;
+	float4x4 vpMat;
 	float3 cameraPos;
 };
+
+
+[[vk::push_constant]]
+ModelNormalMat pc_ModelMat;
 
 // (binding, set)
 // binding = 0
 // set = 0 : TransBuffer
 [[vk::binding(0, 0)]]
-ConstantBuffer<MVPMatrix, Std140DataLayout> u_MVPMatix;
+ConstantBuffer<VPMatrix, Std140DataLayout> u_VPMatix;
 
 [shader("vertex")]
 SVertexOutput VertMain(SVertexInput vertIn){
 	SVertexOutput output;
 // 顶点坐标
 #ifdef VERT_POSITION
-	output.fragPos = mul(u_MVPMatix.mvpMat, float4(vertIn.vertPosition, 1.0));
-	output.fragWorldPos = mul(u_MVPMatix.modelMat, float4(vertIn.vertPosition, 1.0)).xyz;
+	output.fragPos = mul(mul(pc_ModelMat.modelMat, u_VPMatix.vpMat), float4(vertIn.vertPosition, 1.0));
+	output.fragWorldPos = mul(pc_ModelMat.modelMat, float4(vertIn.vertPosition, 1.0)).xyz;
 #else
-	output.fragPos = mul(u_MVPMatix.mvpMat, float4(0.0, 0.0, 0.0, 1.0));
-	output.fragWorldPos = mul(u_MVPMatix.modelMat, float4(0.0, 0.0, 0.0, 1.0)).xyz;
+	output.fragPos = mul(mul(pc_ModelMat.modelMat, u_VPMatix.vpMat), float4(0.0, 0.0, 0.0, 1.0));
+	output.fragWorldPos = mul(pc_ModelMat.modelMat, float4(0.0, 0.0, 0.0, 1.0)).xyz;
 #endif
 
 // UV
@@ -52,15 +60,15 @@ SVertexOutput VertMain(SVertexInput vertIn){
 
 // 法线和切线
 #ifdef VERT_NORMAL
-	output.fragNormal = mul(u_MVPMatix.normalMat, vertIn.vertNormal);
+	output.fragNormal = mul(pc_ModelMat.normalMat, vertIn.vertNormal);
 #endif
 
 #ifdef VERT_TANGENT
-	output.fragTangent = mul(u_MVPMatix.normalMat, vertIn.vertTangent);
+	output.fragTangent = mul(pc_ModelMat.normalMat, vertIn.vertTangent);
 #endif
 
 #ifdef VERT_BITANGENT
-	output.fragBitangent = mul(u_MVPMatix.normalMat, vertIn.vertBitangent);
+	output.fragBitangent = mul(pc_ModelMat.normalMat, vertIn.vertBitangent);
 #endif
 	
 // 顶点颜色	
@@ -74,10 +82,10 @@ SVertexOutput VertMain(SVertexInput vertIn){
 #endif
 
 // 相机世界坐标
-	output.cameraWorldPos = u_MVPMatix.cameraPos;
+	output.cameraWorldPos = u_VPMatix.cameraPos;
 
 // 观察向量
-	output.viewVec = normalize(u_MVPMatix.cameraPos - output.fragWorldPos);
+	output.viewVec = normalize(u_VPMatix.cameraPos - output.fragWorldPos);
 
 // 模型坐标
 #ifdef VERT_POSITION

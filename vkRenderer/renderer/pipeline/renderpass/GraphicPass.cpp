@@ -1,5 +1,6 @@
 // 编码utf-8
 #include "vkRendererCommon.h"
+#include "EngineCommon.h"
 #include "GraphicPass.hpp"
 #include "vkContext.h"
 #include "SlangCompiler.hpp"
@@ -12,6 +13,10 @@
 #include "SamplerManager.h"
 
 #include "ShaderResourceManager.hpp"
+
+// RenderEntity
+#include "EntityRender.hpp"
+#include "EntityRenderMesh.hpp"
 
 namespace LT {
 	GraphicPass::GraphicPass()
@@ -38,7 +43,9 @@ namespace LT {
 		}
 
 	}
-	void GraphicPass::Init(const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout) {
+	void GraphicPass::Init(
+		const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout,
+		bool bCreateModelMatPushConst/* = true*/) {
 
 		vk::Device& device = vkContext::GetVkDevice();
 
@@ -221,6 +228,22 @@ namespace LT {
 			.setPSetLayouts(vecVkDescSetLayout.data())
 			.setPushConstantRanges(0)
 			;
+
+		if (bCreateModelMatPushConst)
+		{
+
+			vk::PushConstantRange pcr = {};
+			pcr
+				.setOffset(0)
+				.setSize(sizeof(ModelNormalMat))
+				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
+				;
+
+			plci
+				.setPushConstantRangeCount(1)
+				.setPPushConstantRanges(&pcr)
+				;
+		}
 
 		m_vkPipelineLayout = device.createPipelineLayout(plci);
 
@@ -425,21 +448,6 @@ namespace LT {
 		// 绑定渲染管线
 		cmdBuffer.BindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
 
-		// 绑定顶点缓冲
-		std::vector<vk::Buffer> vecVertexBuffer;
-		std::vector<vk::DeviceSize> vecVertexBufferOffset;
-		vecVertexBuffer.reserve(sRecordInfo.vecVertexBufferID.size());
-		vecVertexBufferOffset.reserve(sRecordInfo.vecVertexBufferID.size());
-		for (BufferID nID : sRecordInfo.vecVertexBufferID)
-		{
-			vecVertexBuffer.push_back(BufferManager::GetNativeDeviceBuffer(nID));
-			vecVertexBufferOffset.push_back(0);
-		}
-		cmdBuffer.BindVertexBuffers(0, vecVertexBuffer, vecVertexBufferOffset);
-
-		// 绑定索引缓冲
-		cmdBuffer.BindIndexBuffer(BufferManager::GetNativeDeviceBuffer(sRecordInfo.nIndexBufferID), 0, vk::IndexType::eUint32);
-
 		// 绑定
 		// const buffer
 		// texture resource
@@ -476,9 +484,31 @@ namespace LT {
 		cmdBuffer.SetViewport(0, std::vector<vk::Viewport>{viewport});
 		cmdBuffer.SetScissor(0, std::vector<vk::Rect2D>{scissor});
 
-		
-		auto nIndexCount = BufferManager::GetIndexBuffer(sRecordInfo.nIndexBufferID)->GetIndexCount();
-		cmdBuffer.DrawIndexed(nIndexCount, 1, 0, 0, 0);
+		// 绘制各个Mesh
+		for (size_t i = 0; i < sRecordInfo.vecVertexBufferID.size(); ++i)
+		{
+			const std::vector<BufferID> &vecVertexBufferID = sRecordInfo.vecVertexBufferID[i];
+			const BufferID nIndexBufferID = sRecordInfo.vecIndexBufferID[i];
+			// 绑定顶点缓冲
+			std::vector<vk::Buffer> vecVertexBuffer;
+			std::vector<vk::DeviceSize> vecVertexBufferOffset;
+			vecVertexBuffer.reserve(vecVertexBufferID.size());
+			vecVertexBufferOffset.reserve(vecVertexBufferID.size());
+			for (BufferID nID : vecVertexBufferID)
+			{
+				vecVertexBuffer.push_back(BufferManager::GetNativeDeviceBuffer(nID));
+				vecVertexBufferOffset.push_back(0);
+			}
+			cmdBuffer.BindVertexBuffers(0, vecVertexBuffer, vecVertexBufferOffset);
+
+			// 绑定索引缓冲
+			cmdBuffer.BindIndexBuffer(BufferManager::GetNativeDeviceBuffer(nIndexBufferID), 0, vk::IndexType::eUint32);
+
+			auto nIndexCount = BufferManager::GetIndexBuffer(nIndexBufferID)->GetIndexCount();
+			cmdBuffer.DrawIndexed(nIndexCount, 1, 0, 0, 0);
+		}
+
+
 
 		cmdBuffer.EndRendering();
 
@@ -534,5 +564,22 @@ namespace LT {
 			pDescriptorSet->SetFenceDrawing(fence);
 		}
 
+	}
+	void GraphicPass::Bind(CommandBufferWrapper* pCmdBuffer)
+	{
+		// 绑定渲染管线
+		pCmdBuffer->BindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
+
+		pCmdBuffer->BindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics,
+			m_vkPipelineLayout,
+			0,
+			m_vecDescriptorSets,
+			{}
+		);
+	}
+	vk::PipelineLayout GraphicPass::GetPipelineLayout() const
+	{
+		return m_vkPipelineLayout;
 	}
 } // namespace LT

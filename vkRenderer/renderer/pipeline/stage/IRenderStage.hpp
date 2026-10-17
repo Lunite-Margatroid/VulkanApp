@@ -13,7 +13,8 @@ namespace LT {
 		FlightFrameIndex nFlightFrameIndex;
 		ImageID nDepthBufferID;
 		std::vector<ImageID> vecRenderTarget;
-		std::vector<EntityRender*> vecRenderEntity;
+		//std::vector<EntityRender*> vecRenderEntity;
+		std::map<MaterialID, std::vector<EntityRender*>> mapRenderEntity;
 		RenderView* pRenderView;
 
 		std::vector<vk::Semaphore> vecSemWait;
@@ -33,6 +34,44 @@ namespace LT {
 			, pRenderView(nullptr)
 			, refFence(INVALID_FENCE_HANDLE)
 		{}
+	};
+
+	struct StageDrawBeginInfo {
+		uint32_t nWidth;
+		uint32_t nHeight;
+		FlightFrameIndex nFlightFrameIndex;
+		ImageID nDepthBufferID;
+		std::vector<ImageID> vecRenderTarget;
+
+		vk::AttachmentLoadOp eColorLoadOp;
+		vk::AttachmentStoreOp eColorStoreOp;
+		vk::AttachmentLoadOp eDepthLoadOp;
+		vk::AttachmentStoreOp eDepthStoreOp;
+		StageDrawBeginInfo() 
+			: nWidth(0)
+			, nHeight(0)
+			, nFlightFrameIndex(-1)
+			, nDepthBufferID(INVALID_IMAGE_ID)
+			, eColorLoadOp(vk::AttachmentLoadOp::eLoad)
+			, eColorStoreOp(vk::AttachmentStoreOp::eStore)
+			, eDepthLoadOp(vk::AttachmentLoadOp::eLoad)
+			, eDepthStoreOp(vk::AttachmentStoreOp::eDontCare)
+		{}
+	};
+
+	struct StageDrawEndInfo {
+		FlightFrameIndex nFlightFrameIndex;
+
+		// 这里面有Submit 需要时序控制
+		std::vector<vk::Semaphore> vecSemWait;
+		std::vector<vk::PipelineStageFlags> vecSemWaitMask;
+
+		std::vector<vk::Semaphore> vecSemSignal;
+
+		// 当前Stage最后一次Submit的Fence
+		// 通常作为输出参数
+		FenceRef refFence;
+		StageDrawEndInfo() :nFlightFrameIndex(-1){}
 	};
 
 	struct StageBeginInfo {

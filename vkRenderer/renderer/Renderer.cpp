@@ -32,11 +32,6 @@ namespace LT {
 		m_pRenderView.reset();
 	}
 
-	void Renderer::SetModelMat(const glm::mat4& matModel)
-	{
-		m_pRenderView->SetModelMat(matModel);
-	}
-
 	void Renderer::SetViewMat(const glm::mat4& matView)
 	{
 		m_pRenderView->SetViewMat(matView);

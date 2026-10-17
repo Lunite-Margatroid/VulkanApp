@@ -56,8 +56,9 @@ namespace LT {
 			pPass = reinterpret_cast<GraphicPass*>(iterPass->second);
 		}
 
-		BindShaderResource(sMtlBindInfo);
+		//BindShaderResource(sMtlBindInfo);
 		pPass->SetDescriptorSets({ &ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), &s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) });
+		pPass->Bind(sMtlBindInfo.pCmdBuffer);
 		return pPass;
 	}
 

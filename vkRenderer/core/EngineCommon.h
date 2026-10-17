@@ -62,30 +62,38 @@ namespace LT
 		Default
 	};
 
-
-	// std130
-	struct MVPMatrixBuffer {
+	struct ModelNormalMat {
 		glm::mat4 modelMat;
-		glm::mat4 viewMat;
-		glm::mat4 projectionMat;
-		glm::mat4 mvpMat;
-		// 列主序
-		// 第四行无用 内存对齐 std130
-		// 实际是一个3x3矩阵
+// 列主序
+// 第四行无用 内存对齐 std130
+// 实际是一个3x3矩阵
 		glm::vec4 normalMatCol[3];
-		// cameraPos.w 无用 内存对齐
-		glm::vec4 cameraPos;
 
-		MVPMatrixBuffer()
-			: modelMat(glm::identity<glm::mat4>())
-			, viewMat(glm::identity<glm::mat4>())
-			, projectionMat(glm::identity<glm::mat4>())
-			, mvpMat(glm::identity<glm::mat4>())
-			, cameraPos(0.f, 0.f, 0.f, 0.f)
-		{
+		ModelNormalMat() 
+			: modelMat(glm::identity<glm::mat4>()) {
 			normalMatCol[0] = glm::vec4(1.f, 0.f, 0.f, 0.f);
 			normalMatCol[1] = glm::vec4(0.f, 1.f, 0.f, 0.f);
 			normalMatCol[2] = glm::vec4(0.f, 0.f, 1.f, 0.f);
+		}
+	};
+
+	// std130
+	struct VPMatrixBuffer {
+		
+		glm::mat4 viewMat;
+		glm::mat4 projectionMat;
+		glm::mat4 vpMat;
+
+		// cameraPos.w 无用 内存对齐
+		glm::vec4 cameraPos;
+
+		VPMatrixBuffer()
+			: viewMat(glm::identity<glm::mat4>())
+			, projectionMat(glm::identity<glm::mat4>())
+			, cameraPos(0.f, 0.f, 0.f, 0.f)
+			, vpMat(1.0f)
+		{
+
 		}
 	};
 }

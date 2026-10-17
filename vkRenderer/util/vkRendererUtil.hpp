@@ -8,6 +8,11 @@ namespace LT
 	{
 		vk::Instance CreateVulkanInstance(const char* const* extensions, uint32_t nCount);
 
+		template <typename T>
+		constexpr T AlignUp(T value, size_t alignment) {
+			return (value + alignment - 1) & ~(alignment - 1);
+		}
+
 		// -------------- math -----------------
 		namespace RandomGenerator
 		{

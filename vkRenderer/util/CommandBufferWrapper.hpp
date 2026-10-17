@@ -26,8 +26,9 @@ namespace LT {
 
 	private:
 		std::array<CmdBufferWithFence, RENDERER_COMMAND_BUFFER_COUNT> m_arrCmdBuffers;
-		std::queue<CmdBufferWithFence*> m_qCmdBuffers;
+		std::queue<size_t> m_qCmdBuffers;
 		vk::Queue m_queue;
+		CmdBufferWithFence& Front() { return m_arrCmdBuffers[m_qCmdBuffers.front()]; }
 	public:
 		CommandBufferWrapper();
 		CommandBufferWrapper(const CommandBufferWrapper&) = delete;
@@ -63,6 +64,14 @@ namespace LT {
 
 		void EndRendering();
 		void End();
+
+		void PushConstants(
+			vk::PipelineLayout                       layout,
+			vk::ShaderStageFlags                     stageFlags,
+			uint32_t                             offset,
+			uint32_t size,
+			const void* pValues
+		);
 	};
 
 } // namspace LT

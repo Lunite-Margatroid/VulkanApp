@@ -19,6 +19,7 @@ namespace LT {
 
 	ShaderResourceManager::ConstBufferPool::ConstBufferPool(size_t nSizePerBlock)
 		: m_nSizePerBlock(nSizePerBlock)
+		, m_nSizePerBlockAligned(util::AlignUp(nSizePerBlock, CONST_BUFFER_OFFSET_ALIGNMENT))
 	{}
 
 	ShaderResourceManager::ConstBufferPool::~ConstBufferPool()
@@ -58,7 +59,7 @@ namespace LT {
 					if (!buffer.flagRef.test(i))
 					{
 						binding.nBufferID = buffer.nBufferID;
-						binding.nOffset = i * binding.nSize;
+						binding.nOffset = i * m_nSizePerBlockAligned;
 						buffer.flagRef.set(i);
 						buffer.bDirt = true;
 						break;
@@ -71,7 +72,7 @@ namespace LT {
 		if (bNeedAllocate)
 		{
 			BufferWithCounter buffer(
-				BufferManager::CreateConstBuffer(BLOCK_COUNT_PER_BUFFER_HEAP * m_nSizePerBlock, nullptr)->GetBufferID(),
+				BufferManager::CreateConstBuffer(BLOCK_COUNT_PER_BUFFER_HEAP * m_nSizePerBlockAligned, nullptr)->GetBufferID(),
 				true
 			);
 
@@ -94,7 +95,7 @@ namespace LT {
 		for (BufferWithCounter& buffer : m_buffers)
 		{
 			if (buffer.nBufferID == binding.nBufferID) {
-				size_t nIndex = binding.nOffset / binding.nSize;
+				size_t nIndex = binding.nOffset / m_nSizePerBlockAligned;
 				RENDERER_ASSERT(buffer.flagRef.test(nIndex), "The Buffer is not used.");
 				buffer.flagRef.reset(nIndex);
 				bFound = true;
@@ -148,7 +149,7 @@ namespace LT {
 
 	ShaderResourceManager::ShaderResourceManager()
 		: m_nConstBufferHandleCounter(0)
-		, m_sMVPTransBufferPool(sizeof(MVPMatrixBuffer))
+		, m_sMVPTransBufferPool(sizeof(VPMatrixBuffer))
 		, m_vkDescriptorPool(VK_NULL_HANDLE)
 	{
 	}
@@ -358,7 +359,7 @@ namespace LT {
 		{
 			for (int i = 0; i < mgr.m_arrTransBufferDescriptorSet.size(); i++)
 			{
-				mgr.m_arrTransBufferDescriptorSet[i].Init(mgr.m_vkDescriptorPool, mgr.m_vkTransBufferDescriptorSetLayout);
+				mgr.m_arrTransBufferDescriptorSet[i].Init(mgr.m_vkDescriptorPool, GetTransBufferDescriptorSetLayout());
 			}
 		}
 

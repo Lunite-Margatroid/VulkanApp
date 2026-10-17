@@ -33,6 +33,7 @@ namespace LT {
 		RenderStageType eStage;
 		RenderPassFlag nFlag;
 		FlightFrameIndex nFlightIndex;
+		CommandBufferWrapper* pCmdBuffer;
 	};
 
 	using MaterialPropDataLayout = std::map<MtlProp, size_t>;
@@ -70,6 +71,8 @@ namespace LT {
 
 		virtual RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) = 0;
 		//virtual void UpdateMtlResource(RenderStageType eStage, RenderPassFlag nFlag) = 0;
+
+		virtual void BindShaderResource(const MaterialBindInfo& sMtlBindInfo) = 0;
 
 		virtual EngineResult SetMtlProp(MtlProp eProp, const MtlPropVar& value) = 0;
 
@@ -191,7 +194,7 @@ namespace LT {
 			return EngineResult::eSuccess;
 		}
 
-		void BindShaderResource(const MaterialBindInfo& sMtlBindInfo) {
+		void BindShaderResource(const MaterialBindInfo& sMtlBindInfo) override{
 			// 绑定资源
 			std::vector<vk::WriteDescriptorSet> vecWDSMtlProp;
 			std::vector<vk::WriteDescriptorSet> vecWDSTrans;

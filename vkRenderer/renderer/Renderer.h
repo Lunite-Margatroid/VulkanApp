@@ -27,7 +27,6 @@ namespace LT {
 		void SetView(View* pView);
 		void SetDisplayDevice(DisplayDevice* pDisplayDevice);
 
-		void SetModelMat(const glm::mat4& matModel);
 		void SetViewMat(const glm::mat4& matView);
 		void SetProjectionMat(const glm::mat4& matProjection);
 		void SetCameraPos(const glm::vec4& vec4CameraPos);

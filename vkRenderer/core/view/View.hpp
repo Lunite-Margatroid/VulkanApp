@@ -17,7 +17,7 @@ namespace LT {
 
 	public:
 		View();
-		virtual ~View() = default;
+		virtual ~View();
 
 		// 三五法则:删除拷贝和移动
 		View(const View&) = delete;
