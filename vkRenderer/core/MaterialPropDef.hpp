@@ -69,6 +69,7 @@ namespace LT {
 
 
 	enum class MtlProp {
+		eInvalid = -1,
 #define X(eProp, eType)	e##eProp,
 
 		MtlPropList(X)

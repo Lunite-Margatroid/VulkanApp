@@ -2,6 +2,7 @@
 #pragma once
 #include "IRenderStage.hpp"
 #include "RenderPass.hpp"
+#include "GraphicPass.hpp"
 
 #include "ShaderResourceManager.hpp"
 #include "SamplerManager.h"
@@ -58,11 +59,13 @@ namespace LT {
 		operator bool() const;
 	};
 
+
 	class IMaterial {
 		friend class MaterialManager;
 	protected:
 		MaterialID m_nID;
 		MaterialType m_eMtlType;
+		RenderPassFlag m_nTexDefFlag;
 		std::unordered_map<BindingInfo, MaterialSlot, BindingInfoHash> m_mapSlots;
 
 	protected:
@@ -87,6 +90,8 @@ namespace LT {
 		MaterialType GetMaterialType() const { return m_eMtlType; }
 
 		EngineResult SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID);
+
+		MaterialID GetMaterialID()const { return m_nID; }
 
 	};
 
@@ -141,6 +146,10 @@ namespace LT {
 			}
 		}
 
+		~BaseMaterial() {
+			ShaderResourceManager::ReleaseMtlPropBufferHandle<TBaseMaterial>(m_nPropBufferHandle);
+		}
+
 		void RegisterStage(RenderStageType eStage) override
 		{
 			if (s_mapRenderPasses.find(eStage) == s_mapRenderPasses.end())
@@ -184,7 +193,11 @@ namespace LT {
 				{
 					return EngineResult::eInvalidParam;
 				}
-				m_mapSlots[BindingInfo(iter->second, MTL_TEX_BINDING_SPACE, ShaderResSpace::eMtlProp)] = MaterialSlot(vk::DescriptorType::eCombinedImageSampler, std::get<ImageID>(value));
+				ImageID nImageID = std::get<ImageID>(value);
+
+				m_mapSlots[BindingInfo(iter->second, MTL_TEX_BINDING_SPACE, ShaderResSpace::eMtlProp)] = MaterialSlot(vk::DescriptorType::eCombinedImageSampler, nImageID);
+
+				SetMtlPropTex(m_nTexDefFlag, MtlPropEnum2TexIndex(eProp), nImageID != INVALID_IMAGE_ID);
 			}
 			else
 			{
@@ -289,7 +302,59 @@ namespace LT {
 			}
 		}
 
-		// ---- static -----
+		RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) override
+		{
+			GraphicPass* pPass = nullptr;
+
+
+
+			auto iterPasses = s_mapRenderPasses.find(sMtlBindInfo.eStage);
+			if (iterPasses == s_mapRenderPasses.end())
+			{
+				return nullptr;
+			}
+			auto& mapPass = iterPasses->second;
+
+			RenderPassFlag nFlag = static_cast<uint64_t>(sMtlBindInfo.nFlag) & (~MTL_PROP_TEX_MASK) | static_cast<uint_64_t>(m_nTexDefFlag) & MTL_PROP_TEX_MASK;
+
+			auto iterPass = mapPass.find(nFlag);
+			if (iterPass == mapPass.end())
+			{
+				pPass = new GraphicPass();
+				pPass->SetRenderPassFlag(nFlag);
+
+				InitShaderModule(pPass);
+
+				std::vector<vk::DescriptorSetLayout> vecSetLayout;
+
+				//跟 enum ShaderResSpace 的顺序保持一致
+				//	eTransBuffer = 0,
+				//	eMtlProp = 1,
+
+				// 0 Trans Buffer
+				auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescriptorSetLayout();
+				vecSetLayout.push_back(vkTransBufferSetLayout);
+				// 1 Mtl Prop
+				auto vkMtlPropDescSet = GetMtlPropDescriptorSetLayout();
+				vecSetLayout.push_back(vkMtlPropDescSet);
+
+
+				pPass->Init(vecSetLayout);
+
+				mapPass[nFlag] = pPass;
+			}
+			else
+			{
+				pPass = reinterpret_cast<GraphicPass*>(iterPass->second);
+			}
+
+			//BindShaderResource(sMtlBindInfo);
+			pPass->SetDescriptorSets({ &ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), &s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) });
+			pPass->Bind(sMtlBindInfo.pCmdBuffer);
+			return pPass;
+		}
+
+		// -------------------------------------------------------- static ----------------------------------------------------------------
 	public:
 		// 声明材质属性变量的着色器代码
 		static std::string GenMtlPropShaderModule() {
@@ -320,15 +385,18 @@ namespace LT {
 
 			for (const auto& [eProp, bindingIndex] : s_setImage)
 			{
-				oss << "[[vk::binding(" << bindingIndex << ", " << static_cast<int>(ShaderResSpace::eMtlProp) << ")]]" << std::endl
-					<< "Sampler2D " << ToString(eProp) << ";" << std::endl;
+				if (HasMtlPropTex(m_nTexDefFlag, MtlPropEnum2TexIndex(eProp)))
+				{
+					oss << "[[vk::binding(" << bindingIndex << ", " << static_cast<int>(ShaderResSpace::eMtlProp) << ")]]" << std::endl
+						<< "Sampler2D " << ToString(eProp) << ";" << std::endl;
+				}
 			}
 
 			return oss.str();
 		}
 	protected:
 
-		// ------------- 静态变量 ------------
+		// ------------------------------ 静态变量 ------------------------------------
 		static RenderPassMap s_mapRenderPasses;
 		// 属性在数据块中的offset /字节
 		static MaterialPropDataLayout s_mapMtlPropDataLayout;
@@ -343,7 +411,10 @@ namespace LT {
 		// 材质属性相关的Desc Set
 		static MtlPropDescriptorSets s_sDescriptorSets;
 
-		// ------------------------------------
+		// -----------------------------------------------------------------------------
+
+		// 加载Shader代码 创建RenderPass
+		static void InitShaderModule(GraphicPass* pPass);
 
 		// 获取材质属性描述符的绑定索引
 		static void GetDescriptorBindings(std::vector<std::pair<vk::DescriptorType, BindingInfo>>& bindings) {

@@ -66,7 +66,7 @@ namespace LT {
 		// 用于材质属性的Buffer Pool
 		std::map<MaterialType, ConstBufferPool> m_mapBuffers;
 		// 用于MVPTrans的Buffer Pool
-		ConstBufferPool m_sMVPTransBufferPool;
+		ConstBufferPool m_sVPTransBufferPool;
 
 		// 目前仅用于Trans Buffer的DescriptorPool
 		vk::DescriptorPool m_vkDescriptorPool;

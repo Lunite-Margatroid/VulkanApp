@@ -17,7 +17,9 @@ namespace LT {
 		MaterialMainTexture(MaterialMainTexture&&) = delete;
 
 	public:
-		RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) override;
+		//RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) override;
 	};
+
+	using MaterialMainTextureBase = BaseMaterial<MaterialMainTexture, MaterialType::eMainTexture>;
 
 } // namespace LT

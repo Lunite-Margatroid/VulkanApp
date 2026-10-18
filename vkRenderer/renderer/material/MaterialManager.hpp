@@ -26,5 +26,19 @@ private:
 		TMaterial::UnresigterMaterial();
 	}
 
+	template<typename TMaterial>
+	static _MaterialRef CreateMaterial() {
+
+		MaterialManager& mgr = GetInstance();
+		MaterialID nID = mgr.GenID();
+		TMaterial* pMtl = new TMaterial(nID);
+		if (pMtl)
+		{
+			return mgr.Insert(pMtl->GetMaterialID(), pMtl);
+		}
+
+		return _MaterialRef(INVALID_MATERIAL_ID);
+	}
+
 	DECLEAR_SINGLETON_MANAGER_END(MaterialManager, IMaterial, MaterialID, Material)
 }

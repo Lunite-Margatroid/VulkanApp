@@ -8,6 +8,12 @@
 #include "ShaderModuleInfo.hpp"
 
 namespace LT {
+	extern std::array<uint32_t, static_cast<size_t>(MtlProp::MtlPropCount)> g_arrMtlTex2TexIndex;
+	extern std::array<MtlProp, MTL_PROP_TEX_MAX_COUNT> g_arrMtlPropTex2MtlPropEnum;
+
+	uint32_t MtlPropEnum2TexIndex(MtlProp eProp);
+	MtlProp MtlPropTexIndexToMtlPropEnum(int32_t nIndex);
+
 	inline vk::ShaderStageFlags GetShaderStageFlag(ShaderStage eSpace)
 	{
 		switch (eSpace)

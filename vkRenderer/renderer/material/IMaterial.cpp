@@ -47,6 +47,7 @@ namespace LT {
 	IMaterial::IMaterial(MaterialID nID, MaterialType eType)
 		:m_nID(nID)
 		, m_eMtlType(eType)
+		, m_nTexDefFlag(0)
 	{
 		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, ShaderStage::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
 	}

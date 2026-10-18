@@ -4,6 +4,66 @@
 
 namespace LT {
 
+	std::array<uint32_t, static_cast<size_t>(MtlProp::MtlPropCount)> g_arrMtlTex2TexIndex = [] {
+		uint32_t nIndex = 0;
+		std::array<uint32_t, static_cast<size_t>(MtlProp::MtlPropCount)> result;
+		for (int i = 0; i < result.size(); ++i)
+		{
+			if (GetMtlPropDataType(static_cast<MtlProp>(i)) == MtlPropDataType::eImage) {
+				result[i] = nIndex++;
+			}
+			else
+			{
+				result[i] = std::numeric_limits<uint32_t>::max();
+			}
+		}
+		RENDERER_ASSERT(nIndex > MTL_PROP_TEX_MAX_COUNT, "Tex Prop is Too Many.");
+		return result;
+		}();
+
+	std::array<MtlProp, MTL_PROP_TEX_MAX_COUNT> g_arrMtlPropTex2MtlPropEnum = { MtlProp::eInvalid };
+
+	// 记录每个纹理槽位的宏定义名称 "MTL_PROP_" + 属性名
+	// 由 ToString(MtlProp eProp) 生成
+	std::array<std::string, MTL_PROP_TEX_MAX_COUNT> g_arrMtlPropTexMacroName = [] {
+		std::array<std::string, MTL_PROP_TEX_MAX_COUNT> arrName;
+		for (uint32_t nTexSlotIndex = 0; nTexSlotIndex < MTL_PROP_TEX_MAX_COUNT; ++nTexSlotIndex)
+		{
+			MtlProp eProp = MtlPropTexIndexToMtlPropEnum(nTexSlotIndex);
+			if (eProp != MtlProp::eInvalid)
+			{
+				arrName[nTexSlotIndex] = "MTL_PROP_" + std::string(ToString(eProp));
+			}
+		}
+		return arrName;
+	}();
+
+
+	uint32_t MtlPropEnum2TexIndex(MtlProp eProp) {
+		return g_arrMtlTex2TexIndex[static_cast<uint32_t>(eProp)];
+	}
+
+	MtlProp MtlPropTexIndexToMtlPropEnum(int32_t nIndex) {
+		if (g_arrMtlPropTex2MtlPropEnum[0] == MtlProp::eInvalid)
+		{
+			for (int i = 0; i < static_cast<int>(MtlProp::MtlPropCount); ++i)
+			{
+				uint32_t tIndex = MtlPropEnum2TexIndex(static_cast<MtlProp>(i));
+				if (tIndex < MTL_PROP_TEX_MAX_COUNT)
+				{
+					g_arrMtlPropTex2MtlPropEnum[tIndex] = static_cast<MtlProp>(i);
+				}
+				else
+				{
+					g_arrMtlPropTex2MtlPropEnum[tIndex] = MtlProp::eInvalid;
+				}
+			}
+		}
+		if (nIndex >= g_arrMtlPropTex2MtlPropEnum.size())
+			return MtlProp::eInvalid;
+		return g_arrMtlPropTex2MtlPropEnum[nIndex];
+	}
+
     std::vector<std::pair<const char*, const char*>> GenGraphicPPMacroDesc(const RenderPassFlag& nFlag)
     {
 		std::vector<std::pair<const char*, const char*>> vecPPMacro;
@@ -49,6 +109,14 @@ namespace LT {
 		if (HasAO(nFlag))
 		{
 			vecPPMacro.emplace_back("VERT_AO", "1");
+		}
+		// 材质属性贴图
+		for (uint32_t nTexSlotIndex = 0; nTexSlotIndex < MTL_PROP_TEX_MAX_COUNT; ++nTexSlotIndex)
+		{
+			if (HasMtlPropTex(nFlag, nTexSlotIndex) && !g_arrMtlPropTexMacroName[nTexSlotIndex].empty())
+			{
+				vecPPMacro.emplace_back(g_arrMtlPropTexMacroName[nTexSlotIndex].c_str(), "1");
+			}
 		}
 		return vecPPMacro;
     }

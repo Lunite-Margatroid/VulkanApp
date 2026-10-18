@@ -1,7 +1,7 @@
 // 材质 MaterialManager
 #include "vkRendererCommon.h"
 #include "EngineCommon.h"
-
+// 允许额外的初始化和释放
 #define SINGLETON_MANAGER_CUSTOMED_INIT_AND_RELEASE
 
 #include "MaterialManager.hpp"
@@ -20,6 +20,7 @@ namespace LT {
 	};
 	// 注册材质
 	using MaterialRegistry = _MaterialRegistry<MaterialMainTexture, MaterialExample>;
+
 
 
 	IMPLEMENT_SINGLETON_MANAGER(MaterialManager, IMaterial, MaterialID, Material)
@@ -88,19 +89,13 @@ namespace LT {
 	MaterialRef MaterialManager::CreateMaterial(MaterialType eType) {
 
 		MaterialManager& mgr = GetInstance();
-
-		IMaterial* pMtl = nullptr;
-		MaterialID nID = INVALID_MATERIAL_ID;
-		switch (eType) {
-			case MaterialType::eMainTexture:
-				nID = mgr.GenID();
-				pMtl = new MaterialMainTexture(nID);
-				break;
-			default:
-				break;
-		};
-
-		return mgr.Insert(nID, pMtl);
+		MaterialRef refMtl(INVALID_MATERIAL_ID);
+		MaterialRegistry::ForEach([&]<typename T>() {
+			if (T::GetMaterialType() == eType) {
+				refMtl = MaterialManager::CreateMaterial<T>();
+			}
+		});
+		return refMtl;
 	}
 
 } // namespace

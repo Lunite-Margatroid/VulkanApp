@@ -2,7 +2,7 @@
 #include "IMaterial.hpp"
 
 namespace LT {
-	class MaterialExample final : public BaseMaterial<MaterialExample, MaterialType::eExample> {
+	class MaterialExample final : public  BaseMaterial<MaterialExample, MaterialType::eExample> {
 		friend class MaterialManager;
 
 	protected:
@@ -16,7 +16,8 @@ namespace LT {
 		MaterialExample& operator = (MaterialExample&&) = delete;
 
 	public:
-		RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) override;
+		//RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) override;
 	};
 
+	using MaterialExampleBase = BaseMaterial<MaterialExample, MaterialType::eExample>;
 } // namespace LT

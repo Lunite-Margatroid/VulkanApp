@@ -156,14 +156,21 @@ namespace LT {
 		MaterialID nMtlID = INVALID_MATERIAL_ID;
 		CreateMaterial(nMtlID, MaterialType::eMainTexture);
 		SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID);
+		m_vecMtlID.push_back(nMtlID);
 
+		CreateMaterial(nMtlID, MaterialType::eExample);
+		SetMaterialProp(nMtlID, MtlProp::eColorDiffuse, std::array<float, 3>{1.0f, 1.0f, 1.0f});
+		m_vecMtlID.push_back(nMtlID);
+
+		CreateMaterial(nMtlID, MaterialType::eExample);
+		SetMaterialProp(nMtlID, MtlProp::eColorDiffuse, std::array<float, 3>{0.5f, 0.5f, 0.5f});
 		m_vecMtlID.push_back(nMtlID);
 
 		for (int i = 0; i < 400; i++)
 		{
 			NodeID nNode;
 			CreateCubeMeshNode(nNode, 1.f);
-			SetMaterial(nNode, nMtlID);
+			SetMaterial(nNode, m_vecMtlID[i % m_vecMtlID.size()]);
 			SceneNodeRebase(m_nMainScene, nNode);
 			SetSceneNodePosition(nNode, util::RandomGenerator::RandomSampleSphere(20.f));
 			SetSceneNodeEulerRotation(nNode, 

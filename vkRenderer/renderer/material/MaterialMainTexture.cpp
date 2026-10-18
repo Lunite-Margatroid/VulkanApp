@@ -8,59 +8,65 @@
 
 namespace LT {
 
+	void MaterialMainTextureBase::InitShaderModule(GraphicPass* pPass) {
+		pPass->AddShaderModule("MaterialMainTextureProp", GenMtlPropShaderModule(), std::vector<std::string>());
+		pPass->AddShaderModule("FragmentShaderMainTex", { "MaterialMainTextureProp" });
+		pPass->AddShaderModule("CommonVertexShader", std::vector<std::string>());
+	}
+
 	MaterialMainTexture::MaterialMainTexture(MaterialID nID)
 		:BaseMaterial<MaterialMainTexture, MaterialType::eMainTexture>(nID)
 	{
 		RegisterStage(RenderStageType::eOpaqueForward);
 	}
-	RenderPass* MaterialMainTexture::Bind(const MaterialBindInfo& sMtlBindInfo)
-	{
-		GraphicPass* pPass = nullptr;
+	//RenderPass* MaterialMainTexture::Bind(const MaterialBindInfo& sMtlBindInfo)
+	//{
+	//	GraphicPass* pPass = nullptr;
 
-		auto iterPasses = s_mapRenderPasses.find(sMtlBindInfo.eStage);
-		if (iterPasses == s_mapRenderPasses.end())
-		{
-			return nullptr;
-		}
-		auto& mapPass = iterPasses->second;
+	//	auto iterPasses = s_mapRenderPasses.find(sMtlBindInfo.eStage);
+	//	if (iterPasses == s_mapRenderPasses.end())
+	//	{
+	//		return nullptr;
+	//	}
+	//	auto& mapPass = iterPasses->second;
 
-		auto iterPass = mapPass.find(sMtlBindInfo.nFlag);
-		if (iterPass == mapPass.end())
-		{
-			pPass = new GraphicPass();
-			pPass->SetRenderPassFlag(sMtlBindInfo.nFlag);
-			pPass->AddShaderModule("MaterialMainTextureProp", GenMtlPropShaderModule(), std::vector<std::string>());
-			pPass->AddShaderModule("FragmentShaderMainTex", { "MaterialMainTextureProp" });
-			pPass->AddShaderModule("CommonVertexShader", std::vector<std::string>());
+	//	auto iterPass = mapPass.find(sMtlBindInfo.nFlag);
+	//	if (iterPass == mapPass.end())
+	//	{
+	//		pPass = new GraphicPass();
+	//		pPass->SetRenderPassFlag(sMtlBindInfo.nFlag);
+	//		pPass->AddShaderModule("MaterialMainTextureProp", GenMtlPropShaderModule(), std::vector<std::string>());
+	//		pPass->AddShaderModule("FragmentShaderMainTex", { "MaterialMainTextureProp" });
+	//		pPass->AddShaderModule("CommonVertexShader", std::vector<std::string>());
 
-			std::vector<vk::DescriptorSetLayout> vecSetLayout;
+	//		std::vector<vk::DescriptorSetLayout> vecSetLayout;
 
 
-			//跟 enum ShaderResSpace 的顺序保持一致
-			//	eTransBuffer = 0,
-			//	eMtlProp = 1,
+	//		//跟 enum ShaderResSpace 的顺序保持一致
+	//		//	eTransBuffer = 0,
+	//		//	eMtlProp = 1,
 
-			// 0 Trans Buffer
-			auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescriptorSetLayout();
-			vecSetLayout.push_back(vkTransBufferSetLayout);
-			// 1 Mtl Prop
-			auto vkMtlPropDescSet = GetMtlPropDescriptorSetLayout();
-			vecSetLayout.push_back(vkMtlPropDescSet);
+	//		// 0 Trans Buffer
+	//		auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescriptorSetLayout();
+	//		vecSetLayout.push_back(vkTransBufferSetLayout);
+	//		// 1 Mtl Prop
+	//		auto vkMtlPropDescSet = GetMtlPropDescriptorSetLayout();
+	//		vecSetLayout.push_back(vkMtlPropDescSet);
 
-			pPass->Init(vecSetLayout);
+	//		pPass->Init(vecSetLayout);
 
-			mapPass[sMtlBindInfo.nFlag] = pPass;
-		}
-		else
-		{
-			pPass = reinterpret_cast<GraphicPass*>(iterPass->second);
-		}
+	//		mapPass[sMtlBindInfo.nFlag] = pPass;
+	//	}
+	//	else
+	//	{
+	//		pPass = reinterpret_cast<GraphicPass*>(iterPass->second);
+	//	}
 
-		//BindShaderResource(sMtlBindInfo);
-		pPass->SetDescriptorSets({ &ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), &s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) });
-		pPass->Bind(sMtlBindInfo.pCmdBuffer);
-		return pPass;
-	}
+	//	//BindShaderResource(sMtlBindInfo);
+	//	pPass->SetDescriptorSets({ &ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), &s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) });
+	//	pPass->Bind(sMtlBindInfo.pCmdBuffer);
+	//	return pPass;
+	//}
 
 	void BaseMaterial<MaterialMainTexture, MaterialType::eMainTexture>::RegisterMaterialProp() {
 		AddMaterialProp(MtlProp::eTexDiffuse);

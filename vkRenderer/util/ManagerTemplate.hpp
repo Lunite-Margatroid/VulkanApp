@@ -257,6 +257,7 @@ TargetName##Ref ManagerType::Insert(IDType nID, TargetType* pItem){\
 	return TargetName##Ref(nID);\
 }
 
+	// 允许额外的初始化和释放
 #ifdef SINGLETON_MANAGER_CUSTOMED_INIT_AND_RELEASE
 
 #define IMPLEMENT_SINGLETON_MANAGER(ManagerType, TargetType, IDType, TargetName) IMPLEMENT_SINGLETON_MANAGER_DEFAULT(ManagerType, TargetType, IDType, TargetName)

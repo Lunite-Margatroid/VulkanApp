@@ -149,7 +149,7 @@ namespace LT {
 
 	ShaderResourceManager::ShaderResourceManager()
 		: m_nConstBufferHandleCounter(0)
-		, m_sMVPTransBufferPool(sizeof(VPMatrixBuffer))
+		, m_sVPTransBufferPool(sizeof(VPMatrixBuffer))
 		, m_vkDescriptorPool(VK_NULL_HANDLE)
 	{
 	}
@@ -281,7 +281,7 @@ namespace LT {
 	{
 		auto& mgr = GetInstance();
 		ConstBufferHandle nHandle = mgr.GenConstBufferHandle();
-		mgr.m_mapHandle[nHandle] = mgr.m_sMVPTransBufferPool.AllocateBuffer();
+		mgr.m_mapHandle[nHandle] = mgr.m_sVPTransBufferPool.AllocateBuffer();
 
 		return nHandle;
 	}
@@ -292,7 +292,7 @@ namespace LT {
 		auto iter = mgr.m_mapHandle.find(nHandle);
 		if (iter != mgr.m_mapHandle.end())
 		{
-			mgr.m_sMVPTransBufferPool.ReleaseBuffer(iter->second);
+			mgr.m_sVPTransBufferPool.ReleaseBuffer(iter->second);
 			mgr.m_mapHandle.erase(iter);
 		}
 		else
@@ -308,7 +308,7 @@ namespace LT {
 		auto iter = mgr.m_mapHandle.find(nHandle);
 		if (iter != mgr.m_mapHandle.end())
 		{
-			mgr.m_sMVPTransBufferPool.UpdateConstBuffer(iter->second, pData);
+			mgr.m_sVPTransBufferPool.UpdateConstBuffer(iter->second, pData);
 		}
 		else
 		{
@@ -319,7 +319,7 @@ namespace LT {
 	void ShaderResourceManager::UpdateDeviceTransBuffer()
 	{
 		auto& mgr = GetInstance();
-		mgr.m_sMVPTransBufferPool.UpdateDeviceConstBuffer();
+		mgr.m_sVPTransBufferPool.UpdateDeviceConstBuffer();
 	}
 
 	vk::DescriptorSetLayout ShaderResourceManager::GetTransBufferDescriptorSetLayout() {

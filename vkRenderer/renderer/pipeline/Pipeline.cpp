@@ -69,6 +69,7 @@ namespace LT {
 		ShaderResourceManager::UpdateTransBuffer(
 			sInOutFrameInfo.pRenderView->GetTransBufferHandle(sInOutFrameInfo.nFightFrameIndex), sInOutFrameInfo.pRenderView->GetTransBuffer());
 		ShaderResourceManager::UpdateDeviceTransBuffer();
+		ShaderResourceManager::UpdateDeviceMtlPropBuffer();
 
 		StageExecuteInfo sStageInfo;
 		sStageInfo.vecRenderTarget = sInOutFrameInfo.vecRenderTargets;

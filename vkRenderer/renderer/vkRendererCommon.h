@@ -139,10 +139,14 @@ namespace LT {
 
 // 生成着色器使用的FlagBits
 // 0-10给顶点数据使用 enum VertexChannel
+// 32-47给材质属性贴图使用 MTL_PROP_TEX_MAX_COUNT个槽位 每个bit对应一个贴图槽位
 
-	constexpr uint32_t PRIMITIVE_BIT_OFFSET = 13;
-	constexpr uint32_t POLYGONMODE_BIT_OFFSET = 17;
-	constexpr uint32_t LINE_WIDTH_BIT_OFFSET = 19;
+	constexpr uint32_t PRIMITIVE_BIT_OFFSET = 13u;
+	constexpr uint32_t POLYGONMODE_BIT_OFFSET = 17u;
+	constexpr uint32_t LINE_WIDTH_BIT_OFFSET = 19u;
+	constexpr uint32_t MTL_PROP_TEX_MAX_COUNT = 16u;
+	constexpr uint32_t MTL_PROP_TEX0_BIT_OFFSET = 32u;
+	constexpr uint64_t MTL_PROP_TEX_MASK = ((1ull << MTL_PROP_TEX_MAX_COUNT) - 1) << MTL_PROP_TEX0_BIT_OFFSET;
 
 	using RenderPassFlag = uint64_t;
 	enum class RenderPassFlagBits : RenderFlagType {
@@ -152,7 +156,32 @@ namespace LT {
 		ePolygonModeMask = (3ull << POLYGONMODE_BIT_OFFSET), // 17-18记录填充类型
 		eLineWidthMask = (15ull << LINE_WIDTH_BIT_OFFSET), // 19-22 记录线宽
 		eBlendEnable = (1ull << 23), // 开启混合
+		// 32-47 材质属性贴图标志位 每个bit对应一个材质属性贴图槽位
+		eMtlPropTex0 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 0)),
+		eMtlPropTex1 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 1)),
+		eMtlPropTex2 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 2)),
+		eMtlPropTex3 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 3)),
+		eMtlPropTex4 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 4)),
+		eMtlPropTex5 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 5)),
+		eMtlPropTex6 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 6)),
+		eMtlPropTex7 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 7)),
+		eMtlPropTex8 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 8)),
+		eMtlPropTex9 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 9)),
+		eMtlPropTex10 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 10)),
+		eMtlPropTex11 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 11)),
+		eMtlPropTex12 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 12)),
+		eMtlPropTex13 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 13)),
+		eMtlPropTex14 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 14)),
+		eMtlPropTex15 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 15)),
+		eMtlPropTexMask = MTL_PROP_TEX_MASK,
+
+		eInvalid = 1ull << 63
+
 	};
+
+	inline bool IsValid(const RenderPassFlag& nFlag) {
+		return !(static_cast<RenderFlagType>(RenderPassFlagBits::eInvalid) & static_cast<RenderFlagType>(nFlag));
+	}
 
 	inline void SetPrimitiveTopology(RenderPassFlag& nFlag, vk::PrimitiveTopology ePrimitiveTopology) {
 
@@ -267,5 +296,28 @@ namespace LT {
 			return false;
 		}
 		return static_cast<uint64_t>(nFlag) & (static_cast<uint64_t>(VertexChannel::UV) << nUVChannelIndex);
+	}
+
+	inline bool HasMtlPropTex(const RenderPassFlag& nFlag, uint32_t nTexSlotIndex) {
+		if (nTexSlotIndex >= MTL_PROP_TEX_MAX_COUNT)
+		{
+			return false;
+		}
+		return static_cast<uint64_t>(nFlag) & (static_cast<uint64_t>(RenderPassFlagBits::eMtlPropTex0) << nTexSlotIndex);
+	}
+
+	inline void SetMtlPropTex(RenderPassFlag& nFlag, uint32_t nTexSlotIndex, bool bEnable) {
+		if (nTexSlotIndex >= MTL_PROP_TEX_MAX_COUNT)
+		{
+			return;
+		}
+		if (bEnable)
+		{
+			SetBit(nFlag, static_cast<uint64_t>(RenderPassFlagBits::eMtlPropTex0) << nTexSlotIndex);
+		}
+		else
+		{
+			ResetBit(nFlag, static_cast<uint64_t>(RenderPassFlagBits::eMtlPropTex0) << nTexSlotIndex);
+		}
 	}
 } // namespace LT
