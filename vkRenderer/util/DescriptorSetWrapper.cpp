@@ -96,7 +96,11 @@ namespace LT {
 		{
 			writeInfo.setDstSet(Front().vkDescriptorSet);
 		}
-		vkContext::GetVkDevice().updateDescriptorSets(descriptorWrites, {});
+		vkContext::GetVkDevice().updateDescriptorSets(
+			descriptorWrites.size(), 
+			descriptorWrites.data(),
+			0,
+			nullptr);
 	}
 
 	void DescriptorSetWrapper::PopFrontAndPushBack()

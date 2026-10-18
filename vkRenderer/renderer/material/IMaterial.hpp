@@ -11,10 +11,16 @@
 
 namespace LT {
 	struct MaterialSlot {
+		int64_t nSrcID;
+		union {
+			vk::DescriptorBufferInfo bufferInfo;
+			vk::DescriptorImageInfo imageInfo;
+		};
+
 		vk::DescriptorType eDescType;
 		// 如果是纹理 nSrcID是一个ImageID
 		// 如果是const buffer, nSrcID是一个ConstBufferHandle，由ShaderResource控制
-		int64_t nSrcID;
+
 
 		MaterialSlot(vk::DescriptorType desc, int64_t srcID)
 			: eDescType(desc)
@@ -198,7 +204,7 @@ namespace LT {
 			// 绑定资源
 			std::vector<vk::WriteDescriptorSet> vecWDSMtlProp;
 			std::vector<vk::WriteDescriptorSet> vecWDSTrans;
-			for (const auto& [bindings, mtlSlot] : m_mapSlots) {
+			for (auto& [bindings, mtlSlot] : m_mapSlots) {
 
 				if (mtlSlot.nSrcID == INVALID_ITEM_ID)
 					continue;
@@ -213,29 +219,26 @@ namespace LT {
 						Buffer* pBuffer = BufferManager::GetBuffer(binding.nBufferID);
 
 						RENDERER_ASSERT(pBuffer, "Invalid Const Buffer Handle");
-
-						vk::DescriptorBufferInfo dbi = {};
-						dbi
+						vk::DescriptorBufferInfo& bufferInfo = mtlSlot.bufferInfo;
+						bufferInfo
 							.setBuffer(pBuffer->GetNativeBuffer())
 							.setOffset(binding.nOffset)
 							.setRange(binding.nSize)
 							;
-
-
-						wds.setPBufferInfo(&dbi);
+						// BufferInfo不能使用临时对象
+						wds.setPBufferInfo(&bufferInfo);
 					}
 					break;
 					case vk::DescriptorType::eCombinedImageSampler:
 					{
-						vk::DescriptorImageInfo ddi = {};
-
-						ddi
+						vk::DescriptorImageInfo& imageInfo = mtlSlot.imageInfo;
+						imageInfo
 							.setImageView(ImageManager::GetNativeDeviceImageView(mtlSlot.nSrcID))
 							.setSampler(SamplerManager::GetDefaultImageSampler()->GetNativeSampler())
 							.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
 							;
-
-						wds.setPImageInfo(&ddi);
+						// ImageInfo不能使用临时对象
+						wds.setPImageInfo(&imageInfo);
 					}
 					break;
 					default:
