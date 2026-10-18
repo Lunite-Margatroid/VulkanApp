@@ -30,10 +30,10 @@ SVertexOutput VertMain(SVertexInput vertIn){
 	SVertexOutput output;
 // 顶点坐标
 #ifdef VERT_POSITION
-	output.fragPos = mul(mul(pc_ModelMat.modelMat, u_VPMatix.vpMat), float4(vertIn.vertPosition, 1.0));
+	output.fragPos = mul(mul(u_VPMatix.vpMat, pc_ModelMat.modelMat), float4(vertIn.vertPosition, 1.0));
 	output.fragWorldPos = mul(pc_ModelMat.modelMat, float4(vertIn.vertPosition, 1.0)).xyz;
 #else
-	output.fragPos = mul(mul(pc_ModelMat.modelMat, u_VPMatix.vpMat), float4(0.0, 0.0, 0.0, 1.0));
+	output.fragPos = mul(mul(u_VPMatix.vpMat, pc_ModelMat.modelMat), float4(0.0, 0.0, 0.0, 1.0));
 	output.fragWorldPos = mul(pc_ModelMat.modelMat, float4(0.0, 0.0, 0.0, 1.0)).xyz;
 #endif
 
