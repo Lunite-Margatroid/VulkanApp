@@ -13,7 +13,7 @@ float4 FragMain(SVertexOutput sVertOut) : SV_Target{
 #endif
 
 #ifdef MTL_PROP_TexDiffuse
-	cDiffuse = TexDiffuse.Sample(uvMain);
+	cDiffuse = TexDiffuse.Sample(uvMain).rgb;
 #else
 	cDiffuse = float3(0,0,0);
 #endif

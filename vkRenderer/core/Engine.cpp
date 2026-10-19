@@ -159,11 +159,27 @@ namespace LT {
 		m_vecMtlID.push_back(nMtlID);
 
 		CreateMaterial(nMtlID, MaterialType::eExample);
-		SetMaterialProp(nMtlID, MtlProp::eColorDiffuse, std::array<float, 3>{1.0f, 1.0f, 1.0f});
+		SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID);
 		m_vecMtlID.push_back(nMtlID);
 
 		CreateMaterial(nMtlID, MaterialType::eExample);
-		SetMaterialProp(nMtlID, MtlProp::eColorDiffuse, std::array<float, 3>{0.5f, 0.5f, 0.5f});
+		SetMaterialProp(nMtlID, MtlProp::eTexSpecular, m_nImageID);
+		m_vecMtlID.push_back(nMtlID);
+
+		CreateMaterial(nMtlID, MaterialType::eExample);
+		SetMaterialProp(nMtlID, MtlProp::eTexIOR, m_nImageID);
+		m_vecMtlID.push_back(nMtlID);
+
+		CreateMaterial(nMtlID, MaterialType::eExample);
+		SetMaterialProp(nMtlID, MtlProp::eTexMeltalness, m_nImageID);
+		m_vecMtlID.push_back(nMtlID);
+
+		CreateMaterial(nMtlID, MaterialType::eExample);
+		SetMaterialProp(nMtlID, MtlProp::eTexRoughness, m_nImageID);
+		m_vecMtlID.push_back(nMtlID);
+
+		CreateMaterial(nMtlID, MaterialType::eExample);
+		SetMaterialProp(nMtlID, MtlProp::eTexAlpha, m_nImageID);
 		m_vecMtlID.push_back(nMtlID);
 
 		for (int i = 0; i < 400; i++)
