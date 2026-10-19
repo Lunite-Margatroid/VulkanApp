@@ -9,7 +9,7 @@
 namespace LT {
 
 	void MaterialMainTextureBase::InitShaderModule(GraphicPass* pPass) {
-		pPass->AddShaderModule("MaterialMainTextureProp", GenMtlPropShaderModule(), std::vector<std::string>());
+		pPass->AddShaderModule("MaterialMainTextureProp", GenMtlPropShaderModule(pPass->GetRenderPassFlag()), std::vector<std::string>());
 		pPass->AddShaderModule("FragmentShaderMainTex", { "MaterialMainTextureProp" });
 		pPass->AddShaderModule("CommonVertexShader", std::vector<std::string>());
 	}

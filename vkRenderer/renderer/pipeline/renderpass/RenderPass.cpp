@@ -17,7 +17,7 @@ namespace LT {
 				result[i] = std::numeric_limits<uint32_t>::max();
 			}
 		}
-		RENDERER_ASSERT(nIndex > MTL_PROP_TEX_MAX_COUNT, "Tex Prop is Too Many.");
+		RENDERER_ASSERT(nIndex < MTL_PROP_TEX_MAX_COUNT, "Tex Prop is Too Many.");
 		return result;
 		}();
 
@@ -46,16 +46,13 @@ namespace LT {
 	MtlProp MtlPropTexIndexToMtlPropEnum(int32_t nIndex) {
 		if (g_arrMtlPropTex2MtlPropEnum[0] == MtlProp::eInvalid)
 		{
+			g_arrMtlPropTex2MtlPropEnum.fill(MtlProp::eInvalid);
 			for (int i = 0; i < static_cast<int>(MtlProp::MtlPropCount); ++i)
 			{
 				uint32_t tIndex = MtlPropEnum2TexIndex(static_cast<MtlProp>(i));
 				if (tIndex < MTL_PROP_TEX_MAX_COUNT)
 				{
 					g_arrMtlPropTex2MtlPropEnum[tIndex] = static_cast<MtlProp>(i);
-				}
-				else
-				{
-					g_arrMtlPropTex2MtlPropEnum[tIndex] = MtlProp::eInvalid;
 				}
 			}
 		}

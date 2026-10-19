@@ -315,7 +315,7 @@ namespace LT {
 			}
 			auto& mapPass = iterPasses->second;
 
-			RenderPassFlag nFlag = static_cast<uint64_t>(sMtlBindInfo.nFlag) & (~MTL_PROP_TEX_MASK) | static_cast<uint_64_t>(m_nTexDefFlag) & MTL_PROP_TEX_MASK;
+			RenderPassFlag nFlag = static_cast<uint64_t>(sMtlBindInfo.nFlag) & (~MTL_PROP_TEX_MASK) | static_cast<uint64_t>(m_nTexDefFlag) & MTL_PROP_TEX_MASK;
 
 			auto iterPass = mapPass.find(nFlag);
 			if (iterPass == mapPass.end())
@@ -357,7 +357,7 @@ namespace LT {
 		// -------------------------------------------------------- static ----------------------------------------------------------------
 	public:
 		// 声明材质属性变量的着色器代码
-		static std::string GenMtlPropShaderModule() {
+		static std::string GenMtlPropShaderModule(RenderPassFlag nTexDefFlag) {
 			std::ostringstream oss;
 			if (s_vecMtlPropDataLayout.size() > 0)
 			{
@@ -385,7 +385,7 @@ namespace LT {
 
 			for (const auto& [eProp, bindingIndex] : s_setImage)
 			{
-				if (HasMtlPropTex(m_nTexDefFlag, MtlPropEnum2TexIndex(eProp)))
+				if (HasMtlPropTex(nTexDefFlag, MtlPropEnum2TexIndex(eProp)))
 				{
 					oss << "[[vk::binding(" << bindingIndex << ", " << static_cast<int>(ShaderResSpace::eMtlProp) << ")]]" << std::endl
 						<< "Sampler2D " << ToString(eProp) << ";" << std::endl;
@@ -566,7 +566,7 @@ namespace LT {
 				}
 
 				oss << "======== Shader Define ========\n";
-				oss << GenMtlPropShaderModule() << std::endl;
+				oss << GenMtlPropShaderModule(MTL_PROP_TEX_MASK) << std::endl;
 
 				LOG_INFO("Init Material Prop Buffer Layout:\n%s", oss.str().c_str());
 			}
