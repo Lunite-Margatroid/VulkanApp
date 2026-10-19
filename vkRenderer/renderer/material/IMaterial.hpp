@@ -339,7 +339,11 @@ namespace LT {
 				vecSetLayout.push_back(vkMtlPropDescSet);
 
 
-				pPass->Init(vecSetLayout);
+				if (!pPass->Init(vecSetLayout))
+				{
+					delete pPass;
+					pPass = nullptr;
+				}
 
 				mapPass[nFlag] = pPass;
 			}
@@ -349,8 +353,11 @@ namespace LT {
 			}
 
 			//BindShaderResource(sMtlBindInfo);
-			pPass->SetDescriptorSets({ &ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), &s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) });
-			pPass->Bind(sMtlBindInfo.pCmdBuffer);
+			if (pPass)
+			{
+				pPass->SetDescriptorSets({ &ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), &s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) });
+				pPass->Bind(sMtlBindInfo.pCmdBuffer);
+			}
 			return pPass;
 		}
 

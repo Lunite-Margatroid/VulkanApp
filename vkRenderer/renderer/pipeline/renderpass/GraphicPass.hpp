@@ -100,7 +100,7 @@ namespace LT {
 		GraphicPass(GraphicPass&&) = delete;
 		GraphicPass(const GraphicPass&) = delete;
 
-		void Init(
+		bool Init(
 			const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout,
 			bool bCreateModelMatPushConst = true
 			);

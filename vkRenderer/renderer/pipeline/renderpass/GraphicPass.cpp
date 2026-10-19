@@ -21,6 +21,7 @@
 namespace LT {
 	GraphicPass::GraphicPass()
 		:m_nFlag(0)
+		, m_vkShaderModule(VK_NULL_HANDLE)
 	{
 
 	}
@@ -43,7 +44,7 @@ namespace LT {
 		}
 
 	}
-	void GraphicPass::Init(
+	bool GraphicPass::Init(
 		const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout,
 		bool bCreateModelMatPushConst/* = true*/) {
 
@@ -55,7 +56,11 @@ namespace LT {
 
 
 			std::vector<BYTE> binShader = SlangCompiler::GetInstance().CompileShader(m_sShaderSrc, GenGraphicPPMacroDesc(m_nFlag), m_sShaderModuleInfo);
-
+			if(binShader.size() <= 0)
+			{
+				LOG_ERROR("GraphicPass: Compile shader failed.");
+				return false;
+			}
 			vk::ShaderModuleCreateInfo smci(
 				{},
 				static_cast<uint32_t>(binShader.size()),
@@ -65,6 +70,8 @@ namespace LT {
 
 			m_vkShaderModule = device.createShaderModule(smci);
 		}
+
+
 
 		vk::PipelineShaderStageCreateInfo pssciVert = {};
 		pssciVert
@@ -303,6 +310,8 @@ namespace LT {
 		RENDERER_ASSERT(result.result == vk::Result::eSuccess, "create graphics pipeline failed");
 
 		m_vkPipeline = result.value;
+
+		return true;
 	}
 
 	void GraphicPass::SetDescriptorSets(const std::vector<DescriptorSetWrapper*>& vecDescriptorSets)

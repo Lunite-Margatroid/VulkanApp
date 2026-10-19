@@ -141,6 +141,8 @@ namespace LT {
 
 	void Engine::CreateDebugScene(DisplayDevice* pDisplayDivice)
 	{
+#define ENGINE_CALL_CHECK(x) do{EngineResult nResult = (x); if(nResult != EngineResult::eSuccess){ LOG_WARNING("Engine call failed"); }} while(false)
+
 		m_pView = new View();
 		CreateCamera(m_nCameraID);
 		CreateSceneNode(m_nMainScene, NodeType::eNodeMesh);
@@ -154,45 +156,49 @@ namespace LT {
 		m_nImageID = pImg->GetImageID();
 
 		MaterialID nMtlID = INVALID_MATERIAL_ID;
-		CreateMaterial(nMtlID, MaterialType::eMainTexture);
-		SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID);
+		ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eMainTexture));
+		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID));
 		m_vecMtlID.push_back(nMtlID);
 
-		CreateMaterial(nMtlID, MaterialType::eExample);
-		SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID);
+		ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eExample));
+		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID));
 		m_vecMtlID.push_back(nMtlID);
 
-		CreateMaterial(nMtlID, MaterialType::eExample);
-		SetMaterialProp(nMtlID, MtlProp::eTexSpecular, m_nImageID);
+		ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eExample));
+		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexSpecular, m_nImageID));
 		m_vecMtlID.push_back(nMtlID);
 
-		CreateMaterial(nMtlID, MaterialType::eExample);
-		SetMaterialProp(nMtlID, MtlProp::eTexIOR, m_nImageID);
+		ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eExample));
+		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexIOR, m_nImageID));
 		m_vecMtlID.push_back(nMtlID);
 
-		CreateMaterial(nMtlID, MaterialType::eExample);
-		SetMaterialProp(nMtlID, MtlProp::eTexMeltalness, m_nImageID);
+		ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eExample));
+		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexMeltalness, m_nImageID));
 		m_vecMtlID.push_back(nMtlID);
 
-		CreateMaterial(nMtlID, MaterialType::eExample);
-		SetMaterialProp(nMtlID, MtlProp::eTexRoughness, m_nImageID);
+		ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eExample));
+		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexRoughness, m_nImageID));
 		m_vecMtlID.push_back(nMtlID);
 
-		CreateMaterial(nMtlID, MaterialType::eExample);
-		SetMaterialProp(nMtlID, MtlProp::eTexAlpha, m_nImageID);
+		ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eExample));
+		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexAlpha, m_nImageID));
+		m_vecMtlID.push_back(nMtlID);
+
+
+		ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eError));
 		m_vecMtlID.push_back(nMtlID);
 
 		for (int i = 0; i < 400; i++)
 		{
 			NodeID nNode;
-			CreateCubeMeshNode(nNode, 1.f);
-			SetMaterial(nNode, m_vecMtlID[i % m_vecMtlID.size()]);
-			SceneNodeRebase(m_nMainScene, nNode);
-			SetSceneNodePosition(nNode, util::RandomGenerator::RandomSampleSphere(20.f));
-			SetSceneNodeEulerRotation(nNode, 
+			ENGINE_CALL_CHECK(CreateCubeMeshNode(nNode, 1.f));
+			ENGINE_CALL_CHECK(SetMaterial(nNode, m_vecMtlID[i % m_vecMtlID.size()]));
+			ENGINE_CALL_CHECK(SceneNodeRebase(m_nMainScene, nNode));
+			ENGINE_CALL_CHECK(SetSceneNodePosition(nNode, util::RandomGenerator::RandomSampleSphere(20.f)));
+			ENGINE_CALL_CHECK(SetSceneNodeEulerRotation(nNode, 
 				{util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f),
 				util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f), 
-				util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f)});
+				util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f)}));
 		}
 		pDisplayDivice->SetView(m_pView);
 	}
@@ -423,11 +429,16 @@ namespace LT {
 
 	EngineResult Engine::CreateMaterial(MaterialID& nOutMtlID, MaterialType eMtlType)
 	{
+		EngineResult result = EngineResult::eSuccess;
 		MaterialRef refMtl = MaterialManager::CreateMaterial(eMtlType);
-		//refMtl.AddRef();
+		if (!refMtl)
+		{
+			refMtl = MaterialManager::GetInstance().GetDefaultErrorMaterial();
+			result = EngineResult::eFailed;
+		}
 		nOutMtlID = refMtl.GetID();
 		MaterialManager::GetInstance().RefIncrease(nOutMtlID);
-		return EngineResult::eSuccess;
+		return result;
 	}
 
 	EngineResult Engine::DeleteMaterial(MaterialID nMtlID)

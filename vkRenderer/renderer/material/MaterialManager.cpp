@@ -7,6 +7,7 @@
 #include "MaterialManager.hpp"
 #include "MaterialMainTexture.hpp"
 #include "MaterialExample.hpp"
+#include "MaterialError.hpp"
 
 namespace LT {
 
@@ -19,7 +20,7 @@ namespace LT {
 		}
 	};
 	// 注册材质
-	using MaterialRegistry = _MaterialRegistry<MaterialMainTexture, MaterialExample>;
+	using MaterialRegistry = _MaterialRegistry<MaterialMainTexture, MaterialExample, MaterialError>;
 
 
 
@@ -77,6 +78,13 @@ namespace LT {
 	// 释放
 	IMPLEMENT_SINGLETON_MANAGER_RELEASE_BEGIN(MaterialManager)
 	{
+		// 删除默认的材质
+		MaterialManager& mgr = MaterialManager::GetInstance();
+		if (mgr.m_refDefaultErrorMtl)
+		{
+			mgr.m_refDefaultErrorMtl = MaterialRef(INVALID_MATERIAL_ID);
+		}
+
 		// 遍历已注册材质
 		MaterialRegistry::ForEach(
 			[]<typename M>() {
@@ -96,6 +104,15 @@ namespace LT {
 			}
 		});
 		return refMtl;
+	}
+
+	MaterialRef MaterialManager::GetDefaultErrorMaterial()
+	{
+		if (!m_refDefaultErrorMtl)
+		{
+			m_refDefaultErrorMtl = CreateMaterial(MaterialType::eError);
+		}
+		return m_refDefaultErrorMtl;
 	}
 
 } // namespace

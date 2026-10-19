@@ -153,15 +153,19 @@ namespace LT {
 				if (nLastFlag != nFlag)
 				{
 					sMtlBindInfo.nFlag = entities.front().first;
-					pMaterial->Bind(sMtlBindInfo);
+					pGraphicPass = dynamic_cast<GraphicPass*>(pMaterial->Bind(sMtlBindInfo));
 					nLastFlag = nFlag;
 				}
 				EntityDrawInfo sDrawInfo;
 				sDrawInfo.pCommandBuffer = &vkContext::GetCmdBuffer(sInOutExecuteInfo.nFlightFrameIndex);
-				if (pGraphicPass)
+				if (!pGraphicPass)
 				{
-					sDrawInfo.vkLayout = pGraphicPass->GetPipelineLayout();
+					pGraphicPass = dynamic_cast<GraphicPass*>(MaterialManager::GetInstance().GetDefaultErrorMaterial().GetPtr()->Bind(sMtlBindInfo));
+					RENDERER_ASSERT(pGraphicPass, "Failed to bind error material");
+
 				}
+
+				sDrawInfo.vkLayout = pGraphicPass->GetPipelineLayout();
 
 				pEntity->Draw(sDrawInfo);
 			}

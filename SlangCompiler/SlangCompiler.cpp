@@ -126,6 +126,11 @@ namespace LT {
 		Slang::ComPtr<slang::ISession> pSession;
 		CompileShaderToProgram(sSrc, vecPPMacro, pSession.writeRef(), pLinked.writeRef());
 
+		if(!pLinked)
+		{
+			return std::vector<uint8_t>();
+		}
+
 		// 反射 获取着色器信息
 		{
 			slang::ProgramLayout* pLayout = pLinked->getLayout();
@@ -187,6 +192,7 @@ namespace LT {
 			{
 				LOG_ERROR_WITH_FILE("Slang Compiler: Get Code Failed.");
 				// TODO:
+				return  std::vector<uint8_t>();
 			}
 		}
 
@@ -279,16 +285,19 @@ namespace LT {
 				pDiagnosticsBlob.writeRef()
 			);
 
-			if (pModule)
-			{
-				vecPModules.push_back(pModule);
-			}
 			if (pDiagnosticsBlob)
 			{
 				// 查错
 				LOG_INFO("Shader Compiler Log. Module %s :\n%s", src.strModuleName.c_str(), static_cast<const char*> (pDiagnosticsBlob->getBufferPointer()));
 			}
-
+			if (pModule)
+			{
+				vecPModules.push_back(pModule);
+			}
+			else
+			{
+				return;
+			}
 			};
 
 		// 组合
@@ -312,7 +321,7 @@ namespace LT {
 			}
 			if (SLANG_FAILED(result)) {
 				// TODO:
-
+				return;
 			}
 		}
 
@@ -328,13 +337,9 @@ namespace LT {
 			}
 			if (SLANG_FAILED(result)) {
 				// TODO:
-
+				return;
 			}
 		}
-
-
-			// 反射测试
-		slang::ProgramLayout* pLayout = (*ppOutProgram)->getLayout();
 	}
 
 	Slang::ComPtr<slang::IGlobalSession> SlangCompiler::GetGlobalSession() const

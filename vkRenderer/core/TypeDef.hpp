@@ -48,6 +48,7 @@ namespace LT {
 		eUndifined = -1,
 		eMainTexture,
 		eExample,
+		eError, // 着色器编译错误或者材质ID不存在则使用该材质
 		MaterialTypeCount
 	};
 

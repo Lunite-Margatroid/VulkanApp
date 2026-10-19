@@ -8,8 +8,17 @@
 namespace LT {
 
 	DECLEAR_SINGLETON_MANAGER_BEGIN(MaterialManager, IMaterial, MaterialID, Material)
+
+
 public:
 	static _MaterialRef CreateMaterial(MaterialType eType);
+
+private:
+
+	_MaterialRef m_refDefaultErrorMtl;
+
+public:
+	_MaterialRef GetDefaultErrorMaterial();
 
 private:
 	template<typename TMaterial>
