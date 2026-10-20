@@ -20,7 +20,8 @@ namespace LT {
 	ShaderResourceManager::ConstBufferPool::ConstBufferPool(size_t nSizePerBlock)
 		: m_nSizePerBlock(nSizePerBlock)
 		, m_nSizePerBlockAligned(util::AlignUp(nSizePerBlock, CONST_BUFFER_OFFSET_ALIGNMENT))
-	{}
+	{
+	}
 
 	ShaderResourceManager::ConstBufferPool::~ConstBufferPool()
 	{
@@ -151,8 +152,7 @@ namespace LT {
 		: m_nConstBufferHandleCounter(0)
 		, m_sVPTransBufferPool(sizeof(VPMatrixBuffer))
 		, m_vkDescriptorPool(VK_NULL_HANDLE)
-	{
-	}
+	{}
 
 	ShaderResourceManager::~ShaderResourceManager()
 	{
@@ -275,6 +275,15 @@ namespace LT {
 
 	ConstBufferHandle ShaderResourceManager::GenConstBufferHandle() {
 		return m_nConstBufferHandleCounter++;
+	}
+
+	LightManager& ShaderResourceManager::GetLightManager()
+	{
+		if (!m_pLightManager)
+		{
+			m_pLightManager = std::make_unique<LightManager>(GetDescriptorPool());
+		}
+		return *m_pLightManager;
 	}
 
 	ConstBufferHandle ShaderResourceManager::CreateTransBufferHandle()

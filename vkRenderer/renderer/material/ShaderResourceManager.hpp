@@ -7,6 +7,7 @@
 
 #include "RenderPass.hpp"
 #include "DescriptorSetWrapper.hpp"
+#include "LightManager.hpp"
 
 namespace LT {
 	class ConstBuffer;
@@ -60,23 +61,29 @@ namespace LT {
 		int64_t m_nConstBufferHandleCounter;
 
 		// handle到Binding的映射
+		// Material Mtl Prop 和 Camera Trans Buffer 都在用
 		std::map<ConstBufferHandle, BufferBinding> m_mapHandle;
+		// -------------------------- Material Mtl Prop -----------------
 		// Buffer的索引
 		// BufferID和引用标记
 		// 用于材质属性的Buffer Pool
 		std::map<MaterialType, ConstBufferPool> m_mapBuffers;
-		// 用于MVPTrans的Buffer Pool
-		ConstBufferPool m_sVPTransBufferPool;
-
-		// 目前仅用于Trans Buffer的DescriptorPool
+		// 目前仅用于Trans Buffer和Light Uniform Buffer
 		vk::DescriptorPool m_vkDescriptorPool;
 		// 用于材质属性的Descriptor pool
 		vk::DescriptorPool m_vkMtlPropDescriptorPool;
 		
+		// ---------------- Camera Trans Buffer ----------------
+		// 用于MVPTrans的Buffer Pool
+		ConstBufferPool m_sVPTransBufferPool;
 		// trans buffer desc layout
 		vk::DescriptorSetLayout m_vkTransBufferDescriptorSetLayout;
 		// trans buffer Desc set
 		std::array<DescriptorSetWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrTransBufferDescriptorSet;
+
+		// ------------------ Light Uniform Buffer --------------------
+
+		std::unique_ptr<LightManager> m_pLightManager;
 
 		ShaderResourceManager();
 
@@ -92,6 +99,8 @@ namespace LT {
 
 	private:
 		ConstBufferHandle GenConstBufferHandle();
+
+		LightManager& GetLightManager();
 
 		// -------------- static ------------------
 	private:
@@ -186,6 +195,9 @@ namespace LT {
 
 		static vk::DescriptorPool GetDescriptorPool();
 		static vk::DescriptorPool GetMtlPropDescriptorPool();
+
+
+		
 	};
 
 } // namespace LT

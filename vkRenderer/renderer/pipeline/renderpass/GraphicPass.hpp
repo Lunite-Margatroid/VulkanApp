@@ -106,8 +106,18 @@ namespace LT {
 			);
 
 		void SetDescriptorSets(const std::vector<DescriptorSetWrapper*>& vecDescriptorSets);
-
+		/// <summary>
+		/// 添加基于代码文件的模块
+		/// </summary>
+		/// <param name="strShaderModule"> 文件名 </param>
+		/// <param name="vecDepMod">依赖的模块</param>
 		void AddShaderModule(const char* strShaderModule, const std::vector<std::string>& vecDepMod);
+		/// <summary>
+		/// 添加基于源代码的模块
+		/// </summary>
+		/// <param name="strName"> 模块名 </param>
+		/// <param name="strCode"> slang代码 </param>
+		/// <param name="vecDepMod"> 依赖模块 </param>
 		void AddShaderModule(const std::string& strName, const std::string& strCode, const std::vector<std::string>& vecDepMod);
 		void SetRenderPassFlag(RenderPassFlag nFlag);
 		RenderPassFlag GetRenderPassFlag() const;

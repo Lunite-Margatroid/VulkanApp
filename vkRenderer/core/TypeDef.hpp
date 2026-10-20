@@ -25,6 +25,12 @@ namespace LT {
 		eUnknown = -1,
 		eNode,
 		eNodeMesh,
+		eNodePointLight,
+		eNodeSphereLight,
+		eNodeSpotLight,
+		eNodeRectLight,
+		eNodeDirectionalLight,
+		eNodeAmbient
 	};
 
 	// 这个枚举要作为索引
@@ -81,8 +87,64 @@ namespace LT {
 		size_t nSize;
 	};
 
+
+	constexpr uint32_t LIGHT_GROUP_MAX_COUNT = 16u;
+	constexpr uint32_t LIGHT_MAX_COUNT_PER_GROUP = 1024u;
+	constexpr uint32_t LIGHT_MAX_COUNT_PER_GROUP_FORWARD = 16u;
+
+	enum class LightType : int {
+		eNone = -1,
+		eLightPoint,
+		eLightSphere,
+		eLightSpot,
+		eLightRect,
+		eLightDirectional,
+		eLightAmbient
+	};
+
+	//std::140
+	// 64byte
+	struct LightUniformBuffer {
+		std::array<float, 3> position; // 12byte
+		float attenuation0; // 4byte
+		std::array<float, 3> direction; // 16byte
+		float attenuation1; // 4byte
+		std::array<float, 3> color; // 16byte
+		LightType nLightType; // -1标志该块缓冲不起作用
+		// 8byte
+		union {
+			struct {
+				float rectU;
+				float rectV;
+			};
+			struct {
+				float radius;
+				float padding;
+			};
+		};
+		// 8byte
+		float radianOuter;
+		float radianInner;
+	};
+
 	using TPropVar = std::variant<int, float, ImageID, std::array<float, 2>, std::array<float, 3>, std::array<float, 4>, std::array<int, 2>, std::array<int, 3>, std::array<int, 4>>;
 
 	using MtlPropVar = TPropVar;
 	using SceneNodePropVar = TPropVar;
+
+	struct RGBA_8 {
+		unsigned char r, g, b, a;
+	};
+
+	struct RGBA_32 {
+		float r, g, b, a;
+	};
+
+	struct RGB_8 {
+		unsigned char r, g, b;
+	};
+
+	struct RGB_32 {
+		float r, g, b;
+	};
 }

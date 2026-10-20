@@ -320,4 +320,5 @@ namespace LT {
 			ResetBit(nFlag, static_cast<uint64_t>(RenderPassFlagBits::eMtlPropTex0) << nTexSlotIndex);
 		}
 	}
+
 } // namespace LT
