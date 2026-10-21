@@ -5,6 +5,8 @@
 
 #include "CompSprite3D.hpp"
 
+#include "NodeLight.hpp"
+
 namespace LT {
 	View::View() 
 		: m_nMainScene(INVALID_NODE_ID)
@@ -17,12 +19,19 @@ namespace LT {
 
 	}
 
-	std::vector<EntityRender*> View::GetRenderEntity() const {
-		std::vector<EntityRender*> vecEntity;
+	void View::GetRenderEntityAndLight(
+		std::vector<EntityRender*>& vecOutEntity, 
+		std::vector<std::pair<LightUniformBuffer, std::bitset<LIGHT_GROUP_MAX_COUNT>>> vecOutLightBuffer,
+		bool& bOutLightDirty) const {
+
 
 		auto func = [&](Node* pNode) {
 			CompSprite3D* pSprite3D = pNode->GetComponent<CompSprite3D>();
 			CompTransform3D* pTrans = pNode->GetComponent<CompTransform3D>();
+			NodeFlag nNodeFlag = pNode->GetNodeFlag();
+
+			bool bIsLightNode = static_cast<uint32_t>(nNodeFlag) & static_cast<uint32_t>(NodeFlagBits::eIsLightNode);
+
 
 			if (pTrans)
 			{
@@ -43,19 +52,40 @@ namespace LT {
 				if (pEntity)
 				{
 					pEntity->SetModuleMat(pNode->GetGlobalMat());
-					vecEntity.push_back(pEntity);
+					vecOutEntity.push_back(pEntity);
 				}
 			}
+
+			if (bIsLightNode && bOutLightDirty)
+			{
+				// 处理灯光节点
+				NodeLight* pNodeLight = 
+#ifdef _DEBUG
+					dynamic_cast<NodeLight*>(pNode);
+				RENDERER_ASSERT(pNodeLight, "Node is marked as Light Node but cannot cast to NodeLight.");
+#else
+					reinterpret_cast<NodeLight*>(pNode);
+#endif
+
+				std::bitset<LIGHT_GROUP_MAX_COUNT> bitGroupFlag = pNodeLight->GetLightGroupBits();
+				vecOutLightBuffer.push_back(std::make_pair(LightUniformBuffer{}, bitGroupFlag));
+				pNodeLight->FillLightUniformBuffer(&vecOutLightBuffer.back().first);
+
+				nNodeFlag = static_cast<uint32_t>(nNodeFlag) & ~static_cast<uint32_t>(NodeFlagBits::eLightDirty);
+			}
+
+			pNode->SetNodeFlag(nNodeFlag);
+
 			};
 
 		Node* pRoot = SceneManager::GetNode(m_nMainScene);
+		bOutLightDirty = static_cast<uint32_t>(pRoot->GetNodeFlag()) & static_cast<uint32_t>(NodeFlagBits::eLightDirty);
+
 		// 这里要确保m_nMainScene是一个根节点
-		// 否则Transform可能出错
+		// 否则Transform和LightBuffer的更新可能出错
 		if (pRoot)
 		{
 			pRoot->ForEachBFS_PreOrder(func);
 		}
-
-		return vecEntity;
 	}
 } // namespace LT

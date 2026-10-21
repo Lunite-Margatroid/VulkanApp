@@ -7,7 +7,7 @@
 
 namespace LT {
 	Node::Node(NodeID id)
-		: m_id(id), m_pParent(nullptr)
+		: m_id(id), m_pParent(nullptr), m_nRootID(id), m_nFlag(0)
 	{
 		m_arrComponents.fill(nullptr);
 		AddComponent<ComponentType::eTransform3D>();
@@ -46,6 +46,7 @@ namespace LT {
 		}
 
 		pChild->m_pParent = this;
+		pChild->m_nRootID = m_nRootID; // 子节点的根节点与父节点一致
 		m_listChildren.push_back(pChild);
 	}
 
@@ -57,6 +58,7 @@ namespace LT {
 		}
 		m_listChildren.erase(iter);
 		pChild->m_pParent = nullptr;
+		pChild->m_nRootID = pChild->m_id; // 移除后成为独立节点 根节点为自身
 		return true;
 	}
 

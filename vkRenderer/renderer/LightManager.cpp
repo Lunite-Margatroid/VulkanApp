@@ -4,34 +4,24 @@
 #include "LightManager.hpp"
 #include "vkContext.h"
 
+#include "ShaderResourceManager.hpp"
+
 namespace LT {
 
 	LightManager::LightManager(vk::DescriptorPool vkDescriptorPool)
 		:m_vkDescriptorPool(vkDescriptorPool)
 	{
-		m_nLightBuffer = BufferManager::CreateConstBuffer(sizeof(LightUniformBuffer) * LIGHT_GROUP_MAX_COUNT * LIGHT_MAX_COUNT_PER_GROUP_FORWARD, nullptr)->GetBufferID();
+		m_nLightBuffer = ShaderResourceManager::CreateLightBufferHandle();
 
-		vk::DescriptorSetLayoutBinding dslb = {};
-		dslb
-			.setBinding(LIGHT_UNIFORM_BUFFER_BINDING_INDEX)
-			.setDescriptorCount(1)
-			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-			.setStageFlags(LIGHT_UNIFORM_BUFFER_STAGE_FLAG)
-			;
+		m_sDescritporSet.Init(vkDescriptorPool, ShaderResourceManager::GetLightBufferDescriptorSetLayout());
 
-		vk::DescriptorSetLayoutCreateInfo dslci = {};
-		dslci
-			.setBindingCount(1)
-			.setPBindings(&dslb)
-			;
-
-		m_vkLayout = vkContext::GetVkDevice().createDescriptorSetLayout(dslci);
-
-		m_sDescritporSet.Init(vkDescriptorPool, m_vkLayout);
+		ClearLightBuffer();
 	}
 	void LightManager::ClearLightBuffer()
 	{
-		ConstBuffer* pConstBuffer = dynamic_cast<ConstBuffer*>(BufferManager::GetBuffer(m_nLightBuffer));
+		BufferID nBufferID = ShaderResourceManager::GetConstBufferBinding(m_nLightBuffer).nBufferID;
+		ConstBuffer* pConstBuffer = dynamic_cast<ConstBuffer*>(BufferManager::GetBuffer(nBufferID));
+
 		LightUniformBuffer* pLightBuffer = reinterpret_cast<LightUniformBuffer*>(pConstBuffer->Data());
 		if (pLightBuffer)
 		{
@@ -47,24 +37,29 @@ namespace LT {
 
 	void LightManager::PushLight(const std::bitset<LIGHT_GROUP_MAX_COUNT>& bitLightGroupFlag, const LightUniformBuffer& sLightBuffer)
 	{
-		ConstBuffer* pConstBuffer = dynamic_cast<ConstBuffer*>(BufferManager::GetBuffer(m_nLightBuffer));
+		BufferID nBufferID = ShaderResourceManager::GetConstBufferBinding(m_nLightBuffer).nBufferID;
+
+		ConstBuffer* pConstBuffer = dynamic_cast<ConstBuffer*>(BufferManager::GetBuffer(nBufferID));
 		LightUniformBuffer* pLightBuffer = reinterpret_cast<LightUniformBuffer*>(pConstBuffer->Data());
 		for (uint32_t i = 0; i < LIGHT_GROUP_MAX_COUNT; i++)
 		{
-			if (bitLightGroupFlag.test(i)) {
+			if (bitLightGroupFlag.test(i) && m_arrLightCount[i] < LIGHT_MAX_COUNT_PER_GROUP_FORWARD) {
 				pLightBuffer[i * LIGHT_MAX_COUNT_PER_GROUP_FORWARD + m_arrLightCount[i]] = sLightBuffer;
 				m_arrLightCount[i] += 1;
 			}
 		}
 	}
 
+	void LightManager::UpdateBufferToDevice()
+	{
+		BufferID nBufferID = ShaderResourceManager::GetConstBufferBinding(m_nLightBuffer).nBufferID;
+		ConstBuffer* pConstBuffer = dynamic_cast<ConstBuffer*>(BufferManager::GetBuffer(nBufferID));
+		pConstBuffer->UpdateConstBuffer();
+	}
+
 	LightManager::~LightManager()
 	{
-		BufferManager::DeleteBuffer(m_nLightBuffer);
-		if (m_vkLayout)
-		{
-			vkContext::GetVkDevice().destroyDescriptorSetLayout(m_vkLayout);
-		}
+		ShaderResourceManager::ReleaseLightBufferHandle(m_nLightBuffer);
 		m_sDescritporSet.Destroy(m_vkDescriptorPool);
 	}
 } // namespace

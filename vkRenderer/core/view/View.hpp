@@ -30,6 +30,9 @@ namespace LT {
 		void SetCamera(Camera* pCamera) { m_pCamera = pCamera; }
 		Camera* GetCamera() const { return m_pCamera; }
 
-		std::vector<EntityRender*> GetRenderEntity() const;
+		void GetRenderEntityAndLight(
+			std::vector<EntityRender*>& vecOutEntity, 
+			std::vector<std::pair<LightUniformBuffer,
+			std::bitset<LIGHT_GROUP_MAX_COUNT>>> vecOutLightBuffer,bool& bOutLightDirty) const;
 	};
 } // namespace LT

@@ -86,7 +86,7 @@ namespace LT {
 		virtual EngineResult SetMtlProp(MtlProp eProp, const MtlPropVar& value) = 0;
 
 		EngineResult SetTransBuffer(ConstBufferHandle nHandle);
-
+		EngineResult SetLightBuffer(BufferID nBuffer);
 		MaterialType GetMaterialType() const { return m_eMtlType; }
 
 		EngineResult SetSlotSrc(const BindingInfo& sBindingInfo, int64_t nSrcID);
@@ -217,6 +217,7 @@ namespace LT {
 			// 绑定资源
 			std::vector<vk::WriteDescriptorSet> vecWDSMtlProp;
 			std::vector<vk::WriteDescriptorSet> vecWDSTrans;
+			std::vector<vk::WriteDescriptorSet> vecWDSLight;
 			for (auto& [bindings, mtlSlot] : m_mapSlots) {
 
 				if (mtlSlot.nSrcID == INVALID_ITEM_ID)
@@ -280,6 +281,11 @@ namespace LT {
 							vecWDSMtlProp.push_back(std::move(wds));
 							break;
 						}
+						// 前向渲染的灯光
+						case ShaderResSpace::eLightUniformBuffer: {
+							vecWDSLight.push_back(std::move(wds));
+							break;
+						}
 						default:
 							break;
 					}
@@ -337,7 +343,8 @@ namespace LT {
 				// 1 Mtl Prop
 				auto vkMtlPropDescSet = GetMtlPropDescriptorSetLayout();
 				vecSetLayout.push_back(vkMtlPropDescSet);
-
+				// 2 Light Uniform Buffer
+				vecSetLayout.push_back(ShaderResourceManager::GetLightBufferDescriptorSetLayout());
 
 				if (!pPass->Init(vecSetLayout))
 				{

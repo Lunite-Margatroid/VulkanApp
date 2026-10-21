@@ -43,6 +43,16 @@ namespace LT {
 
 
 
+	// 节点标志位 NodeFlag的类型
+	using NodeFlag = uint32_t;
+	enum class NodeFlagBits : NodeFlag {
+		eIsEnabled = (1u << 0), // 0 节点是否启用
+		eLightDirty = (1u << 1), // 1 该帧灯光有更新  只有当根节点没有改变 该标志的功能才能保证
+		eIsLightNode = (1u << 2), // 2 该节点是灯光节点
+	};
+
+
+
 	// 简单的树节点 用std::list<Node*>记录子节点
 	// 父节点拥有子节点的所有权 析构时级联释放子节点
 	class Node {
@@ -53,12 +63,16 @@ namespace LT {
 		Node* m_pParent;
 		std::list<Node*> m_listChildren;
 		std::array<IComponent*, static_cast<size_t>(ComponentType::ComponentTypeCount)> m_arrComponents;
+		// 该节点所在的节点树的根节点ID 无父节点的独立节点时等于自身ID
+		NodeID m_nRootID;
+		// 节点标志位 位含义见NodeFlagBits
+		NodeFlag m_nFlag;
+
 
 		Node(NodeID id);
 		virtual ~Node();
-
-
 	public:
+
 
 		// 禁止拷贝和移动 节点具有唯一身份
 		Node& operator = (const Node&) = delete;
@@ -109,6 +123,10 @@ namespace LT {
 		// 获取变换矩阵
 		// 如果没有Transform Component 将从它的父节点获取
 		glm::mat4 GetGlobalMat();
+
+		NodeID GetRootID() const { return m_nRootID; }
+		NodeFlag GetNodeFlag() const { return m_nFlag; }
+		void SetNodeFlag(NodeFlag nFlag) { m_nFlag = nFlag; }
 	};
 
 } // namespace LT

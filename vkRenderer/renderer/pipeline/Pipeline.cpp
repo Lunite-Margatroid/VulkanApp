@@ -22,6 +22,11 @@ namespace LT {
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
 			m_vecDepthBuffer.push_back(ImageManager::CreateImage2DDepthBuffer(m_nWidth, m_nHeight));
 		}
+
+		// 灯光
+		// LightManager
+		m_pLightManager = ShaderResourceManager::CreateLightManager();
+		RENDERER_ASSERT(m_pLightManager, "Create Light Manager Failed.");
 	}
 
 	Pipeline::~Pipeline() {
@@ -66,9 +71,24 @@ namespace LT {
 
 	void Pipeline::Execute(FrameInfo& sInOutFrameInfo)
 	{
+		// 更新Trans Buffer
 		ShaderResourceManager::UpdateTransBuffer(
 			sInOutFrameInfo.pRenderView->GetTransBufferHandle(sInOutFrameInfo.nFightFrameIndex), sInOutFrameInfo.pRenderView->GetTransBuffer());
 		ShaderResourceManager::UpdateDeviceTransBuffer();
+		// 更新Light Uniform Buffer
+
+		if(sInOutFrameInfo.bLightDirty)
+		{
+			m_pLightManager->ClearLightBuffer();
+
+			for (const auto& [sLightBuffer, bitsGroup] : sInOutFrameInfo.vecLightBuffer) {
+				m_pLightManager->PushLight(bitsGroup, sLightBuffer);
+			}
+
+			m_pLightManager->UpdateBufferToDevice();
+		}
+
+		// 更新Mtl Prop Buffer and Texture
 		ShaderResourceManager::UpdateDeviceMtlPropBuffer();
 
 		StageExecuteInfo sStageInfo;

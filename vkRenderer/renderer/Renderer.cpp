@@ -58,7 +58,7 @@ namespace LT {
 		
 
 		// 收集RenderEntity
-		sInOutFrameInfo.vecEntityRender = m_pView->GetRenderEntity();
+		m_pView->GetRenderEntityAndLight(sInOutFrameInfo.vecEntityRender, sInOutFrameInfo.vecLightBuffer, sInOutFrameInfo.bLightDirty);
 		sInOutFrameInfo.pRenderView = m_pRenderView.get();
 
 		m_pPipeline->Resize(sInOutFrameInfo.nWidth, sInOutFrameInfo.nHeight);

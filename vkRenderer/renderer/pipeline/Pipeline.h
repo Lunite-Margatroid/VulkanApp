@@ -30,6 +30,9 @@
 // Fence Manager
 #include "FenceManager.hpp"
 
+// Light Manager
+#include "LightManager.hpp"
+
 namespace LT {
 
 	class VertexBuffer;
@@ -68,6 +71,10 @@ namespace LT {
 
 		uint32_t nWidth;
 		uint32_t nHeight;
+
+		bool bLightDirty; // 该帧灯光是否有更新
+		std::vector<std::pair<LightUniformBuffer, std::bitset<LIGHT_GROUP_MAX_COUNT>>> vecLightBuffer;
+
 	};
 
 
@@ -80,6 +87,8 @@ namespace LT {
 		std::vector<Image2DDepthBuffer*> m_vecDepthBuffer; // 深度缓冲
 
 		RenderStageOpaqueForward m_sStage;
+
+		std::shared_ptr<LightManager> m_pLightManager;
 
 	public:
 		Pipeline();

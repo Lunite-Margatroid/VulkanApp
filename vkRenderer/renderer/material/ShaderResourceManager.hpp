@@ -82,8 +82,9 @@ namespace LT {
 		std::array<DescriptorSetWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrTransBufferDescriptorSet;
 
 		// ------------------ Light Uniform Buffer --------------------
+		std::vector<std::shared_ptr<LightManager>> m_vecLightManagers;
+		vk::DescriptorSetLayout m_vkLightBufferLayout;
 
-		std::unique_ptr<LightManager> m_pLightManager;
 
 		ShaderResourceManager();
 
@@ -99,8 +100,6 @@ namespace LT {
 
 	private:
 		ConstBufferHandle GenConstBufferHandle();
-
-		LightManager& GetLightManager();
 
 		// -------------- static ------------------
 	private:
@@ -125,14 +124,15 @@ namespace LT {
 		static void ReleaseTransBufferHandle(ConstBufferHandle nHandle);
 		static void UpdateTransBuffer(ConstBufferHandle nHandle, const void* pData);
 		static void UpdateDeviceTransBuffer();
+		static ConstBufferHandle CreateLightBufferHandle();
+		static void ReleaseLightBufferHandle(ConstBufferHandle nHandle);
 
 		// 获取Trnas Buffer Layout
 		static vk::DescriptorSetLayout GetTransBufferDescriptorSetLayout();
-
-
 		// 获取Trans Buffer描述符
 		static DescriptorSetWrapper& GetTransBufferDescriptorSet(FlightFrameIndex nFlightIndex);
-
+		// 获取Light Buffer Layout
+		static vk::DescriptorSetLayout GetLightBufferDescriptorSetLayout();
 
 
 		template<typename TMaterial>
@@ -196,7 +196,7 @@ namespace LT {
 		static vk::DescriptorPool GetDescriptorPool();
 		static vk::DescriptorPool GetMtlPropDescriptorPool();
 
-
+		static std::shared_ptr<LightManager> CreateLightManager();
 		
 	};
 

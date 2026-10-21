@@ -15,6 +15,7 @@ namespace LT {
 	enum class ShaderResSpace : int16_t {
 		eTransBuffer = 0,
 		eMtlProp = 1,
+		eLightUniformBuffer = 2,
 		ShaderResSpaceCount
 	};
 

@@ -71,4 +71,9 @@ namespace LT {
 		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, ShaderStage::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nHandle);
 		return EngineResult::eSuccess;
 	}
+	EngineResult IMaterial::SetLightBuffer(BufferID nBuffer)
+	{
+		m_mapSlots[BindingInfo(LIGHT_UNIFORM_BUFFER_BINDING_INDEX, ShaderStage::eFragmentShader, ShaderResSpace::eLightUniformBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nBuffer);
+		return EngineResult::eSuccess;
+	}
 } // namespace

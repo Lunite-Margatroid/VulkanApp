@@ -8,27 +8,26 @@ namespace LT {
 	constexpr vk::ShaderStageFlags LIGHT_UNIFORM_BUFFER_STAGE_FLAG = vk::ShaderStageFlagBits::eVertex;
 
 	// 不是一个单例
-	// ShaderResourceManager会使用该类
+	// ShaderResourceManager和Pipeline使用
 	class LightManager
 	{
 		friend class ShaderResourceManager;
 	private:
-		BufferID m_nLightBuffer;
+		ConstBufferHandle m_nLightBuffer;
 
 		std::array<uint32_t, LIGHT_GROUP_MAX_COUNT> m_arrLightCount;
 		vk::DescriptorPool m_vkDescriptorPool;
-		// 储存灯光的Uniform Buffer的Layout
-		vk::DescriptorSetLayout m_vkLayout;
 		DescriptorSetWrapper m_sDescritporSet;
 
+	public:
 		void ClearLightBuffer();
 
 		void PushLight(const std::bitset<LIGHT_GROUP_MAX_COUNT>& bitLightGroupFlag, const LightUniformBuffer& sLightBuffer);
 
-		LightManager(vk::DescriptorPool vkDescriptorPool);
-		~LightManager();
+		void UpdateBufferToDevice();
 
-	public:
-		
+		LightManager(vk::DescriptorPool vkDescriptorPool);
+
+		~LightManager();
 	};
 } // namespace

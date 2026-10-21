@@ -158,6 +158,12 @@ namespace LT {
 	{
 		vk::Device& device = vkContext::GetVkDevice();
 
+		if(m_vkLightBufferLayout) {
+			device.destroyDescriptorSetLayout(m_vkLightBufferLayout);
+		}
+
+		m_vecLightManagers.clear();
+
 		if (m_mapHandle.size() > 0) {
 			LOG_ERROR("%s, ConstBuffers did not release.", __FUNCTION__);
 		}
@@ -258,6 +264,15 @@ namespace LT {
 		return GetInstance().m_vkMtlPropDescriptorPool;
 	}
 
+	std::shared_ptr<LightManager> ShaderResourceManager::CreateLightManager()
+	{
+		ShaderResourceManager& mgr = ShaderResourceManager::GetInstance();
+
+		mgr.m_vecLightManagers.push_back(std::make_shared<LightManager>(mgr.GetDescriptorPool()));
+
+		return mgr.m_vecLightManagers.back();
+	}
+
 	ShaderResourceManager& ShaderResourceManager::GetInstance() {
 		RENDERER_ASSERT(s_pInstance, "ShaderResourceManager Did not init.");
 		return *s_pInstance;
@@ -275,15 +290,6 @@ namespace LT {
 
 	ConstBufferHandle ShaderResourceManager::GenConstBufferHandle() {
 		return m_nConstBufferHandleCounter++;
-	}
-
-	LightManager& ShaderResourceManager::GetLightManager()
-	{
-		if (!m_pLightManager)
-		{
-			m_pLightManager = std::make_unique<LightManager>(GetDescriptorPool());
-		}
-		return *m_pLightManager;
 	}
 
 	ConstBufferHandle ShaderResourceManager::CreateTransBufferHandle()
@@ -331,6 +337,31 @@ namespace LT {
 		mgr.m_sVPTransBufferPool.UpdateDeviceConstBuffer();
 	}
 
+	ConstBufferHandle ShaderResourceManager::CreateLightBufferHandle()
+	{
+		auto& mgr = GetInstance();
+		BufferID nBuffer = BufferManager::CreateConstBuffer(sizeof(LightUniformBuffer) * LIGHT_GROUP_MAX_COUNT * LIGHT_MAX_COUNT_PER_GROUP_FORWARD, nullptr)->GetBufferID();
+		ConstBufferHandle nHandle = mgr.GenConstBufferHandle();
+		mgr.m_mapHandle[nHandle] = BufferBinding{ nBuffer, 0, sizeof(LightUniformBuffer) * LIGHT_GROUP_MAX_COUNT * LIGHT_MAX_COUNT_PER_GROUP_FORWARD };
+
+		return nHandle;
+	}
+
+	void ShaderResourceManager::ReleaseLightBufferHandle(ConstBufferHandle nHandle)
+	{
+		auto& mgr = GetInstance();
+		auto iter = mgr.m_mapHandle.find(nHandle);
+		if (iter != mgr.m_mapHandle.end())
+		{
+			BufferManager::DeleteBuffer(iter->second.nBufferID);
+			mgr.m_mapHandle.erase(iter);
+		}
+		else
+		{
+			LOG_WARNING("invalid light buffer Handle");
+		}
+	}
+
 	vk::DescriptorSetLayout ShaderResourceManager::GetTransBufferDescriptorSetLayout() {
 
 		ShaderResourceManager& mgr = GetInstance();
@@ -373,6 +404,32 @@ namespace LT {
 		}
 
 		return mgr.m_arrTransBufferDescriptorSet[nFlightIndex];
+	}
+
+	vk::DescriptorSetLayout ShaderResourceManager::GetLightBufferDescriptorSetLayout()
+	{
+		ShaderResourceManager& mgr = GetInstance();
+		if (!mgr.m_vkLightBufferLayout) {
+		
+			vk::DescriptorSetLayoutBinding dslb = {};
+			dslb
+				.setBinding(LIGHT_UNIFORM_BUFFER_BINDING_INDEX)
+				.setDescriptorCount(1)
+				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+				.setStageFlags(LIGHT_UNIFORM_BUFFER_STAGE_FLAG)
+				;
+
+			vk::DescriptorSetLayoutCreateInfo dslci = {};
+			dslci
+				.setBindingCount(1)
+				.setPBindings(&dslb)
+				;
+
+			mgr.m_vkLightBufferLayout = vkContext::GetVkDevice().createDescriptorSetLayout(dslci);
+		}
+
+
+		return mgr.m_vkLightBufferLayout;
 	}
 
 	void ShaderResourceManager::UpdateDeviceMtlPropBuffer() {
