@@ -99,6 +99,8 @@ namespace LT {
 		sStageInfo.nFlightFrameIndex = sInOutFrameInfo.nFightFrameIndex;
 		sStageInfo.nWidth = m_nWidth;
 		sStageInfo.nHeight = m_nHeight;
+		sStageInfo.pPipeline = this;
+
 
 		if (sInOutFrameInfo.semAcquiring)
 		{
@@ -120,6 +122,30 @@ namespace LT {
 		m_sStage.Execute(sStageInfo);
 
 		sInOutFrameInfo.fenceDrawing = sStageInfo.refFence;
+	}
+
+	DescriptorSetWrapper* Pipeline::GetLightBufferDescriptorSet()
+	{
+		if (m_pLightManager)
+		{
+			return &m_pLightManager->GetDescriptorSetWrapper();
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
+	ConstBufferHandle Pipeline::GetLightBufferHandle()
+	{
+		if (m_pLightManager)
+		{
+			return m_pLightManager->GetBufferHandle();
+		}
+		else
+		{
+			return INVALID_CONST_BUFFER_HANDLE;
+		}
 	}
 
 } //namespace LT

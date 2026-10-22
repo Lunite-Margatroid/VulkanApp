@@ -17,6 +17,10 @@ namespace LT {
 
 		ClearLightBuffer();
 	}
+	ConstBufferHandle LightManager::GetBufferHandle() const
+	{
+		return m_nLightBuffer;
+	}
 	void LightManager::ClearLightBuffer()
 	{
 		BufferID nBufferID = ShaderResourceManager::GetConstBufferBinding(m_nLightBuffer).nBufferID;
@@ -55,6 +59,11 @@ namespace LT {
 		BufferID nBufferID = ShaderResourceManager::GetConstBufferBinding(m_nLightBuffer).nBufferID;
 		ConstBuffer* pConstBuffer = dynamic_cast<ConstBuffer*>(BufferManager::GetBuffer(nBufferID));
 		pConstBuffer->UpdateConstBuffer();
+	}
+
+	DescriptorSetWrapper& LightManager::GetDescriptorSetWrapper()
+	{
+		return m_sDescritporSet;
 	}
 
 	LightManager::~LightManager()

@@ -1,3 +1,6 @@
+#ifndef COMMONVERTEXOUTPUT_SLANG
+#define COMMONVERTEXOUTPUT_SLANG
+
 // 定义顶点着色器输出
 struct SVertexOutput{
 	float4 fragPos : SV_Position;
@@ -49,4 +52,6 @@ struct SVertexOutput{
 	float3 viewVec;
 	// 模型坐标
 	float3 modelPos;
-}; 
+};
+
+#endif // COMMONVERTEXOUTPUT_SLANG

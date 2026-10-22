@@ -1,6 +1,6 @@
 // 测试材质 单一贴图 无光照
 #pragma once
-#include "IMaterial.hpp"
+#include "BaseMaterial.hpp"
 
 
 namespace LT {

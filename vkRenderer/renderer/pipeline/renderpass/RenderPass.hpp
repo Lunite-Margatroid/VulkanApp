@@ -77,7 +77,7 @@ namespace LT {
 
 	}
 
-	std::vector<std::pair<const char* , const char*>> GenGraphicPPMacroDesc(const RenderPassFlag& nFlag);
+	std::vector<std::pair<const char* , const char*>> GenGraphicPPMacroDesc(const RenderPassFlag& nFlag, const std::vector<MtlProp>& vecMtlProps);
 
 
 	struct TransitionImageLayoutInfo {

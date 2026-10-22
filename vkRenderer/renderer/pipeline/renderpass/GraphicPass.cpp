@@ -55,7 +55,7 @@ namespace LT {
 			m_sShaderModuleInfo.Clear();
 
 
-			std::vector<BYTE> binShader = SlangCompiler::GetInstance().CompileShader(m_sShaderSrc, GenGraphicPPMacroDesc(m_nFlag), m_sShaderModuleInfo);
+			std::vector<BYTE> binShader = SlangCompiler::GetInstance().CompileShader(m_sShaderSrc, GenGraphicPPMacroDesc(m_nFlag, m_vecMtlProps), m_sShaderModuleInfo);
 			if(binShader.size() <= 0)
 			{
 				LOG_ERROR("GraphicPass: Compile shader failed.");
@@ -350,6 +350,11 @@ namespace LT {
 	RenderPassFlag GraphicPass::GetRenderPassFlag() const
 	{
 		return m_nFlag;
+	}
+
+	void GraphicPass::SetMtlProps(const std::vector<MtlProp>& vecMtlProps)
+	{
+		m_vecMtlProps = vecMtlProps;
 	}
 
 	void GraphicPass::GenVertexAttributeDesc(VertexChannelFlag nVertexChannelFlag, std::vector<vk::VertexInputBindingDescription>& vecInputBindDesc, std::vector<vk::VertexInputAttributeDescription>& vertDesc)

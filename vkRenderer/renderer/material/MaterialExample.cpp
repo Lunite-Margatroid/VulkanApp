@@ -18,6 +18,8 @@ namespace LT {
 		:BaseMaterial<MaterialExample, MaterialType::eExample>(nID)
 	{
 		RegisterStage(RenderStageType::eOpaqueForward);
+		// 没有灯光
+		SetLighting(m_nMtlFlag, false);
 	}
 
 	//RenderPass* MaterialExample::Bind(const MaterialBindInfo& sMtlBindInfo)

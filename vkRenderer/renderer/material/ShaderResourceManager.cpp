@@ -239,16 +239,18 @@ namespace LT {
 
 		// 其他描述符
 		{
-			// Trans Buffer
+			// Trans Buffer 和 Light Buffer
 			vk::DescriptorPoolSize dps = {};
 			dps
 				.setType(vk::DescriptorType::eUniformBuffer)
-				.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT)
+				.setDescriptorCount(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT * 2)
 				;
+
+
 			vk::DescriptorPoolCreateInfo dpci;
 			dpci
 				.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT)
+				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT * 2)
 				.setPoolSizeCount(1)
 				.setPPoolSizes(&dps)
 				;

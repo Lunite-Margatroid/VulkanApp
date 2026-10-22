@@ -5,10 +5,10 @@
 namespace LT {
 	constexpr uint32_t LIGHT_UNIFORM_BUFFER_BINDING_INDEX = 0;
 	constexpr uint32_t LIGHT_UNIFORM_BUFFER_DESC_SET_INDEX = 2;
-	constexpr vk::ShaderStageFlags LIGHT_UNIFORM_BUFFER_STAGE_FLAG = vk::ShaderStageFlagBits::eVertex;
+	constexpr vk::ShaderStageFlags LIGHT_UNIFORM_BUFFER_STAGE_FLAG = vk::ShaderStageFlagBits::eFragment;
 
-	// ²»ÊÇÒ»¸öµ¥Àı
-	// ShaderResourceManagerºÍPipelineÊ¹ÓÃ
+	// ä¸æ˜¯ä¸€ä¸ªå•ä¾‹
+	// ShaderResourceManagerå’ŒPipelineä½¿ç”¨
 	class LightManager
 	{
 		friend class ShaderResourceManager;
@@ -26,7 +26,11 @@ namespace LT {
 
 		void UpdateBufferToDevice();
 
+		DescriptorSetWrapper& GetDescriptorSetWrapper();
+
 		LightManager(vk::DescriptorPool vkDescriptorPool);
+
+		ConstBufferHandle GetBufferHandle() const;
 
 		~LightManager();
 	};

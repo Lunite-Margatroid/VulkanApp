@@ -47,7 +47,7 @@ namespace LT {
 	IMaterial::IMaterial(MaterialID nID, MaterialType eType)
 		:m_nID(nID)
 		, m_eMtlType(eType)
-		, m_nTexDefFlag(0)
+		, m_nMtlFlag(0)
 	{
 		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, ShaderStage::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, -1);
 	}
@@ -71,9 +71,9 @@ namespace LT {
 		m_mapSlots[BindingInfo(MTL_TRANS_BUFFER_BINDING_INDEX, ShaderStage::eVertexShader, ShaderResSpace::eTransBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nHandle);
 		return EngineResult::eSuccess;
 	}
-	EngineResult IMaterial::SetLightBuffer(BufferID nBuffer)
+	EngineResult IMaterial::SetLightBuffer(ConstBufferHandle nHandle)
 	{
-		m_mapSlots[BindingInfo(LIGHT_UNIFORM_BUFFER_BINDING_INDEX, ShaderStage::eFragmentShader, ShaderResSpace::eLightUniformBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nBuffer);
+		m_mapSlots[BindingInfo(LIGHT_UNIFORM_BUFFER_BINDING_INDEX, ShaderStage::eFragmentShader, ShaderResSpace::eLightUniformBuffer)] = MaterialSlot(vk::DescriptorType::eUniformBuffer, nHandle);
 		return EngineResult::eSuccess;
 	}
 } // namespace

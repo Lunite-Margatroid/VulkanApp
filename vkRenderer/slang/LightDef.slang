@@ -180,37 +180,40 @@ void AmbientLightIlluminate(in LocalSurfaceInfo surface, in LightUniformBuffer l
 
 // 遍历表面所属的灯光组 计算组内所有灯光的光照贡献
 // 调用前需用FragInfoInit初始化frag 多次调用可累加多个灯光组
-void Lighting(in LocalSurfaceInfo surface, inout FragInfo frag){
-	// 表面所属的灯光组 越界时回到灯光组0
-	uint nGroupIndex = min(surface.nLightGroupID, LIGHT_GROUP_MAX_COUNT - 1);
-	for (uint i = 0; i < LIGHT_GROUP_LIGHT_COUNT; i++){
-		LightUniformBuffer light = u_LightGroups[nGroupIndex][i];
-		if (light.nLightType <= LIGHT_TYPE_NONE){
-			continue; // 无效槽位
+void Lighting(in LocalSurfaceInfo surface, inout FragInfo frag) {
+    // 若surface.nLightGroupID小于0 则不使用任何灯光组
+    int nGroupIndex = min(surface.nLightGroupID, LIGHT_GROUP_MAX_COUNT - 1);
+    if (nGroupIndex >= 0)
+    {
+		for (uint i = 0; i < LIGHT_GROUP_LIGHT_COUNT; i++){
+			LightUniformBuffer light = u_LightGroups[nGroupIndex][i];
+			if (light.nLightType <= LIGHT_TYPE_NONE){
+				continue; // 无效槽位
+			}
+			switch (light.nLightType){
+				case LIGHT_TYPE_POINT:
+					PointLightIlluminate(surface, light, frag);
+					break;
+				case LIGHT_TYPE_SPHERE:
+					SphereLightIlluminate(surface, light, frag);
+					break;
+				case LIGHT_TYPE_SPOT:
+					SpotLightIlluminate(surface, light, frag);
+					break;
+				case LIGHT_TYPE_RECT:
+					RectLightIlluminate(surface, light, frag);
+					break;
+				case LIGHT_TYPE_DIRECTIONAL:
+					DirectionalLightIlluminate(surface, light, frag);
+					break;
+				case LIGHT_TYPE_AMBIENT:
+					AmbientLightIlluminate(surface, light, frag);
+					break;
+				default:
+					break;
+			}
 		}
-		switch (light.nLightType){
-			case LIGHT_TYPE_POINT:
-				PointLightIlluminate(surface, light, frag);
-				break;
-			case LIGHT_TYPE_SPHERE:
-				SphereLightIlluminate(surface, light, frag);
-				break;
-			case LIGHT_TYPE_SPOT:
-				SpotLightIlluminate(surface, light, frag);
-				break;
-			case LIGHT_TYPE_RECT:
-				RectLightIlluminate(surface, light, frag);
-				break;
-			case LIGHT_TYPE_DIRECTIONAL:
-				DirectionalLightIlluminate(surface, light, frag);
-				break;
-			case LIGHT_TYPE_AMBIENT:
-				AmbientLightIlluminate(surface, light, frag);
-				break;
-			default:
-				break;
-		}
-	}
+    }
 	// 透明度与光照无关 由表面决定
 	frag.cColorAcc.a = surface.fAlpha;
 }

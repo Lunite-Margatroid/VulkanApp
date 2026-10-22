@@ -57,6 +57,7 @@ namespace LT {
 
 		// ---------------------- Scene -------------------------
 		EngineResult CreateSceneNode(NodeID& nOutNodeID, NodeType nNodeType);
+		EngineResult CreateLightNode(NodeID& nOutNodeID, NodeID nParentID, LightType eLightType);
 		EngineResult SceneNodeRebase(NodeID nParient, NodeID nChild);
 		// 删除节点会连带子节点一起释放
 		EngineResult DeleteSceneNode(NodeID nNodeID);
@@ -67,7 +68,18 @@ namespace LT {
 		EngineResult SetSceneNodeEulerRotation(NodeID nNodeID, const std::array<float, 3>& arrEulerRotation);
 
 		EngineResult SetSceneNodeScale(NodeID nNodeID, const std::array<float, 3>& arrScale);
-		
+
+		// ---------------- Light Node ----------------
+		EngineResult SetLightColor(NodeID nNodeID, const std::array<float, 3>& arrColor);
+		// 光照范围 点光源/聚光灯
+		EngineResult SetLightRange(NodeID nNodeID, float fRange);
+		// 球体半径 球形光
+		EngineResult SetLightRadius(NodeID nNodeID, float fRadius);
+		// U/V方向半宽 矩形光
+		EngineResult SetLightRectSize(NodeID nNodeID, const std::array<float, 2>& arrRectSize);
+		// 内/外锥角(弧度) 聚光灯
+		EngineResult SetLightSpotRadian(NodeID nNodeID, const std::array<float, 2>& arrInnerOuterRadian);
+
 		EngineResult AddComponent(NodeID nNodeID, ComponentType eCompType);
 
 		EngineResult CreateCamera(CameraID& nOutCameraID);

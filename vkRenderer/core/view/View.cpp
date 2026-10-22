@@ -20,8 +20,8 @@ namespace LT {
 	}
 
 	void View::GetRenderEntityAndLight(
-		std::vector<EntityRender*>& vecOutEntity, 
-		std::vector<std::pair<LightUniformBuffer, std::bitset<LIGHT_GROUP_MAX_COUNT>>> vecOutLightBuffer,
+		std::vector<EntityRender*>& vecOutEntity,
+		std::vector<std::pair<LightUniformBuffer, std::bitset<LIGHT_GROUP_MAX_COUNT>>>& vecOutLightBuffer,
 		bool& bOutLightDirty) const {
 
 

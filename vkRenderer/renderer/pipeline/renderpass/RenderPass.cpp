@@ -38,6 +38,17 @@ namespace LT {
 		return arrName;
 	}();
 
+	// 记录每个材质属性的宏定义名称 "MTL_PROP_" + 属性名
+	// 宏名称指针需要传给着色器编译器 必须指向持久存储 不能使用临时字符串
+	std::array<std::string, static_cast<size_t>(MtlProp::MtlPropCount)> g_arrMtlPropMacroName = [] {
+		std::array<std::string, static_cast<size_t>(MtlProp::MtlPropCount)> arrName;
+		for (size_t i = 0; i < arrName.size(); ++i)
+		{
+			arrName[i] = "MTL_PROP_" + std::string(ToString(static_cast<MtlProp>(i)));
+		}
+		return arrName;
+	}();
+
 
 	uint32_t MtlPropEnum2TexIndex(MtlProp eProp) {
 		return g_arrMtlTex2TexIndex[static_cast<uint32_t>(eProp)];
@@ -61,7 +72,7 @@ namespace LT {
 		return g_arrMtlPropTex2MtlPropEnum[nIndex];
 	}
 
-    std::vector<std::pair<const char*, const char*>> GenGraphicPPMacroDesc(const RenderPassFlag& nFlag)
+    std::vector<std::pair<const char*, const char*>> GenGraphicPPMacroDesc(const RenderPassFlag& nFlag, const std::vector<MtlProp>& vecMtlProps)
     {
 		std::vector<std::pair<const char*, const char*>> vecPPMacro;
 		if (HasVertexPos(nFlag)) {
@@ -115,6 +126,15 @@ namespace LT {
 				vecPPMacro.emplace_back(g_arrMtlPropTexMacroName[nTexSlotIndex].c_str(), "1");
 			}
 		}
+		// 除了贴图属性外的材质属性
+		for (MtlProp eProp : vecMtlProps)
+		{
+			if (eProp != MtlProp::Padding && GetMtlPropDataType(eProp) != MtlPropDataType::eImage)
+			{
+				vecPPMacro.emplace_back(g_arrMtlPropMacroName[static_cast<size_t>(eProp)].c_str(), "1");
+			}
+		}
+
 		return vecPPMacro;
     }
 

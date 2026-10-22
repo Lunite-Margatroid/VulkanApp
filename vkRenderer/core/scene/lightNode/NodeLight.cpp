@@ -47,8 +47,8 @@ namespace LT {
 	}
 
 	void NodeLight::FillLightDirection(LightUniformBuffer* pOutBuffer) {
-		// 方向 = 全局旋转矩阵 * -Z轴 与Camera默认朝向一致
-		glm::vec3 vDir = glm::normalize(glm::mat3(GetGlobalMat()) * -VEC3_AXIS_Z);
+		// 方向 = 全局旋转矩阵 * -Y轴 默认朝下
+		glm::vec3 vDir = glm::normalize(glm::mat3(GetGlobalMat()) * -VEC3_AXIS_Y);
 		pOutBuffer->direction = { vDir.x, vDir.y, vDir.z };
 	}
 } // namespace LT

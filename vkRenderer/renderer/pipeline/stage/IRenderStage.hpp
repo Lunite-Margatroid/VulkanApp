@@ -7,6 +7,8 @@
 namespace LT {
 	class EntityRender;
 
+	class Pipeline;
+
 	struct StageExecuteInfo {
 		uint32_t nWidth;
 		uint32_t nHeight;
@@ -26,6 +28,8 @@ namespace LT {
 		// 通常作为输出参数
 		FenceRef refFence;
 
+		Pipeline* pPipeline;
+
 		StageExecuteInfo() 
 			: nWidth(0)
 			, nHeight(0)
@@ -33,6 +37,7 @@ namespace LT {
 			, nDepthBufferID(INVALID_IMAGE_ID)
 			, pRenderView(nullptr)
 			, refFence(INVALID_FENCE_HANDLE)
+			, pPipeline(nullptr)
 		{}
 	};
 

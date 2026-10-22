@@ -79,6 +79,8 @@ namespace LT {
 		std::vector<std::string> m_vecShaderModuleSrc;
 		ShaderSrc m_sShaderSrc;
 		RenderPassFlag m_nFlag;
+		// 材质注册的属性列表 用于生成MTL_PROP_宏
+		std::vector<MtlProp> m_vecMtlProps;
 		vk::ShaderModule m_vkShaderModule;
 		ShaderModuleInfo m_sShaderModuleInfo;
 
@@ -121,6 +123,8 @@ namespace LT {
 		void AddShaderModule(const std::string& strName, const std::string& strCode, const std::vector<std::string>& vecDepMod);
 		void SetRenderPassFlag(RenderPassFlag nFlag);
 		RenderPassFlag GetRenderPassFlag() const;
+
+		void SetMtlProps(const std::vector<MtlProp>& vecMtlProps);
 
 		void RecordCommand(const RecordCommandInfo& sRecordInfo);
 

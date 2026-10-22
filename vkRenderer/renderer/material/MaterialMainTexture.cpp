@@ -18,6 +18,8 @@ namespace LT {
 		:BaseMaterial<MaterialMainTexture, MaterialType::eMainTexture>(nID)
 	{
 		RegisterStage(RenderStageType::eOpaqueForward);
+		// 没有灯光
+		SetLighting(m_nMtlFlag, false);
 	}
 	//RenderPass* MaterialMainTexture::Bind(const MaterialBindInfo& sMtlBindInfo)
 	//{

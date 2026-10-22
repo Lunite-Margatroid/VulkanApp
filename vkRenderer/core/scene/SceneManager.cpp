@@ -3,6 +3,12 @@
 #include "EngineCommon.h"
 #include "SceneManager.hpp"
 #include "NodeMesh.hpp"
+#include "NodePointLight.hpp"
+#include "NodeSphereLight.hpp"
+#include "NodeSpotLight.hpp"
+#include "NodeRectLight.hpp"
+#include "NodeDirectionalLight.hpp"
+#include "NodeAmbient.hpp"
 
 namespace LT {
 	SceneManager* SceneManager::s_pSceneManager = nullptr;
@@ -58,6 +64,30 @@ namespace LT {
 			case NodeType::eNodeMesh:
 				id = instance.GenID();
 				pNode = new NodeMesh(id);
+				break;
+			case NodeType::eNodePointLight:
+				id = instance.GenID();
+				pNode = new NodePointLight(id);
+				break;
+			case NodeType::eNodeSphereLight:
+				id = instance.GenID();
+				pNode = new NodeSphereLight(id);
+				break;
+			case NodeType::eNodeSpotLight:
+				id = instance.GenID();
+				pNode = new NodeSpotLight(id);
+				break;
+			case NodeType::eNodeRectLight:
+				id = instance.GenID();
+				pNode = new NodeRectLight(id);
+				break;
+			case NodeType::eNodeDirectionalLight:
+				id = instance.GenID();
+				pNode = new NodeDirectionalLight(id);
+				break;
+			case NodeType::eNodeAmbient:
+				id = instance.GenID();
+				pNode = new NodeAmbient(id);
 				break;
 			default:
 				break;

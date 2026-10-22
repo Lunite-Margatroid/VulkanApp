@@ -7,6 +7,7 @@
 #include "MaterialManager.hpp"
 #include "MaterialMainTexture.hpp"
 #include "MaterialExample.hpp"
+#include "MaterialPhong.hpp"
 #include "MaterialError.hpp"
 
 namespace LT {
@@ -20,7 +21,7 @@ namespace LT {
 		}
 	};
 	// 注册材质
-	using MaterialRegistry = _MaterialRegistry<MaterialMainTexture, MaterialExample, MaterialError>;
+	using MaterialRegistry = _MaterialRegistry<MaterialMainTexture, MaterialExample, MaterialPhong, MaterialError>;
 
 
 

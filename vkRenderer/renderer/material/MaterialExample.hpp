@@ -1,5 +1,5 @@
 #pragma once
-#include "IMaterial.hpp"
+#include "BaseMaterial.hpp"
 
 namespace LT {
 	class MaterialExample final : public  BaseMaterial<MaterialExample, MaterialType::eExample> {

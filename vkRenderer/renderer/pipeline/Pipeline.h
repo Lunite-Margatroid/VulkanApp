@@ -102,6 +102,8 @@ namespace LT {
 
 		void Execute(FrameInfo& sInOutFrameInfo);
 
+		DescriptorSetWrapper* GetLightBufferDescriptorSet();
+		ConstBufferHandle GetLightBufferHandle();
 
 		uint32_t GetWidth() const { return m_nWidth; }
 		uint32_t GetHeight() const { return m_nHeight; }

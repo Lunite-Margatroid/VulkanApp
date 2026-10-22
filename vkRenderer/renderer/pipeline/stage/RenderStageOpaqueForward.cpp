@@ -9,6 +9,8 @@
 
 #include "RenderViewSingleCamera.hpp"
 
+#include "Pipeline.h"
+
 namespace LT {
 	RenderStageOpaqueForward::RenderStageOpaqueForward()
 	{
@@ -96,6 +98,7 @@ namespace LT {
 		sMtlBindInfo.nFlightIndex = nFlightFrameIndex;
 		sMtlBindInfo.pCmdBuffer = &vkContext::GetCmdBuffer(nFlightFrameIndex);
 		sMtlBindInfo.eStage = GetRenderStageType();
+		sMtlBindInfo.pPipeline = sInOutExecuteInfo.pPipeline;
 		// 遍历每个Material
 		size_t nMtlCounter = 0;
 		for (const auto& [nMtlID, vecEntityRender] : sInOutExecuteInfo.mapRenderEntity) {
@@ -119,14 +122,12 @@ namespace LT {
 				pMaterial->SetTransBuffer(pRenderView->GetTransBufferHandle(nFlightFrameIndex));
 			}
 
-			//sDrawInfo.nWidth = sInOutExecuteInfo.nWidth;
-			//sDrawInfo.nHeight = sInOutExecuteInfo.nHeight;
-			//sDrawInfo.nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
-			//sDrawInfo.nDepthBuffer = sInOutExecuteInfo.nDepthBufferID;
-			//sDrawInfo.vecRenderTargets = sInOutExecuteInfo.vecRenderTarget;
-			//sDrawInfo.pRenderView = sInOutExecuteInfo.pRenderView;
-			//sDrawInfo.eRenderStage = GetRenderStageType();
-			//sDrawInfo.bClear = bFirstDraw;
+			// 该材质受光照影响
+			if (HasLighting(pMaterial->GetMaterialFlag()))
+			{
+				pMaterial->SetLightBuffer(sInOutExecuteInfo.pPipeline->GetLightBufferHandle());
+			}
+
 			// 这里会更新DescriptorSet
 			// UpdateDescriptorSets会被调用
 			pMaterial->BindShaderResource(sMtlBindInfo);
