@@ -16,7 +16,7 @@ namespace LT {
 
 	public:
 		DisplayDevice();
-		virtual ~DisplayDevice() = default;
+		virtual ~DisplayDevice();
 
 		// 三五法则:删除拷贝和移动
 		DisplayDevice(const DisplayDevice&) = delete;

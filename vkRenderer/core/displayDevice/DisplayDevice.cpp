@@ -17,4 +17,8 @@ namespace LT {
 	void DisplayDevice::FrameEnd() {
 
 	}
+
+	DisplayDevice::~DisplayDevice() {
+		
+	}
 } // namespace LT

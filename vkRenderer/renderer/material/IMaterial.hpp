@@ -12,6 +12,7 @@
 
 namespace LT {
 	class Pipeline;
+	class PipelineShade;
 
 	struct MaterialSlot {
 		int64_t nSrcID;
@@ -43,7 +44,7 @@ namespace LT {
 		RenderPassFlag nFlag;
 		FlightFrameIndex nFlightIndex;
 		CommandBufferWrapper* pCmdBuffer;
-		Pipeline* pPipeline;
+		PipelineShade* pPipeline;
 	};
 
 	using MaterialPropDataLayout = std::map<MtlProp, size_t>;

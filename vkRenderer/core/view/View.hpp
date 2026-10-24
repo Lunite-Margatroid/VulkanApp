@@ -34,5 +34,7 @@ namespace LT {
 			std::vector<EntityRender*>& vecOutEntity,
 			std::vector<std::pair<LightUniformBuffer,
 			std::bitset<LIGHT_GROUP_MAX_COUNT>>>& vecOutLightBuffer, bool& bOutLightDirty) const;
+
+		const std::vector<Layer*>& GetLayers() const;
 	};
 } // namespace LT

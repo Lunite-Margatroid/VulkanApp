@@ -7,16 +7,23 @@
 
 #include "NodeLight.hpp"
 
+#include "LayerScene.hpp"
+
 namespace LT {
 	View::View() 
 		: m_nMainScene(INVALID_NODE_ID)
 		, m_pCamera(nullptr)
 	{
+		m_layers.push_back(new LayerScene());
 	}
 
 	View::~View()
 	{
-
+		for (Layer* pLayer : m_layers)
+		{
+			delete pLayer;
+		}
+		m_layers.clear();
 	}
 
 	void View::GetRenderEntityAndLight(
@@ -87,5 +94,9 @@ namespace LT {
 		{
 			pRoot->ForEachBFS_PreOrder(func);
 		}
+	}
+
+	const std::vector<Layer*>& View::GetLayers() const {
+		return m_layers;
 	}
 } // namespace LT

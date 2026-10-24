@@ -9,7 +9,7 @@
 
 #include "RenderViewSingleCamera.hpp"
 
-#include "Pipeline.h"
+#include "PipelineShade.hpp"
 
 namespace LT {
 	RenderStageOpaqueForward::RenderStageOpaqueForward()
@@ -98,7 +98,8 @@ namespace LT {
 		sMtlBindInfo.nFlightIndex = nFlightFrameIndex;
 		sMtlBindInfo.pCmdBuffer = &vkContext::GetCmdBuffer(nFlightFrameIndex);
 		sMtlBindInfo.eStage = GetRenderStageType();
-		sMtlBindInfo.pPipeline = sInOutExecuteInfo.pPipeline;
+		sMtlBindInfo.pPipeline = dynamic_cast<PipelineShade*>(sInOutExecuteInfo.pPipeline);
+		RENDERER_ASSERT(sMtlBindInfo.pPipeline, "Bad Pipeline Type");
 		// 遍历每个Material
 		size_t nMtlCounter = 0;
 		for (const auto& [nMtlID, vecEntityRender] : sInOutExecuteInfo.mapRenderEntity) {
@@ -125,7 +126,7 @@ namespace LT {
 			// 该材质受光照影响
 			if (HasLighting(pMaterial->GetMaterialFlag()))
 			{
-				pMaterial->SetLightBuffer(sInOutExecuteInfo.pPipeline->GetLightBufferHandle());
+				pMaterial->SetLightBuffer(sMtlBindInfo.pPipeline->GetLightBufferHandle());
 			}
 
 			// 这里会更新DescriptorSet

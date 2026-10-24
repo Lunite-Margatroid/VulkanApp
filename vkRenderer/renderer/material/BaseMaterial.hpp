@@ -3,7 +3,7 @@
 #pragma once
 #include "IMaterial.hpp"
 
-#include "Pipeline.h"
+#include "PipelineShade.hpp"
 
 namespace LT {
 	template<typename DerivedMaterial, MaterialType eTypeMaterial>

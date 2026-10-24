@@ -83,27 +83,15 @@ namespace LT {
 		// render target size
 		uint32_t m_nWidth;
 		uint32_t m_nHeight;
-
-		std::vector<Image2DDepthBuffer*> m_vecDepthBuffer; // 深度缓冲
-
-		RenderStageOpaqueForward m_sStage;
-
-		std::shared_ptr<LightManager> m_pLightManager;
-
 	public:
 		Pipeline();
-		~Pipeline();
-		void DrawFrame();
-
+		virtual ~Pipeline();
 
 		void UpdateConstBuffer();
 
-		void Resize(uint32_t nWidth, uint32_t nHeight);
+		virtual void Resize(uint32_t nWidth, uint32_t nHeight) = 0;
 
-		void Execute(FrameInfo& sInOutFrameInfo);
-
-		DescriptorSetWrapper* GetLightBufferDescriptorSet();
-		ConstBufferHandle GetLightBufferHandle();
+		virtual void Execute(FrameInfo& sInOutFrameInfo) = 0;
 
 		uint32_t GetWidth() const { return m_nWidth; }
 		uint32_t GetHeight() const { return m_nHeight; }

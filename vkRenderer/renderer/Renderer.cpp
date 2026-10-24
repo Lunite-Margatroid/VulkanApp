@@ -21,14 +21,11 @@ namespace LT {
 	Renderer::Renderer()
 		: m_pDisplayDevice(nullptr)
 		, m_pView(nullptr)
-		, m_pPipeline(nullptr)
 	{
 		m_pRenderView.reset(new RenderViewSingleCamera());
-		m_pPipeline.reset( new Pipeline());
 	}
 	Renderer::~Renderer()
 	{
-		m_pPipeline.reset();
 		m_pRenderView.reset();
 	}
 
@@ -61,9 +58,17 @@ namespace LT {
 		m_pView->GetRenderEntityAndLight(sInOutFrameInfo.vecEntityRender, sInOutFrameInfo.vecLightBuffer, sInOutFrameInfo.bLightDirty);
 		sInOutFrameInfo.pRenderView = m_pRenderView.get();
 
-		m_pPipeline->Resize(sInOutFrameInfo.nWidth, sInOutFrameInfo.nHeight);
+		const std::vector<Layer*>& layers = m_pView->GetLayers();
 
-		m_pPipeline->Execute(sInOutFrameInfo);
+		for (Layer* pLayer : layers)
+		{
+			const std::vector<Pipeline*> pipelines = pLayer->GetPipelines();
+			for (Pipeline* pPipeline : pipelines)
+			{
+				pPipeline->Resize(sInOutFrameInfo.nWidth, sInOutFrameInfo.nHeight);
+				pPipeline->Execute(sInOutFrameInfo);
+			}
+		}
 	}
 
 	void Renderer::SetDisplayDevice(DisplayDevice* pDisplayDevice) {

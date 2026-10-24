@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Pipeline.h"
+#include "Pipeline.hpp"
 
 
 namespace LT {
@@ -10,9 +10,6 @@ namespace LT {
 
 	class Renderer {
 	private:
-		std::unique_ptr<Pipeline> m_pPipeline;
-
-
 		// 由当前实例管理
 		std::unique_ptr<RenderViewSingleCamera> m_pRenderView;
 
