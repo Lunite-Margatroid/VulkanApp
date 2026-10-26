@@ -9,7 +9,6 @@ namespace LT {
 	PipelineShade::PipelineShade() {
 		vk::Device& device = vkContext::GetVkDevice();
 
-
 		// 创建深度缓冲
 		for (int i = 0; i < RENDERER_DEFAULT_FLIGHT_FRAME_NUM; i++) {
 			m_vecDepthBuffer.push_back(ImageManager::CreateImage2DDepthBuffer(m_nWidth, m_nHeight));
@@ -19,6 +18,7 @@ namespace LT {
 		// LightManager
 		m_pLightManager = ShaderResourceManager::CreateLightManager();
 		RENDERER_ASSERT(m_pLightManager, "Create Light Manager Failed.");
+
 	}
 
 	PipelineShade::~PipelineShade() {
@@ -110,7 +110,7 @@ namespace LT {
 			sStageInfo.mapRenderEntity[pEntity->GetMaterialID()].push_back(pEntity);
 		}
 
-		m_sStage.Execute(sStageInfo);
+		m_cStage.Execute(sStageInfo);
 
 		sInOutFrameInfo.fenceDrawing = sStageInfo.refFence;
 	}
@@ -137,6 +137,30 @@ namespace LT {
 		{
 			return INVALID_CONST_BUFFER_HANDLE;
 		}
+	}
+
+	void PipelineShade::SetColorInType(const std::vector<PipelineIOType>& vecColorInType)
+	{
+		Pipeline::SetColorInType(vecColorInType);
+		m_cStage.SetColorInType(vecColorInType);
+	}
+
+	void PipelineShade::SetColorOutType(const std::vector<PipelineIOType>&vecColorOutType)
+	{
+		Pipeline::SetColorOutType(vecColorOutType);
+		m_cStage.SetColorOutType(vecColorOutType);
+	}
+
+	void PipelineShade::SetDepthInType(PipelineIOType eDepthInType)
+	{
+		Pipeline::SetDepthInType(eDepthInType);
+		m_cStage.SetDepthInType(eDepthInType);
+	}
+
+	void PipelineShade::SetDepthOutType(PipelineIOType eDepthOutType)
+	{
+		Pipeline::SetDepthOutType(eDepthOutType);
+		m_cStage.SetDepthOutType(eDepthOutType);
 	}
 
 }

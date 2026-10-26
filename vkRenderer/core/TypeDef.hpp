@@ -128,6 +128,16 @@ namespace LT {
 		float radianInner;
 	};
 
+
+	enum class PipelineIOType {
+		eUndefined,
+		eColorAttachment,
+		eColorPresent,
+		eDepthAttachment,
+		eCopySrc,
+		eCopyDst,
+	};
+
 	using TPropVar = std::variant<int, float, ImageID, std::array<float, 2>, std::array<float, 3>, std::array<float, 4>, std::array<int, 2>, std::array<int, 3>, std::array<int, 4>>;
 
 	using MtlPropVar = TPropVar;

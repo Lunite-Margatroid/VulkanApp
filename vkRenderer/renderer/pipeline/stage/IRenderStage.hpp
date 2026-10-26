@@ -28,6 +28,7 @@ namespace LT {
 		// 通常作为输出参数
 		FenceRef refFence;
 
+		// 该Stage实例所属的Pipeline
 		Pipeline* pPipeline;
 
 		StageExecuteInfo() 
@@ -101,8 +102,16 @@ namespace LT {
 	using StageEndInfo = StageBeginInfo;
 
 	class IRenderStage {
+	protected:
+		
+		// 标识Transition类型
+		std::vector<PipelineIOType> m_vecColorInType;
+		std::vector<PipelineIOType> m_vecColorOutType;
+		PipelineIOType m_eDepthInType;
+		PipelineIOType m_eDepthOutType;
+
 	public:
-		IRenderStage() = default;
+		IRenderStage();
 		virtual ~IRenderStage() = default;
 	
 
@@ -111,6 +120,12 @@ namespace LT {
 
 		virtual void StageBegin(StageBeginInfo& sInOutBeginInfo) = 0;
 		virtual void StageEnd(StageEndInfo& sInOutEndInfo) = 0;
+
+
+		void SetColorInType(const std::vector<PipelineIOType>& vecColorInType);
+		void SetColorOutType(const std::vector<PipelineIOType>& vecColorOutType);
+		void SetDepthInType(PipelineIOType eDepthInType);
+		void SetDepthOutType(PipelineIOType eDepthOutType);
 	};
 
 } // namespace LT

@@ -7,19 +7,12 @@ namespace LT {
 	class RenderStageOpaqueForward : public IRenderStage
 	{
 	private:
-		// Transiton to attachment
+		// Begin Stage Transition
 		std::array<vk::Semaphore, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrSemTransitionBegin;
-		// transition to present
+		// End Stage Transition
 		std::array<vk::Semaphore, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrSemTransitionEnd;
 
 		TransitionPass m_passTransition;
-
-		// 转换为ColorAttachment
-		TransitionImageLayoutInfo m_sTransitionColorToDraw;
-		// 转换为DepthAttachment
-		TransitionImageLayoutInfo m_sTransitionDepthToDraw;
-		// 转换为Present Color
-		TransitionImageLayoutInfo m_sTransitionColorToPresent;
 
 	public:
 		RenderStageOpaqueForward();
@@ -30,6 +23,7 @@ namespace LT {
 		RenderStageType GetRenderStageType() const override { return RenderStageType::eOpaqueForward; }
 	private:
 		// 主要进行Transition
+		// 如果输出的Fence是false 就是没有进行Transition 没有submit
 		void StageBegin(StageBeginInfo& sInOutBeginInfo) override;
 		// 主要进行Transition
 		void StageEnd(StageEndInfo& sInOutEndInfo) override;

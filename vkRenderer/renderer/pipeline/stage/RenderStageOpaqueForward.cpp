@@ -14,30 +14,6 @@
 namespace LT {
 	RenderStageOpaqueForward::RenderStageOpaqueForward()
 	{
-		// 转换ColorAttachement
-		m_sTransitionColorToDraw.srcAccessFlag = vk::AccessFlagBits2::eNone;
-		m_sTransitionColorToDraw.dstAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
-		m_sTransitionColorToDraw.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-		m_sTransitionColorToDraw.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-		m_sTransitionColorToDraw.eOldLayout = vk::ImageLayout::eUndefined;
-		m_sTransitionColorToDraw.eNewLayout = vk::ImageLayout::eColorAttachmentOptimal;
-		m_sTransitionColorToDraw.eImageAspect = vk::ImageAspectFlagBits::eColor;
-		// 转换为DepthAttachment
-		m_sTransitionDepthToDraw.srcAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentWrite;
-		m_sTransitionDepthToDraw.dstAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentRead;
-		m_sTransitionDepthToDraw.srcStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
-		m_sTransitionDepthToDraw.dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
-		m_sTransitionDepthToDraw.eOldLayout = vk::ImageLayout::eUndefined;
-		m_sTransitionDepthToDraw.eNewLayout = vk::ImageLayout::eDepthAttachmentOptimal;
-		m_sTransitionDepthToDraw.eImageAspect = vk::ImageAspectFlagBits::eDepth;
-		// 转换为Color Present
-		m_sTransitionColorToPresent.eOldLayout = vk::ImageLayout::eColorAttachmentOptimal;
-		m_sTransitionColorToPresent.eNewLayout = vk::ImageLayout::ePresentSrcKHR;
-		m_sTransitionColorToPresent.srcAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
-		m_sTransitionColorToPresent.dstAccessFlag = vk::AccessFlagBits2::eNone;
-		m_sTransitionColorToPresent.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-		m_sTransitionColorToPresent.dstStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
-		m_sTransitionColorToPresent.eImageAspect = vk::ImageAspectFlagBits::eColor;
 
 		// 创建Semaphore
 		vk::Device& device = vkContext::GetVkDevice();
@@ -100,6 +76,9 @@ namespace LT {
 		sMtlBindInfo.eStage = GetRenderStageType();
 		sMtlBindInfo.pPipeline = dynamic_cast<PipelineShade*>(sInOutExecuteInfo.pPipeline);
 		RENDERER_ASSERT(sMtlBindInfo.pPipeline, "Bad Pipeline Type");
+		// Draw End Info
+		StageDrawEndInfo sEndInfo;
+
 		// 遍历每个Material
 		size_t nMtlCounter = 0;
 		for (const auto& [nMtlID, vecEntityRender] : sInOutExecuteInfo.mapRenderEntity) {
@@ -172,7 +151,6 @@ namespace LT {
 				pEntity->Draw(sDrawInfo);
 			}
 
-			StageDrawEndInfo sEndInfo;
 			sEndInfo.nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
 			if (bFirstDraw)
 			{
@@ -251,63 +229,102 @@ namespace LT {
 		}
 		StageEnd(sStageEndInfo);
 
-		sInOutExecuteInfo.refFence = sStageEndInfo.refFence;
+		// 如果End的Fence是空的 把Draw的Fence返回
+		if (sStageEndInfo.refFence)
+		{
+			sInOutExecuteInfo.refFence = sStageEndInfo.refFence;
+		}
+		else
+		{
+			sInOutExecuteInfo.refFence = sEndInfo.refFence;
+		}
 	}
 	void RenderStageOpaqueForward::StageBegin(StageBeginInfo& sInOutBeginInfo)
 	{
+
 		CommandBufferWrapper& cmdBuffer = vkContext::GetCmdBuffer(sInOutBeginInfo.nFlightFrameIndex);
 
 		RecordTransitionInfo sRecordInfo;
 		sRecordInfo.pCmdBuffer = &cmdBuffer;
-		// Color Attachment
-		for (ImageID nImage : sInOutBeginInfo.vecRenderTarget) {
-			TransitionImageLayoutInfo sTransInfo = m_sTransitionColorToDraw;
-			sTransInfo.nImageID = nImage;
-			sTransInfo.pCmdBuffer = &cmdBuffer;
-			sRecordInfo.vecColorAttachment.push_back(sTransInfo);
+
+		// Color Attacment
+		uint32_t nColorAttachmentCount = std::min(sInOutBeginInfo.vecRenderTarget.size(), m_vecColorInType.size());
+		for (int i = 0; i < nColorAttachmentCount; ++i)
+		{
+			PipelineIOType eInColorType = m_vecColorInType[i];
+
+			if (eInColorType != PipelineIOType::eColorAttachment)
+			{
+				ImageID nImageID = sInOutBeginInfo.vecRenderTarget[i];
+
+				sRecordInfo.vecColorAttachment.emplace_back(eInColorType, PipelineIOType::eColorAttachment, nImageID);
+			}
 		}
+
+
 		// Depth Attachment
-		TransitionImageLayoutInfo sDepthTransInfo = m_sTransitionDepthToDraw;
-		sDepthTransInfo.nImageID = sInOutBeginInfo.nDepthBufferID;
-		sDepthTransInfo.pCmdBuffer = &cmdBuffer;
-		sRecordInfo.vecDepthAttachment.push_back(sDepthTransInfo);
+		if (sInOutBeginInfo.nDepthBufferID != INVALID_IMAGE_ID)
+		{
+			if (m_eDepthInType != PipelineIOType::eDepthAttachment)
+			{
+				sRecordInfo.vecDepthAttachment.emplace_back(m_eDepthInType, PipelineIOType::eDepthAttachment, sInOutBeginInfo.nDepthBufferID);
+			}
+		}
 
-		m_passTransition.RecordCommand(sRecordInfo);
+		// 如果有Image需要Transition
+		if (sRecordInfo.vecColorAttachment.size() + sRecordInfo.vecDepthAttachment.size() > 0)
+		{
 
+			m_passTransition.RecordCommand(sRecordInfo);
 
-		TransitionSubmitInfo sSubmitInfo;
-		sSubmitInfo.nFlightFrameIndex = sInOutBeginInfo.nFlightFrameIndex;
-		sSubmitInfo.vecSemToSignal = sInOutBeginInfo.vecSemSignal;
-		sSubmitInfo.vecSemToWait = sInOutBeginInfo.vecSemWait;
-		sSubmitInfo.vecSemWaitMasks = sInOutBeginInfo.vecSemWaitMask;
+			TransitionSubmitInfo sSubmitInfo;
+			sSubmitInfo.nFlightFrameIndex = sInOutBeginInfo.nFlightFrameIndex;
+			sSubmitInfo.vecSemToSignal = sInOutBeginInfo.vecSemSignal;
+			sSubmitInfo.vecSemToWait = sInOutBeginInfo.vecSemWait;
+			sSubmitInfo.vecSemWaitMasks = sInOutBeginInfo.vecSemWaitMask;
 
-		m_passTransition.Submit(sSubmitInfo);
+			m_passTransition.Submit(sSubmitInfo);
 
-		sInOutBeginInfo.refFence = sSubmitInfo.refFence;
+			sInOutBeginInfo.refFence = sSubmitInfo.refFence;
+		}
 	}
 
 	void RenderStageOpaqueForward::StageEnd(StageEndInfo& sInOutEndInfo) {
 		RecordTransitionInfo sRecordInfo;
 		sRecordInfo.pCmdBuffer = &vkContext::GetCmdBuffer(sInOutEndInfo.nFlightFrameIndex);
 		// Color Attachment
-		for (ImageID nImage : sInOutEndInfo.vecRenderTarget) {
-			TransitionImageLayoutInfo sTransInfo = m_sTransitionColorToPresent;
-			sTransInfo.nImageID = nImage;
-			sRecordInfo.vecColorAttachment.push_back(sTransInfo);
+		uint32_t nColorAttachmentCount = std::min(sInOutEndInfo.vecRenderTarget.size(), m_vecColorInType.size());
+		for (int i = 0; i < nColorAttachmentCount; ++i) {
+			PipelineIOType eOutColorType = m_vecColorOutType[i];
+
+			if (eOutColorType != PipelineIOType::eColorAttachment && eOutColorType != PipelineIOType::eUndefined)
+			{
+				ImageID nImageID = sInOutEndInfo.vecRenderTarget[i];
+
+				sRecordInfo.vecColorAttachment.emplace_back(PipelineIOType::eColorAttachment, eOutColorType, nImageID);
+			}
 		}
 
-		m_passTransition.RecordCommand(sRecordInfo);
+		// Depth Attachment
+		if (m_eDepthOutType != PipelineIOType::eUndefined && m_eDepthOutType != PipelineIOType::eDepthAttachment) {
+			sRecordInfo.vecColorAttachment.emplace_back(PipelineIOType::eDepthAttachment, m_eDepthOutType, sInOutEndInfo.nDepthBufferID);
+		}
 
+		if (sRecordInfo.vecColorAttachment.size() + sRecordInfo.vecDepthAttachment.size() > 0)
+		{
 
-		TransitionSubmitInfo sSubmitInfo;
-		sSubmitInfo.nFlightFrameIndex = sInOutEndInfo.nFlightFrameIndex;
-		sSubmitInfo.vecSemToSignal = sInOutEndInfo.vecSemSignal;
-		sSubmitInfo.vecSemToWait = sInOutEndInfo.vecSemWait;
-		sSubmitInfo.vecSemWaitMasks = sInOutEndInfo.vecSemWaitMask;
+			m_passTransition.RecordCommand(sRecordInfo);
 
-		m_passTransition.Submit(sSubmitInfo);
+			TransitionSubmitInfo sSubmitInfo;
+			sSubmitInfo.nFlightFrameIndex = sInOutEndInfo.nFlightFrameIndex;
+			sSubmitInfo.vecSemToSignal = sInOutEndInfo.vecSemSignal;
+			sSubmitInfo.vecSemToWait = sInOutEndInfo.vecSemWait;
+			sSubmitInfo.vecSemWaitMasks = sInOutEndInfo.vecSemWaitMask;
 
-		sInOutEndInfo.refFence = sSubmitInfo.refFence;
+			m_passTransition.Submit(sSubmitInfo);
+
+			sInOutEndInfo.refFence = sSubmitInfo.refFence;
+		}
 	}
 	void RenderStageOpaqueForward::DrawBegin(const StageDrawBeginInfo& sBeginInfo)
 	{

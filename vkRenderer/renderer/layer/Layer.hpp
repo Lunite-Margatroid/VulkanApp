@@ -5,7 +5,7 @@ namespace LT {
 	class Pipeline;
 
 	class Layer {
-	private:
+	protected:
 		std::vector<Pipeline*> m_vecPipelines;
 	public:
 		Layer();

@@ -5,8 +5,18 @@ namespace LT {
 
 	struct RecordTransitionInfo {
 		CommandBufferWrapper* pCmdBuffer;
-		std::vector<TransitionImageLayoutInfo> vecColorAttachment;
-		std::vector<TransitionImageLayoutInfo> vecDepthAttachment;
+
+		struct TransitionType {
+			PipelineIOType eSrc;
+			PipelineIOType eDst;
+			ImageID nImageID;
+		};
+
+		std::vector<TransitionType> vecColorAttachment;
+		std::vector<TransitionType> vecDepthAttachment;
+
+		//std::vector<TransitionImageLayoutInfo> vecColorAttachment;
+		//std::vector<TransitionImageLayoutInfo> vecDepthAttachment;
 	};
 
 	struct TransitionSubmitInfo {
@@ -36,5 +46,11 @@ namespace LT {
 
 		void RecordCommand(const RecordTransitionInfo& sInOutRecordInfo);
 		void Submit(TransitionSubmitInfo& sInOutSubmitInfo);
+
+		static TransitionImageLayoutInfo GenTransitionInfo(
+		PipelineIOType eSrc,
+		PipelineIOType eDst,
+		ImageID nImageID,
+		CommandBufferWrapper* pCmdBuffer);
 	};
 }// namespace LT

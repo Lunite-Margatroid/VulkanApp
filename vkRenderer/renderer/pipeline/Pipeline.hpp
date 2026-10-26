@@ -25,7 +25,7 @@
 #include "GraphicPass.hpp"
 
 // Render Stage
-#include "RenderStageOpaqueForward.hpp"
+#include "IRenderStage.hpp"
 
 // Fence Manager
 #include "FenceManager.hpp"
@@ -83,6 +83,11 @@ namespace LT {
 		// render target size
 		uint32_t m_nWidth;
 		uint32_t m_nHeight;
+
+		std::vector<PipelineIOType> m_vecColorInType;
+		std::vector<PipelineIOType> m_vecColorOutType;
+		PipelineIOType m_eDepthInType;
+		PipelineIOType m_eDepthOutType;
 	public:
 		Pipeline();
 		virtual ~Pipeline();
@@ -95,5 +100,11 @@ namespace LT {
 
 		uint32_t GetWidth() const { return m_nWidth; }
 		uint32_t GetHeight() const { return m_nHeight; }
+
+		virtual void SetColorInType(const std::vector<PipelineIOType>& vecColorInType);
+		virtual void SetColorOutType(const std::vector<PipelineIOType>& vecColorOutType);
+
+		virtual void SetDepthInType(PipelineIOType eDepthInType);
+		virtual void SetDepthOutType(PipelineIOType eDepthOutType);
 	};
 }// namespace LT
