@@ -56,6 +56,7 @@ namespace LT{
 	{
 		TransitionImageLayoutInfo sTransitionInfo;
 		sTransitionInfo.pCmdBuffer = pCmdBuffer;
+		sTransitionInfo.nImageID = nImageID;
 
 		if (eSrc == PipelineIOType::eUndefined && eDst == PipelineIOType::eColorAttachment)
 		{
@@ -91,7 +92,7 @@ namespace LT{
 		else if (eSrc == PipelineIOType::eUndefined && eDst == PipelineIOType::eDepthAttachment)
 		{
 			sTransitionInfo.srcAccessFlag = vk::AccessFlagBits2::eNone;
-			sTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eColorAttachmentRead;
+			sTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentRead;
 			sTransitionInfo.srcStageMask = vk::PipelineStageFlagBits2::eNone;
 			sTransitionInfo.dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
 			sTransitionInfo.eOldLayout = vk::ImageLayout::eUndefined;
