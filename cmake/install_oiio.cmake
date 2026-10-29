@@ -11,6 +11,7 @@
 #   OIIO_GIT_TAG     分支/标签, 默认 release
 #   OIIO_CONFIGS     要构建的配置列表, 默认 "Debug;Release"
 #   OIIO_BUILD_JOBS  并行编译数, 默认不指定(使用全部核心)
+#   OIIO_ARCH        目标架构, 默认从 PROCESSOR_ARCHITECTURE 推断, 兜底 AMD64
 #   OIIO_EXTRA_ARGS  追加的 cmake 配置参数, 如 "-DSTOP_ON_WARNING=0"
 
 cmake_minimum_required(VERSION 3.15)
@@ -32,6 +33,22 @@ if(NOT DEFINED OIIO_CONFIGS)
 endif()
 if(NOT DEFINED OIIO_BUILD_JOBS)
     set(OIIO_BUILD_JOBS "")
+endif()
+
+# ---- 目标架构 ----
+# cmake -P 脚本模式不加载系统信息, 本进程内 CMAKE_SYSTEM_PROCESSOR 恒为空;
+# 子 configure 由 CMake 从环境变量 PROCESSOR_ARCHITECTURE 推断架构. 部分启动
+# 方式(用注册表重建环境的进程等)不携带该变量, 会让子进程的 CMAKE_SYSTEM_PROCESSOR
+# 为空: OIIO 的 compiler.cmake 在 if() 里直接展开空变量导致 configure 报错,
+# SIMD 检测也会一并失效. 这里统一解析并通过 cmake -E env 显式传给子进程.
+if(NOT DEFINED OIIO_ARCH)
+    if(DEFINED ENV{PROCESSOR_ARCHITEW6432})
+        set(OIIO_ARCH "$ENV{PROCESSOR_ARCHITEW6432}")
+    elseif(DEFINED ENV{PROCESSOR_ARCHITECTURE})
+        set(OIIO_ARCH "$ENV{PROCESSOR_ARCHITECTURE}")
+    else()
+        set(OIIO_ARCH "AMD64")
+    endif()
 endif()
 
 # OIIO 配置参数
@@ -88,6 +105,18 @@ foreach(_config IN LISTS OIIO_CONFIGS)
     string(TOLOWER "${_config}" _config_lc)
     set(_build_dir "${OIIO_SOURCE_DIR}/build_${_config_lc}")
 
+    # 旧缓存若是在缺少 PROCESSOR_ARCHITECTURE 的环境下生成的, CMakeSystem.cmake 里
+    # CMAKE_SYSTEM_PROCESSOR 会固化为空, 且重新配置不会刷新; 删除缓存让本次重新探测
+    file(GLOB _sys_files "${_build_dir}/CMakeFiles/*/CMakeSystem.cmake")
+    foreach(_sys_file IN LISTS _sys_files)
+        file(STRINGS "${_sys_file}" _empty_proc REGEX "CMAKE_SYSTEM_PROCESSOR \"\"")
+        if(_empty_proc)
+            message(STATUS "[OIIO] ${_build_dir} 缓存中 CMAKE_SYSTEM_PROCESSOR 为空, 删除 CMakeCache.txt 重新探测")
+            file(REMOVE "${_build_dir}/CMakeCache.txt")
+            break()
+        endif()
+    endforeach()
+
     set(_build_args)
     set(_cfg_cache_args)
     list(APPEND _build_args --config "${_config}")
@@ -106,7 +135,8 @@ foreach(_config IN LISTS OIIO_CONFIGS)
     # 配置
     message(STATUS "[OIIO] 配置 ${_config} -> ${_build_dir}")
     execute_process(
-        COMMAND ${CMAKE_COMMAND}
+        COMMAND ${CMAKE_COMMAND} -E env "PROCESSOR_ARCHITECTURE=${OIIO_ARCH}"
+            ${CMAKE_COMMAND}
             -S "${OIIO_SOURCE_DIR}"
             -B "${_build_dir}"
             ${_cfg_cache_args}

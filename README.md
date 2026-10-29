@@ -5,25 +5,21 @@ Repo to Learn vulkan
 
 ## Vulkan
 
-
-
 ## Slang
-
-
 
 ## VulkanMemoryAllocator
 
-
-
 ## OpenImageIO
 
-
-
-# SDL3
-
-
+## SDL3
 
 ## glm
+
+## Freeype
+
+## HarfBuzz
+
+
 
 
 
@@ -45,7 +41,27 @@ SDL安装位置 `SDL3_INSTALLED_DIR`
 
 ## Windows
 
+### 安装Freetype
+
+在仓库根目录下运行脚本
+
+```bat
+cmake -P cmake/install_freetype.cmake
+```
+
+### 安装HarfBuzz
+
+请先按照上文安装Freetype.
+
+然后在仓库根目录下运行脚本
+
+```bat
+cmake -P cmake/install_harfbuzz.cmake
+```
+
 ### 安装OpenImageIO
+
+如果要运行install_oiio.cmake请先按照上文安装Freetype.或者你自己安装OpenImageIO
 
 **手动安装**或者运行脚本：
 
@@ -61,18 +77,22 @@ cmake -P cmake/install_oiio.cmake
 
 下载地址：https://vulkan.lunarg.com/sdk/home#windows
 
-其中包含了Vulkan, Slang, VulkanMemoryAllocator, SDL3, glm
+其中包含了Vulkan, Slang, VulkanMemoryAllocator, SDL3, glm. 
 
-vulkan可以被`find_package`找到。Slang, VulkanMemoryAllocator, SDL3, glm的安装位置都可以写安装地址
+Slang, VulkanMemoryAllocator, SDL3, glm是可选项，请勾选。
+
+vulkan可以被`find_package`找到。
 
 ### 命令
 
 ```bat
-cmake 	-D OIIO_INSTALLED_DIR=%CD%/vendor/dist^
-		-D VMA_INSTALLED_DIR=%VULKAN_SDK%^
-		-D GLM_INSTALLED_DIR=%VULKAN_SDK%^
-		-D SDL3_INSTALLED_DIR=%VULKAN_SDK%^
-		-D SLANG_INSTALLED_DIR=%VULKAN_SDK%^
+cmake 	-D OIIO_INSTALLED_DIR=%CD%/vendor/dist ^
+		-D VMA_INSTALLED_DIR=%VULKAN_SDK% ^
+		-D GLM_INSTALLED_DIR=%VULKAN_SDK% ^
+		-D SDL3_INSTALLED_DIR=%VULKAN_SDK% ^
+		-D SLANG_INSTALLED_DIR=%VULKAN_SDK% ^
+		-D FREETYPE_INSTALLED_DIR=%CD%/vendor/freetype ^
+		-D HARFBUZZ_INSTALLED_DIR=%CD%/vendor/harfbuzz ^
 		-S ./ -B ./build -G "Visual Studio 17 2022" -A x64 
 ```
 
