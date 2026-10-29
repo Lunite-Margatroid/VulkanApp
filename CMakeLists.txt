@@ -53,6 +53,21 @@ endif()
 if(NOT DEFINED SLANG_INSTALLED_DIR)
     set(SLANG_INSTALLED_DIR "${SDK_DEFAULT_INSTALLED_DIR}" CACHE PATH "Slang installed dir")
 endif()
+
+# OpenImageIO
+if(NOT DEFINED OIIO_INSTALLED_DIR)
+    set(OIIO_INSTALLED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/dist" CACHE PATH "OpenImageIO installed dir")
+endif()
+
+# FreeType
+if(NOT DEFINED FREETYPE_INSTALLED_DIR)
+    set(FREETYPE_INSTALLED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/dist" CACHE PATH "FreeType installed dir")
+endif()
+
+# HarfBuzz
+if(NOT DEFINED HARFBUZZ_INSTALLED_DIR)
+    set(HARFBUZZ_INSTALLED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/dist" CACHE PATH "HarfBuzz installed dir")
+endif()
     
 message(STATUS "SDL3_INSTALLED_DIR = ${SDL3_INSTALLED_DIR}")
 message(STATUS "GLM_INSTALLED_DIR = ${GLM_INSTALLED_DIR}")
@@ -66,6 +81,8 @@ include(cmake/checkvulkan.cmake)
 
 # 添加子目录
 add_subdirectory(logger)
+add_subdirectory(LunarTextIO)
+add_subdirectory(TextTest)
 add_subdirectory(LunarImageIO)
 add_subdirectory(SlangCompiler)
 add_subdirectory(vkRenderer)

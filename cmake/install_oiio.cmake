@@ -100,6 +100,9 @@ foreach(_config IN LISTS OIIO_CONFIGS)
 	set(_oiio_cmake_args ${OIIO_CMAKE_ARGS})
 	list(APPEND _oiio_cmake_args -DCMAKE_INSTALL_PREFIX=${OIIO_INSTALL_DIR_CONFIG})
 
+	# freetype: 使用 install_freetype.cmake 对应配置的独立安装目录 (CMP0074)
+	list(APPEND _oiio_cmake_args -DFreetype_ROOT=${PROJECT_ROOT}/vendor/freetype/dist_${_config_lc})
+
     # 配置
     message(STATUS "[OIIO] 配置 ${_config} -> ${_build_dir}")
     execute_process(
@@ -168,6 +171,18 @@ foreach(_src IN ITEMS dist_debug dist_release)
     if(EXISTS "${_src_dir}")
         message(STATUS "[OIIO] 合并拷贝 ${_src} -> ${OIIO_INSTALL_DIR}")
         file(COPY "${_src_dir}/" DESTINATION "${OIIO_INSTALL_DIR}")
+    endif()
+endforeach()
+
+# ---- freetype 头文件统一拷贝到 dist/include/freetype2 ----
+# deps/dist 里的 freetype 头文件不参与上面的 dist_debug/dist_release 合并,
+# 直接从构建目录的依赖暂存区收集; 后拷贝的配置覆盖先拷贝的 (与合并顺序一致)
+foreach(_config IN LISTS OIIO_CONFIGS)
+    string(TOLOWER "${_config}" _config_lc)
+    set(_deps_ft_include "${OIIO_SOURCE_DIR}/build_${_config_lc}/deps/dist/include/freetype2")
+    if(EXISTS "${_deps_ft_include}")
+        message(STATUS "[OIIO] 拷贝 freetype 头文件: ${_deps_ft_include} -> ${OIIO_INSTALL_DIR}/include/freetype2")
+        file(COPY "${_deps_ft_include}/" DESTINATION "${OIIO_INSTALL_DIR}/include/freetype2")
     endif()
 endforeach()
 

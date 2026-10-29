@@ -4,7 +4,10 @@
 #include "IRenderStage.hpp"
 
 namespace LT {
-	IRenderStage::IRenderStage() {}
+	IRenderStage::IRenderStage() 
+	: m_eDepthInType(PipelineIOType::eUndefined)
+	, m_eDepthOutType(PipelineIOType::eDepthAttachment)
+	{}
 
 	void IRenderStage::SetColorInType(const std::vector<PipelineIOType>& vecColorInType)
 	{
