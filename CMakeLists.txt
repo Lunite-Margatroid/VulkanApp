@@ -81,9 +81,9 @@ include(cmake/checkvulkan.cmake)
 
 # 添加子目录
 add_subdirectory(logger)
+add_subdirectory(LunarImageIO)
 add_subdirectory(LunarTextIO)
 add_subdirectory(TextTest)
-add_subdirectory(LunarImageIO)
 add_subdirectory(SlangCompiler)
 add_subdirectory(vkRenderer)
 add_subdirectory(SlangTest)

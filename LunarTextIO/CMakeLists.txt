@@ -24,7 +24,8 @@ add_library(
 )
 
 # 链接logger
-target_link_libraries(LunarTextIO PUBLIC logger)
+target_link_libraries(LunarTextIO PUBLIC logger LunarImageIO)
+
 
 # 链接FreeType和harfbuzz
 if(WIN32)

@@ -14,4 +14,4 @@ if(WIN32)
 endif()
 
 
-target_link_libraries(TextTest PRIVATE LunarTextIO)
+target_link_libraries(TextTest PRIVATE LunarTextIO LunarImageIO)
