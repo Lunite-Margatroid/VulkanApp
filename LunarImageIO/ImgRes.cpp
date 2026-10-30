@@ -292,10 +292,20 @@ namespace LIIO {
             return;
         }
         // 源区域与目标区域都必须完整落在各自图像内
-        if (srcX < 0 || srcY < 0
-            || srcX + nWidth > other.m_Width || srcY + nHeight > other.m_Height
-            || distX < 0 || distY < 0
-            || distX + nWidth > m_Width || distY + nHeight > m_Height)
+        srcX = srcX < 0 ? 0 : srcX;
+        srcY = srcY < 0 ? 0 : srcY;
+        distX = distX < 0 ? 0 : distX;
+        distY = distY < 0 ? 0 : distY;
+        nWidth = nWidth < 0 ? 0 : nWidth;
+        nHeight = nHeight < 0 ? 0 : nHeight;
+
+        nHeight = (distY + nHeight > m_Height) ? (m_Height - distY) : nHeight;
+        nWidth = (distX + nWidth > m_Width) ? (m_Width - distX) : nWidth;
+
+        nHeight = (srcY + nHeight > other.GetHeight()) ? (other.GetHeight() - srcY) : nHeight;
+        nWidth = (srcX + nWidth > other.GetWidth()) ? (other.GetWidth() - srcX) : nWidth;
+
+        if (nHeight <= 0 || nWidth <= 0)
         {
             LOG_ERROR("CopyRegion: region out of bounds\n");
             return;
