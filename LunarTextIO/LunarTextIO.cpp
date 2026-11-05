@@ -1,10 +1,6 @@
 #include "LunarTextIO.hpp"
+#include "LunarTextIOCommon.hpp"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
-#include "harfbuzz/hb.h"
-#include "harfbuzz/hb-ft.h"
 #include <ctime>
 
 #include "logger.hpp"
@@ -16,7 +12,7 @@
 #include <algorithm>
 
 #include <random>
-namespace LT
+namespace LTIO
 {
 	void LunarTestIO_Test() {
 		FT_Library ftLibrary;
@@ -136,7 +132,7 @@ ftFace->glyph->metrics.vertBearingY / 64.f
 			float xAdvance = glyphPos[i].x_advance / 64.0f;
 			float yAdvance = glyphPos[i].y_advance / 64.0f;
 
-			int nDstY = nLineHeight - (cursor_y + (vecMetrics[i].height - vecMetrics[i].vertBearingY) / 64);
+			int nDstY = nLineHeight - (cursor_y + vecMetrics[i].horiBearingY / 64);
 			int nSrcX = 0;
 			int nSrcY = 0;
 			imgFinal.CopyRegion(vecChars[i], cursor_x + xOffset, nDstY + yOffset, nSrcX, nSrcY, vecChars[i].GetWidth(), vecMetrics[i].vertAdvance / 64);

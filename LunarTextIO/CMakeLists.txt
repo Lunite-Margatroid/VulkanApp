@@ -3,12 +3,18 @@
 # 源文件
 file(GLOB SOURCES
 	"./*.cpp"
+	"./TextTable/*.cpp"
 )
 
 # 头文件
 
 file(GLOB PUBLIC_HEADERS
 	"./*.hpp"
+	"./TextTable/*.hpp"
+)
+
+file(GLOB PRIVATE_HEADERS
+	"./detail/*.hpp"
 )
 
 
@@ -87,4 +93,7 @@ target_include_directories(
 	LunarTextIO
 		PUBLIC
 			"${CMAKE_CURRENT_SOURCE_DIR}"
+			"${CMAKE_CURRENT_SOURCE_DIR}/TextTable"
+		PRIVATE
+			"${CMAKE_CURRENT_SOURCE_DIR}/detail"
 )
