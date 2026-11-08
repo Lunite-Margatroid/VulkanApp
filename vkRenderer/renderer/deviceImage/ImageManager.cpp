@@ -1,8 +1,6 @@
 #include "vkRendererCommon.h"
 #include "vkContext.h"
 #include "ImageManager.h"
-#include "Image2DShaderRes.h"
-#include "Image2DDepthBuffer.h"
 #include "SwapChain.h"
 
 namespace LT {

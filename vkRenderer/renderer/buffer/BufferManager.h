@@ -4,7 +4,11 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "ConstBuffer.h"
+#include "DynamicVertexBuffer.hpp"
+
 #include "MeshManager.hpp"
+
+
 namespace LT {
 	class BufferManager {
 	private:
@@ -28,6 +32,7 @@ namespace LT {
 		static BufferManager& GetInstance();
 
 		static VertexBuffer* CreateVertexBuffer(size_t nSize, const void *pData, uint64_t vertexCount);
+		static DynamicVertexBuffer* CreateDynamicVertexBuffer(size_t nSize, const void* pData, uint64_t vertexCount);
 		static std::pair<VertexBuffer*, IndexBuffer*> CreateVertexIndexBuffer(MeshRef refMesh, int nFlag = 0);
 		static StagingBuffer* CreateStagingBuffer(size_t nSize, const void* pData);
 		static IndexBuffer* CreateIndexBuffer(size_t nSize, const void* pData, uint64_t indexCount);
@@ -38,6 +43,21 @@ namespace LT {
 
 		static Buffer* GetBuffer(BufferID nID);
 		static IndexBuffer* GetIndexBuffer(BufferID nID);
+
+		template<typename TBuffer>
+		static TBuffer* GetBuffer(BufferID nID) {
+			auto& mapBuffer = BufferManager::GetInstance().m_mapBuffers;
+			if (nID > INVALID_BUFFER_ID)
+			{
+				auto iter = mapBuffer.find(nID);
+				if (iter != mapBuffer.end())
+				{
+					return dynamic_cast<TBuffer*>(iter->second);
+				}
+			}
+
+			return nullptr;
+		}
 
 		static void DeleteBuffer(BufferID nID );
 		static void DeleteBuffer(Buffer* pBuffer);

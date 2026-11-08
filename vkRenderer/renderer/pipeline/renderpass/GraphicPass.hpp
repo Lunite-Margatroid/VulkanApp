@@ -9,6 +9,8 @@
 
 #include "FenceManager.hpp"
 
+#include "EngineCommon.h"
+
 namespace LT {
 
 	class SwapChain;
@@ -104,7 +106,7 @@ namespace LT {
 
 		bool Init(
 			const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout,
-			bool bCreateModelMatPushConst = true
+			const std::vector<vk::PushConstantRange>& vecPushConst = { vk::PushConstantRange(vk::ShaderStageFlagBits::eVertex, 0, sizeof(ModelNormalMat)) }
 			);
 
 		void SetDescriptorSets(const std::vector<DescriptorSetWrapper*>& vecDescriptorSets);
@@ -126,7 +128,7 @@ namespace LT {
 
 		void SetMtlProps(const std::vector<MtlProp>& vecMtlProps);
 
-		void RecordCommand(const RecordCommandInfo& sRecordInfo);
+		//void RecordCommand(const RecordCommandInfo& sRecordInfo);
 
 		void Submit(GraphicSubmitInfo& sInOutSubmitInfo);
 

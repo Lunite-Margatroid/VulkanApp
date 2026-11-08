@@ -156,7 +156,7 @@ namespace LT {
 		ePolygonModeMask = (3ull << POLYGONMODE_BIT_OFFSET), // 17-18记录填充类型
 		eLineWidthMask = (15ull << LINE_WIDTH_BIT_OFFSET), // 19-22 记录线宽
 		eBlendEnable = (1ull << 23), // 开启混合
-		eLighting = (1ull << 24), // 是否有光照 由材质决定
+		eDepthTestEnable = (1ull << 24), // 开启深度测试
 		// 32-47 材质属性贴图标志位 每个bit对应一个材质属性贴图槽位
 		eMtlPropTex0 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 0)),
 		eMtlPropTex1 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 1)),
@@ -174,6 +174,7 @@ namespace LT {
 		eMtlPropTex13 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 13)),
 		eMtlPropTex14 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 14)),
 		eMtlPropTex15 = (1ull << (MTL_PROP_TEX0_BIT_OFFSET + 15)),
+		eLighting = (1ull << 48), // 是否有光照 由材质决定
 		eMtlPropTexMask = MTL_PROP_TEX_MASK,
 
 		eInvalid = 1ull << 63
@@ -317,6 +318,17 @@ namespace LT {
 			SetBit(nFlag, static_cast<uint64_t>(RenderPassFlagBits::eLighting));
 		else
 			ResetBit(nFlag, static_cast<uint64_t>(RenderPassFlagBits::eLighting));
+	}
+
+	inline bool IsDepthTestEnable(const RenderPassFlag& nFlag) {
+		return static_cast<uint64_t>(nFlag) & static_cast<uint64_t>(RenderPassFlagBits::eDepthTestEnable);
+	}
+
+	inline void SetDepthTestEnable(RenderPassFlag& nFlag, bool bEnable) {
+		if (bEnable)
+			SetBit(nFlag, static_cast<uint64_t>(RenderPassFlagBits::eDepthTestEnable));
+		else
+			ResetBit(nFlag, static_cast<uint64_t>(RenderPassFlagBits::eDepthTestEnable));
 	}
 
 	inline void SetMtlPropTex(RenderPassFlag& nFlag, uint32_t nTexSlotIndex, bool bEnable) {

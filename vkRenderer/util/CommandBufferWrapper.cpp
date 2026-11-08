@@ -136,6 +136,14 @@ namespace LT {
 	{
 		Front().cmdBuffer.drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
+	void CommandBufferWrapper::Draw(
+		uint32_t vertexCount,
+		uint32_t instanceCount, 
+		uint32_t firstVertex, 
+		uint32_t firstInstance)
+	{
+		Front().cmdBuffer.draw(vertexCount, instanceCount, firstVertex, firstInstance);
+	}
 	void CommandBufferWrapper::EndRendering()
 	{
 		Front().cmdBuffer.endRendering();

@@ -46,7 +46,7 @@ namespace LT {
 	}
 	bool GraphicPass::Init(
 		const std::vector<vk::DescriptorSetLayout>& vecVkDescSetLayout,
-		bool bCreateModelMatPushConst/* = true*/) {
+		const std::vector<vk::PushConstantRange>& vecPushConst) {
 
 		vk::Device& device = vkContext::GetVkDevice();
 
@@ -236,7 +236,8 @@ namespace LT {
 			.setPushConstantRanges(0)
 			;
 
-		if (bCreateModelMatPushConst)
+		// Push Const
+		if (vecPushConst.size() > 0)
 		{
 
 			vk::PushConstantRange pcr = {};
@@ -246,10 +247,7 @@ namespace LT {
 				.setStageFlags(vk::ShaderStageFlagBits::eVertex)
 				;
 
-			plci
-				.setPushConstantRangeCount(1)
-				.setPPushConstantRanges(&pcr)
-				;
+			plci.setPushConstantRanges(vecPushConst);
 		}
 
 		m_vkPipelineLayout = device.createPipelineLayout(plci);
@@ -270,10 +268,12 @@ namespace LT {
 		//m_vecDescriptorSets1 = device.allocateDescriptorSets(dsai);
 
 		// 深度模板测试
+		vk::Bool32 bDepthTestEnabled = IsDepthTestEnable(m_nFlag) ? vk::True : vk::False;
+
 		vk::PipelineDepthStencilStateCreateInfo pdssci = {};
 		pdssci
-			.setDepthTestEnable(vk::True)
-			.setDepthWriteEnable(vk::True)
+			.setDepthTestEnable(bDepthTestEnabled)
+			.setDepthWriteEnable(bDepthTestEnabled)
 			.setDepthCompareOp(vk::CompareOp::eLess)
 			.setDepthBoundsTestEnable(vk::False)
 			.setStencilTestEnable(vk::False)
@@ -385,166 +385,133 @@ namespace LT {
 		vecInputBindDesc.emplace_back(0, nStride, vk::VertexInputRate::eVertex);
 	}
 
-	void GraphicPass::RecordCommand(const RecordCommandInfo& sRecordInfo)
-	{
-		CommandBufferWrapper& cmdBuffer = vkContext::GetCmdBuffer(sRecordInfo.nFlightFrameIndex);
-		vk::Extent2D extent = { sRecordInfo.nWidth , sRecordInfo.nHeight};
-		uint32_t nFlightFrameIndex = sRecordInfo.nFlightFrameIndex;
+	//void GraphicPass::RecordCommand(const RecordCommandInfo& sRecordInfo)
+	//{
+	//	CommandBufferWrapper& cmdBuffer = vkContext::GetCmdBuffer(sRecordInfo.nFlightFrameIndex);
+	//	vk::Extent2D extent = { sRecordInfo.nWidth , sRecordInfo.nHeight};
+	//	uint32_t nFlightFrameIndex = sRecordInfo.nFlightFrameIndex;
 
 
-		vk::CommandBufferBeginInfo cbbi = {};
-		cmdBuffer.Begin(cbbi);
+	//	vk::CommandBufferBeginInfo cbbi = {};
+	//	cmdBuffer.Begin(cbbi);
 
-		//// 转换颜色缓冲
-		//TransitionImageLayoutInfo sColorTransitionInfo;
-		//sColorTransitionInfo.vkCommandBuffer = cmdBuffer;
-		//sColorTransitionInfo.nImageID = sRecordInfo.vecImageIDColor[0];
-		//sColorTransitionInfo.srcAccessFlag = vk::AccessFlagBits2::eNone;
-		//sColorTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
-		//sColorTransitionInfo.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-		//sColorTransitionInfo.dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-		//sColorTransitionInfo.eOldLayout = vk::ImageLayout::eUndefined;
-		//sColorTransitionInfo.eNewLayout = vk::ImageLayout::eColorAttachmentOptimal;
-		//sColorTransitionInfo.eImageAspect = vk::ImageAspectFlagBits::eColor;
-		//RenderPass::RecordTransitionImageLayout(sColorTransitionInfo);
+	//	// 绑定渲染目标
 
-		//// 深度缓冲
-		//TransitionImageLayoutInfo sDepthTransitionInfo;
-		//sDepthTransitionInfo.vkCommandBuffer = cmdBuffer;
-		//sDepthTransitionInfo.nImageID = sRecordInfo.nDepthStencilID;
-		//sDepthTransitionInfo.srcAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentWrite;
-		//sDepthTransitionInfo.dstAccessFlag = vk::AccessFlagBits2::eDepthStencilAttachmentRead;
-		//sDepthTransitionInfo.srcStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
-		//sDepthTransitionInfo.dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests;
-		//sDepthTransitionInfo.eOldLayout = vk::ImageLayout::eUndefined;
-		//sDepthTransitionInfo.eNewLayout = vk::ImageLayout::eDepthAttachmentOptimal;
-		//sDepthTransitionInfo.eImageAspect = vk::ImageAspectFlagBits::eDepth;
-		//RenderPass::RecordTransitionImageLayout(sDepthTransitionInfo);
+	//	// 颜色
+	//	vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f);
+	//	vk::RenderingAttachmentInfo rai;
+	//	rai
+	//		.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sRecordInfo.vecImageIDColor[0]))
+	//		.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
+	//		.setLoadOp(sRecordInfo.eColorLoadOp)
+	//		.setStoreOp(vk::AttachmentStoreOp::eStore)
+	//		.setClearValue(clearColor)
+	//		;
 
-		// 绑定渲染目标
+	//	// 深度
+	//	vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
+	//	vk::RenderingAttachmentInfo raiDepth;
+	//	raiDepth
+	//		.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sRecordInfo.nDepthStencilID))
+	//		.setImageLayout(vk::ImageLayout::eDepthAttachmentOptimal)
+	//		.setLoadOp(sRecordInfo.eDepthLoadOp)
+	//		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
+	//		.setClearValue(clearDepth)
+	//		;
 
-		// 颜色
-		vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f);
-		vk::RenderingAttachmentInfo rai;
-		rai
-			.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sRecordInfo.vecImageIDColor[0]))
-			.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
-			.setLoadOp(sRecordInfo.eColorLoadOp)
-			.setStoreOp(vk::AttachmentStoreOp::eStore)
-			.setClearValue(clearColor)
-			;
+	//	// 录入渲染命令
+	//	vk::RenderingInfo ri;
+	//	
+	//	vk::Rect2D renderArea({ 0, 0 }, { sRecordInfo.nWidth, sRecordInfo.nHeight });
+	//	ri
+	//		.setRenderArea(renderArea)
+	//		.setLayerCount(1)
+	//		.setColorAttachmentCount(1)
+	//		.setPColorAttachments(&rai)
+	//		.setPDepthAttachment(&raiDepth)
+	//		;
 
-		// 深度
-		vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
-		vk::RenderingAttachmentInfo raiDepth;
-		raiDepth
-			.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sRecordInfo.nDepthStencilID))
-			.setImageLayout(vk::ImageLayout::eDepthAttachmentOptimal)
-			.setLoadOp(sRecordInfo.eDepthLoadOp)
-			.setStoreOp(vk::AttachmentStoreOp::eDontCare)
-			.setClearValue(clearDepth)
-			;
+	//	cmdBuffer.BeginRendering(ri);
 
-		// 录入渲染命令
-		vk::RenderingInfo ri;
-		
-		vk::Rect2D renderArea({ 0, 0 }, { sRecordInfo.nWidth, sRecordInfo.nHeight });
-		ri
-			.setRenderArea(renderArea)
-			.setLayerCount(1)
-			.setColorAttachmentCount(1)
-			.setPColorAttachments(&rai)
-			.setPDepthAttachment(&raiDepth)
-			;
+	//	// 绑定渲染管线
+	//	cmdBuffer.BindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
 
-		cmdBuffer.BeginRendering(ri);
+	//	// 绑定
+	//	// const buffer
+	//	// texture resource
 
-		// 绑定渲染管线
-		cmdBuffer.BindPipeline(vk::PipelineBindPoint::eGraphics, m_vkPipeline);
-
-		// 绑定
-		// const buffer
-		// texture resource
-
-		cmdBuffer.BindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics,
-			m_vkPipelineLayout,
-			0,
-			m_vecDescriptorSets,
-			{}
-		);
+	//	cmdBuffer.BindDescriptorSets(
+	//		vk::PipelineBindPoint::eGraphics,
+	//		m_vkPipelineLayout,
+	//		0,
+	//		m_vecDescriptorSets,
+	//		{}
+	//	);
 
 
 
 
-		// 创建并绑定Viewport Scissor State
-		vk::Viewport viewport;
-		viewport
-			.setX(0)
-			.setY(0)
-			.setWidth(sRecordInfo.nWidth)
-			.setHeight(sRecordInfo.nHeight)
-			.setMinDepth(0.f)
-			.setMaxDepth(1.f)
-			;
+	//	// 创建并绑定Viewport Scissor State
+	//	vk::Viewport viewport;
+	//	viewport
+	//		.setX(0)
+	//		.setY(0)
+	//		.setWidth(sRecordInfo.nWidth)
+	//		.setHeight(sRecordInfo.nHeight)
+	//		.setMinDepth(0.f)
+	//		.setMaxDepth(1.f)
+	//		;
 
-		// Scissor
-		vk::Rect2D scissor;
-		scissor
-			.setOffset(vk::Offset2D(0, 0))
-			.setExtent(vk::Extent2D(sRecordInfo.nWidth, sRecordInfo.nHeight))
-			;
+	//	// Scissor
+	//	vk::Rect2D scissor;
+	//	scissor
+	//		.setOffset(vk::Offset2D(0, 0))
+	//		.setExtent(vk::Extent2D(sRecordInfo.nWidth, sRecordInfo.nHeight))
+	//		;
 
-		cmdBuffer.SetViewport(0, std::vector<vk::Viewport>{viewport});
-		cmdBuffer.SetScissor(0, std::vector<vk::Rect2D>{scissor});
+	//	cmdBuffer.SetViewport(0, std::vector<vk::Viewport>{viewport});
+	//	cmdBuffer.SetScissor(0, std::vector<vk::Rect2D>{scissor});
 
-		// 绘制各个Mesh
-		for (size_t i = 0; i < sRecordInfo.vecVertexBufferID.size(); ++i)
-		{
-			const std::vector<BufferID> &vecVertexBufferID = sRecordInfo.vecVertexBufferID[i];
-			const BufferID nIndexBufferID = sRecordInfo.vecIndexBufferID[i];
-			// 绑定顶点缓冲
-			std::vector<vk::Buffer> vecVertexBuffer;
-			std::vector<vk::DeviceSize> vecVertexBufferOffset;
-			vecVertexBuffer.reserve(vecVertexBufferID.size());
-			vecVertexBufferOffset.reserve(vecVertexBufferID.size());
-			for (BufferID nID : vecVertexBufferID)
-			{
-				vecVertexBuffer.push_back(BufferManager::GetNativeDeviceBuffer(nID));
-				vecVertexBufferOffset.push_back(0);
-			}
-			cmdBuffer.BindVertexBuffers(0, vecVertexBuffer, vecVertexBufferOffset);
+	//	// 绘制各个Mesh
+	//	for (size_t i = 0; i < sRecordInfo.vecVertexBufferID.size(); ++i)
+	//	{
+	//		const std::vector<BufferID> &vecVertexBufferID = sRecordInfo.vecVertexBufferID[i];
+	//		// 绑定顶点缓冲
+	//		std::vector<vk::Buffer> vecVertexBuffer;
+	//		std::vector<vk::DeviceSize> vecVertexBufferOffset;
+	//		vecVertexBuffer.reserve(vecVertexBufferID.size());
+	//		vecVertexBufferOffset.reserve(vecVertexBufferID.size());
+	//		size_t nVertexCount = 0;
+	//		for (BufferID nID : vecVertexBufferID)
+	//		{
+	//			VertexBuffer* pVertexBuffer = BufferManager::GetBuffer<VertexBuffer>(nID);
 
-			// 绑定索引缓冲
-			cmdBuffer.BindIndexBuffer(BufferManager::GetNativeDeviceBuffer(nIndexBufferID), 0, vk::IndexType::eUint32);
+	//			vecVertexBuffer.push_back(pVertexBuffer->GetNativeBuffer());
+	//			vecVertexBufferOffset.push_back(0);
 
-			auto nIndexCount = BufferManager::GetIndexBuffer(nIndexBufferID)->GetIndexCount();
-			cmdBuffer.DrawIndexed(nIndexCount, 1, 0, 0, 0);
-		}
+	//			nVertexCount += pVertexBuffer->GetVertexCount();
+	//		}
+	//		cmdBuffer.BindVertexBuffers(0, vecVertexBuffer, vecVertexBufferOffset);
 
+	//		// 绑定索引缓冲
+	//		if (IsIndexed(m_nFlag))
+	//		{
+	//			const BufferID nIndexBufferID = sRecordInfo.vecIndexBufferID[i];
+	//			cmdBuffer.BindIndexBuffer(BufferManager::GetNativeDeviceBuffer(nIndexBufferID), 0, vk::IndexType::eUint32);
+	//			const auto nIndexCount = BufferManager::GetIndexBuffer(nIndexBufferID)->GetIndexCount();
+	//			cmdBuffer.DrawIndexed(nIndexCount, 1, 0, 0, 0);
+	//		}
+	//		else
+	//		{
+	//			cmdBuffer.Draw(nVertexCount, 1, 0, 0);
+	//		}
+	//	}
 
+	//	cmdBuffer.EndRendering();
 
-		cmdBuffer.EndRendering();
+	//	cmdBuffer.End();
 
-		//// 颜色缓冲转为交换缓冲
-		//if (IsSwapChainImageID(sRecordInfo.vecImageIDColor[0]))
-		//{
-		//	TransitionImageLayoutInfo sTransInfoForPresent;
-		//	sTransInfoForPresent.vkCommandBuffer = cmdBuffer;
-		//	sTransInfoForPresent.nImageID = sRecordInfo.vecImageIDColor[0];
-		//	sTransInfoForPresent.eOldLayout = vk::ImageLayout::eColorAttachmentOptimal;
-		//	sTransInfoForPresent.eNewLayout = vk::ImageLayout::ePresentSrcKHR;
-		//	sTransInfoForPresent.srcAccessFlag = vk::AccessFlagBits2::eColorAttachmentWrite;
-		//	sTransInfoForPresent.dstAccessFlag = vk::AccessFlagBits2::eNone;
-		//	sTransInfoForPresent.srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput;
-		//	sTransInfoForPresent.dstStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe;
-		//	sTransInfoForPresent.eImageAspect = vk::ImageAspectFlagBits::eColor;
-		//	RenderPass::RecordTransitionImageLayout(sTransInfoForPresent);
-		//}
-
-		cmdBuffer.End();
-
-	}
+	//}
 
 	void GraphicPass::Submit(GraphicSubmitInfo& sInOutSubmitInfo) {
 		vk::Device& device = vkContext::GetVkDevice();

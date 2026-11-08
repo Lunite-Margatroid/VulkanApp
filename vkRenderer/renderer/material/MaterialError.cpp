@@ -17,6 +17,9 @@ namespace LT {
 		:BaseMaterial<MaterialError, MaterialType::eError>(nID)
 	{
 		RegisterStage(RenderStageType::eOpaqueForward);
+
+		// 没有灯光
+		SetLighting(m_nMtlFlag, false);
 	}
 
 	void BaseMaterial<MaterialError, MaterialType::eError>::RegisterMaterialProp() {

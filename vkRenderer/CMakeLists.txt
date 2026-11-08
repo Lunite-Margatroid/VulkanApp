@@ -91,7 +91,8 @@ target_link_libraries(vkRenderer PRIVATE SlangCompiler)
 target_link_libraries(vkRenderer PUBLIC logger)
 # 链接LunarImageIO
 target_link_libraries(vkRenderer PUBLIC LunarImageIO)
-
+# 链接LunarTextIO
+target_link_libraries(vkRenderer PUBLIC LunarTextIO)
 
 # 使用utf-8编码编译源文件 仅windows
 if(WIN32)

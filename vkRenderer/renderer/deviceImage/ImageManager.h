@@ -4,11 +4,10 @@
 #pragma once
 
 #include "DeviceImage.h"
-
+#include "Image2DShaderRes.h"
+#include "Image2DDepthBuffer.h"
 
 namespace LT {
-	class Image2DShaderRes;
-	class Image2DDepthBuffer;
 	class SwapChain;
 
 	class ImageManager {

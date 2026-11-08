@@ -1,6 +1,7 @@
 #include "vkRendererCommon.h"
 #include "vkContext.h"
 #include "BufferManager.h"
+
 namespace LT {
 	BufferManager* BufferManager::s_pBufferManagerInstance = nullptr;
 
@@ -46,10 +47,23 @@ namespace LT {
 	{
 		BufferManager& bufferManager = GetInstance();
 
+		// VertexBuffer* pVertexBuffer = new VertexBuffer(bufferManager.GenBufferID(), nSize, pData, vertexCount);
 		VertexBuffer* pVertexBuffer = new VertexBuffer(bufferManager.GenBufferID(), nSize, pData, vertexCount);
 
 		RENDERER_ASSERT(pVertexBuffer, "Vertex Buffer create failed.");
 
+		bufferManager.m_mapBuffers[pVertexBuffer->GetBufferID()] = pVertexBuffer;
+
+		return pVertexBuffer;
+	}
+
+	DynamicVertexBuffer* BufferManager::CreateDynamicVertexBuffer(size_t nSize, const void* pData, uint64_t vertexCount)
+	{
+		BufferManager& bufferManager = GetInstance();
+
+		DynamicVertexBuffer* pVertexBuffer = new DynamicVertexBuffer(bufferManager.GenBufferID(), nSize, pData, vertexCount);
+
+		RENDERER_ASSERT(pVertexBuffer, "Dynamic Vertex Buffer create failed.");
 		bufferManager.m_mapBuffers[pVertexBuffer->GetBufferID()] = pVertexBuffer;
 
 		return pVertexBuffer;

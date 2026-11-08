@@ -21,7 +21,7 @@ namespace LT {
 		SetLineWidth(m_eRenderPassFlag, 1.f);
 		SetBlendEnable(m_eRenderPassFlag, true);
 		SetPolygonMode(m_eRenderPassFlag, vk::PolygonMode::eFill);
-
+		SetDepthTestEnable(m_eRenderPassFlag, true);
 		//for (auto& nBufferHandle : m_arrConstBufferVertTrans)
 		//{
 		//	nBufferHandle = ShaderResourceManager::CreateTransBufferHandle();
