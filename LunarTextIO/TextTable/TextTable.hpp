@@ -36,9 +36,16 @@ class TextTable {
 		TextTable& operator=(TextTable&& other) noexcept = default;
 		virtual ~TextTable();
 
+		const std::vector<GlyphsMetrics>& GetGlyphsMetrics() const { return m_vecGlyphsMetrics; }
+
 		const LIIO::ImgRes& GetImage() const {
 			return m_imgTable;
 		}
+
+		uint32_t GetCellWidth() const { return m_nCellWidth; }
+		uint32_t GetCellHeight() const { return m_nCellHeight; }
+		uint32_t GetRowCount() const { return m_nRowCount; }
+		uint32_t GetColCount() const { return m_nColCount; }
 	};
 
 	template class TextTable<char>;
