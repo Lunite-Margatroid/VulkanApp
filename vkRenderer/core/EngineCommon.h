@@ -46,6 +46,8 @@ namespace LT
 		Default
 	};
 
+
+	// 3D 渲染使用的push constant
 	struct ModelNormalMat {
 		glm::mat4 modelMat;
 // 列主序
@@ -79,5 +81,27 @@ namespace LT
 		{
 
 		}
+	};
+	// std130
+	struct VPMatrixBuffer2D {
+		// 列主序
+		glm::mat2 vpMat;
+		glm::vec2 offset;
+		VPMatrixBuffer2D() 
+			: vpMat(glm::identity<glm::mat2>())
+			, offset(0.f, 0.f)
+		{}
+	};
+
+	// std130
+	// 2D渲染使用push constant
+	struct ModelMat2D {
+		glm::mat2 modelMat;
+		glm::vec2 offset;
+
+		ModelMat2D() 
+			: modelMat(1.0f)
+			, offset(0.f, 0.f)
+		{};
 	};
 }

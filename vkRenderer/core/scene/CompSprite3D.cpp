@@ -16,6 +16,7 @@ namespace LT {
 		SetPolygonMode(vk::PolygonMode::eFill);
 		SetBackCull(false);
 		SetClockwiseFront(false);
+		SetDepthTestEnable(m_nRenderPassFlag, true);
 	}
 	CompSprite3D::~CompSprite3D() {
 		if (m_pVertexBuffer) {

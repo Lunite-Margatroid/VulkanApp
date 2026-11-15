@@ -48,9 +48,7 @@ namespace LT {
 
 	class EntityRender : public IEntity {
 	protected:
-		glm::mat4 m_matModel;
-		ModelNormalMat m_sModelNormalMat;
-
+		RenderPassFlag m_eRenderPassFlag;
 	public:
 		EntityRender(EntityID);
 		~EntityRender() = default;
@@ -64,14 +62,11 @@ namespace LT {
 
 		virtual void UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) = 0;
 
-		void SetModuleMat(const glm::mat4& matMod);
+		virtual void SetModuleMat(const float* pMat) = 0;
 
-		virtual void SetMaterial(const MaterialRef& refMtl) = 0;
-		virtual MaterialRef GetMaterial() const = 0;
-		virtual MaterialID GetMaterialID() const = 0;
 
-		virtual void SetRenderPassFlag(RenderPassFlag nFlag) = 0;
-		virtual RenderPassFlag GetRenderPassFlag() const = 0;
+		void SetRenderPassFlag(RenderPassFlag nFlag) { m_eRenderPassFlag = nFlag; }
+		RenderPassFlag GetRenderPassFlag() const { return m_eRenderPassFlag; }
 	};
 
 

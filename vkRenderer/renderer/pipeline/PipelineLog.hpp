@@ -6,7 +6,7 @@
 namespace LT {
 	class PipelineLog : public Pipeline {
 	protected:
-
+		
 	public:
 		PipelineLog();
 		void LogPipelineInfo();

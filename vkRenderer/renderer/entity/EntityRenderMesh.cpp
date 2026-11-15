@@ -10,11 +10,10 @@
 
 namespace LT {
 	EntityRenderMesh::EntityRenderMesh(EntityID nID)
-		:EntityRender(nID)
+		:EntityRender3D(nID)
 		,m_refMaterial(INVALID_MATERIAL_ID)
 		,m_pVertexBuffer(nullptr)
 		,m_pIndexBuffer(nullptr)
-		,m_eRenderPassFlag(0)
 	{
 		SetBackCull(m_eRenderPassFlag, false);
 		SetClockwiseFront(m_eRenderPassFlag, false);
@@ -71,23 +70,13 @@ namespace LT {
 		//}
 	}
 
-	void EntityRender::SetModuleMat(const glm::mat4& matMod)
-	{
-		m_matModel = matMod;
-
-		m_sModelNormalMat.modelMat = m_matModel;
-		glm::mat4 matNormal = glm::transpose(glm::inverse(m_matModel));
-
-		memcpy(&m_sModelNormalMat.normalMatCol, glm::value_ptr(matNormal), sizeof(m_sModelNormalMat.normalMatCol));
-	}
-
 	void EntityRenderMesh::Draw(EntityDrawInfo& sInOutDrawInfo)
 	{
 		CommandBufferWrapper* pCmdBuffer = sInOutDrawInfo.pCommandBuffer;
 
 		pCmdBuffer->BindIndexBuffer(m_pIndexBuffer->GetNativeBuffer(), 0, vk::IndexType::eUint32);
-		std::vector<vk::Buffer> vertexBuffers{ m_pVertexBuffer->GetNativeBuffer() };
-		std::vector<vk::DeviceSize> vertexOffsets{ 0 };
+		std::array<vk::Buffer, 1> vertexBuffers{ m_pVertexBuffer->GetNativeBuffer() };
+		std::array<vk::DeviceSize, 1> vertexOffsets{ 0 };
 		pCmdBuffer->BindVertexBuffers(0, vertexBuffers, vertexOffsets);
 		
 		pCmdBuffer->PushConstants(sInOutDrawInfo.vkLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(ModelNormalMat), &m_sModelNormalMat);

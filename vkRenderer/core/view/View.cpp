@@ -58,7 +58,7 @@ namespace LT {
 				EntityRender* pEntity = reinterpret_cast<EntityRender*>(pSprite3D->GetRenderEntity().GetPtr());
 				if (pEntity)
 				{
-					pEntity->SetModuleMat(pNode->GetGlobalMat());
+					pEntity->SetModuleMat(glm::value_ptr(pNode->GetGlobalMat()));
 					vecOutEntity.push_back(pEntity);
 				}
 			}

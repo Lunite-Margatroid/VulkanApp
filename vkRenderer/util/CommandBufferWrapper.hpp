@@ -44,7 +44,7 @@ namespace LT {
 		void Begin(const vk::CommandBufferBeginInfo& sBeginInfo);
 		void BeginRendering(const vk::RenderingInfo& sRenderingInfo);
 		void BindPipeline(const vk::PipelineBindPoint& pipelineBindPoint, const vk::Pipeline pipeline);
-		void BindVertexBuffers(uint32_t firstBinding, const std::vector<vk::Buffer> buffers, const std::vector<vk::DeviceSize> & offsets);
+		void BindVertexBuffers(uint32_t firstBinding, std::span<vk::Buffer> buffers, std::span<vk::DeviceSize> offsets);
 		void BindIndexBuffer(vk::Buffer buffer, vk::DeviceSize offset, vk::IndexType indexType);
 		void BindDescriptorSets(
 			vk::PipelineBindPoint pipelineBindPoint,
@@ -53,8 +53,8 @@ namespace LT {
 			const std::vector<DescriptorSetWrapper*>& descriptorSets,
 			const std::vector<uint32_t>& dynamicOffsets);
 
-		void SetViewport(uint32_t firstViewport,const std::vector<vk::Viewport> & viewports);
-		void SetScissor(uint32_t firstScissor, const std::vector<vk::Rect2D> & scissors);
+		void SetViewport(uint32_t firstViewport,std::span<vk::Viewport> viewports);
+		void SetScissor(uint32_t firstScissor, std::span<vk::Rect2D> scissors);
 		void DrawIndexed(
 			uint32_t         indexCount,
 			uint32_t         instanceCount,

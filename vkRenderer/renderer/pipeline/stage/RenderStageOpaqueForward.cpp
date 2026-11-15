@@ -14,18 +14,6 @@
 namespace LT {
 	RenderStageOpaqueForward::RenderStageOpaqueForward()
 	{
-
-		// 创建Semaphore
-		vk::Device& device = vkContext::GetVkDevice();
-		for (int i = 0; i < m_arrSemTransitionBegin.size(); ++i)
-		{
-			m_arrSemTransitionBegin[i] = device.createSemaphore(vk::SemaphoreCreateInfo{});
-		}
-
-		for (int i = 0; i < m_arrSemTransitionEnd.size(); ++i)
-		{
-			m_arrSemTransitionEnd[i] = device.createSemaphore(vk::SemaphoreCreateInfo{});
-		}
 	}
 	RenderStageOpaqueForward::~RenderStageOpaqueForward()
 	{
@@ -51,7 +39,8 @@ namespace LT {
 	{
 		if (sInOutExecuteInfo.mapRenderEntity.size() <= 0)
 			return;
-		FlightFrameIndex nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
+		const FlightFrameIndex nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
+		const bool bNeedOutTransition = OutNeedTransiton(sInOutExecuteInfo.vecRenderTarget);
 
 		// ----------------------------- Stage Begin------------------------
 		// Barrier
@@ -82,18 +71,26 @@ namespace LT {
 		// 遍历每个Material
 		size_t nMtlCounter = 0;
 		for (const auto& [nMtlID, vecEntityRender] : sInOutExecuteInfo.mapRenderEntity) {
+			// 跳过无效材质ID和特殊材质
+			if (nMtlID <= INVALID_MATERIAL_ID)
+				continue;
 			nMtlCounter += 1;
 			bool bLastDraw = nMtlCounter == sInOutExecuteInfo.mapRenderEntity.size();
 			StageDrawBeginInfo sBeginInfo;
 			sBeginInfo.nHeight = sInOutExecuteInfo.nHeight;
 			sBeginInfo.nWidth = sInOutExecuteInfo.nWidth;
 			sBeginInfo.nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
-			sBeginInfo.eColorLoadOp = bFirstDraw ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
-			sBeginInfo.eDepthLoadOp = bFirstDraw ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
-			sBeginInfo.eColorStoreOp = vk::AttachmentStoreOp::eStore;
+			sBeginInfo.eDepthLoadOp = (bFirstDraw && sInOutExecuteInfo.bDepthClear) ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
 			sBeginInfo.eDepthStoreOp = vk::AttachmentStoreOp::eStore;
 			sBeginInfo.vecRenderTarget = sInOutExecuteInfo.vecRenderTarget;
 			sBeginInfo.nDepthBufferID = sInOutExecuteInfo.nDepthBufferID;
+
+			for (int i = 0; i < sInOutExecuteInfo.vecRenderTarget.size(); ++i)
+			{
+				sBeginInfo.vecColorLoadOp.push_back((bFirstDraw && sInOutExecuteInfo.vecColorClear[i]) ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad);
+				sBeginInfo.vecColorStoreOp.push_back(vk::AttachmentStoreOp::eStore);
+			}
+
 			DrawBegin(sBeginInfo);
 
 			IMaterial* pMaterial = MaterialManager::GetMaterial(nMtlID);
@@ -159,9 +156,17 @@ namespace LT {
 				sEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
 			}
 
-			// 发射Semaphore 让Transition等待
 			if (bLastDraw) {
-				sEndInfo.vecSemSignal.push_back(m_arrSemTransitionEnd[sInOutExecuteInfo.nFlightFrameIndex]);
+				if (bNeedOutTransition)
+				{
+					// 发射Semaphore 让Transition等待
+					sEndInfo.vecSemSignal.push_back(m_arrSemTransitionEnd[sInOutExecuteInfo.nFlightFrameIndex]);
+				}
+				else
+				{
+					// 如果不需要Transition 那么就把外部的Semaphore发射出去
+					sEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
+				}
 			}
 
 			DrawEnd(sEndInfo);
@@ -217,114 +222,29 @@ namespace LT {
 
 		// ---------------- Stage End -------------
 		// Barrier
-		StageEndInfo sStageEndInfo;
-		sStageEndInfo.nDepthBufferID = sInOutExecuteInfo.nDepthBufferID;
-		sStageEndInfo.vecRenderTarget = sInOutExecuteInfo.vecRenderTarget;
-		sStageEndInfo.nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
-		sStageEndInfo.vecSemWait.push_back(m_arrSemTransitionEnd[sInOutExecuteInfo.nFlightFrameIndex]);
-		sStageEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllGraphics);
-		if (!sInOutExecuteInfo.vecSemSignal.empty())
+		if (bNeedOutTransition)
 		{
-			sStageEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
-		}
-		StageEnd(sStageEndInfo);
 
-		// 如果End的Fence是空的 把Draw的Fence返回
-		if (sStageEndInfo.refFence)
-		{
+			StageEndInfo sStageEndInfo;
+			sStageEndInfo.nDepthBufferID = sInOutExecuteInfo.nDepthBufferID;
+			sStageEndInfo.vecRenderTarget = sInOutExecuteInfo.vecRenderTarget;
+			sStageEndInfo.nFlightFrameIndex = nFlightFrameIndex;
+			sStageEndInfo.vecSemWait.push_back(m_arrSemTransitionEnd[nFlightFrameIndex]);
+			sStageEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllGraphics);
+			if (!sInOutExecuteInfo.vecSemSignal.empty())
+			{
+				sStageEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
+			}
+			StageEnd(sStageEndInfo);
+
 			sInOutExecuteInfo.refFence = sStageEndInfo.refFence;
+
 		}
 		else
 		{
 			sInOutExecuteInfo.refFence = sEndInfo.refFence;
 		}
-	}
-	void RenderStageOpaqueForward::StageBegin(StageBeginInfo& sInOutBeginInfo)
-	{
 
-		CommandBufferWrapper& cmdBuffer = vkContext::GetCmdBuffer(sInOutBeginInfo.nFlightFrameIndex);
-
-		RecordTransitionInfo sRecordInfo;
-		sRecordInfo.pCmdBuffer = &cmdBuffer;
-
-		// Color Attacment
-		uint32_t nColorAttachmentCount = std::min(sInOutBeginInfo.vecRenderTarget.size(), m_vecColorInType.size());
-		for (int i = 0; i < nColorAttachmentCount; ++i)
-		{
-			PipelineIOType eInColorType = m_vecColorInType[i];
-
-			if (eInColorType != PipelineIOType::eColorAttachment)
-			{
-				ImageID nImageID = sInOutBeginInfo.vecRenderTarget[i];
-
-				sRecordInfo.vecColorAttachment.emplace_back(eInColorType, PipelineIOType::eColorAttachment, nImageID);
-			}
-		}
-
-
-		// Depth Attachment
-		if (sInOutBeginInfo.nDepthBufferID != INVALID_IMAGE_ID)
-		{
-			if (m_eDepthInType != PipelineIOType::eDepthAttachment)
-			{
-				sRecordInfo.vecDepthAttachment.emplace_back(m_eDepthInType, PipelineIOType::eDepthAttachment, sInOutBeginInfo.nDepthBufferID);
-			}
-		}
-
-		// 如果有Image需要Transition
-		if (sRecordInfo.vecColorAttachment.size() + sRecordInfo.vecDepthAttachment.size() > 0)
-		{
-
-			m_passTransition.RecordCommand(sRecordInfo);
-
-			TransitionSubmitInfo sSubmitInfo;
-			sSubmitInfo.nFlightFrameIndex = sInOutBeginInfo.nFlightFrameIndex;
-			sSubmitInfo.vecSemToSignal = sInOutBeginInfo.vecSemSignal;
-			sSubmitInfo.vecSemToWait = sInOutBeginInfo.vecSemWait;
-			sSubmitInfo.vecSemWaitMasks = sInOutBeginInfo.vecSemWaitMask;
-
-			m_passTransition.Submit(sSubmitInfo);
-
-			sInOutBeginInfo.refFence = sSubmitInfo.refFence;
-		}
-	}
-
-	void RenderStageOpaqueForward::StageEnd(StageEndInfo& sInOutEndInfo) {
-		RecordTransitionInfo sRecordInfo;
-		sRecordInfo.pCmdBuffer = &vkContext::GetCmdBuffer(sInOutEndInfo.nFlightFrameIndex);
-		// Color Attachment
-		uint32_t nColorAttachmentCount = std::min(sInOutEndInfo.vecRenderTarget.size(), m_vecColorInType.size());
-		for (int i = 0; i < nColorAttachmentCount; ++i) {
-			PipelineIOType eOutColorType = m_vecColorOutType[i];
-
-			if (eOutColorType != PipelineIOType::eColorAttachment && eOutColorType != PipelineIOType::eUndefined)
-			{
-				ImageID nImageID = sInOutEndInfo.vecRenderTarget[i];
-
-				sRecordInfo.vecColorAttachment.emplace_back(PipelineIOType::eColorAttachment, eOutColorType, nImageID);
-			}
-		}
-
-		// Depth Attachment
-		if (m_eDepthOutType != PipelineIOType::eUndefined && m_eDepthOutType != PipelineIOType::eDepthAttachment) {
-			sRecordInfo.vecColorAttachment.emplace_back(PipelineIOType::eDepthAttachment, m_eDepthOutType, sInOutEndInfo.nDepthBufferID);
-		}
-
-		if (sRecordInfo.vecColorAttachment.size() + sRecordInfo.vecDepthAttachment.size() > 0)
-		{
-
-			m_passTransition.RecordCommand(sRecordInfo);
-
-			TransitionSubmitInfo sSubmitInfo;
-			sSubmitInfo.nFlightFrameIndex = sInOutEndInfo.nFlightFrameIndex;
-			sSubmitInfo.vecSemToSignal = sInOutEndInfo.vecSemSignal;
-			sSubmitInfo.vecSemToWait = sInOutEndInfo.vecSemWait;
-			sSubmitInfo.vecSemWaitMasks = sInOutEndInfo.vecSemWaitMask;
-
-			m_passTransition.Submit(sSubmitInfo);
-
-			sInOutEndInfo.refFence = sSubmitInfo.refFence;
-		}
 	}
 	void RenderStageOpaqueForward::DrawBegin(const StageDrawBeginInfo& sBeginInfo)
 	{
@@ -338,15 +258,20 @@ namespace LT {
 
 		// 颜色
 		vk::ClearValue clearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f);
-		vk::RenderingAttachmentInfo rai;
-		rai
-			.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sBeginInfo.vecRenderTarget[0]))
-			.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
-			.setLoadOp(sBeginInfo.eColorLoadOp)
-			.setStoreOp(sBeginInfo.eColorStoreOp)
-			.setClearValue(clearColor)
-			;
 
+		std::vector<vk::RenderingAttachmentInfo> vecColorAttackmentInfo;
+		for (int i = 0; i < sBeginInfo.vecRenderTarget.size(); i++)
+		{
+			vk::RenderingAttachmentInfo rai;
+			rai
+				.setImageView(ImageManager::GetInstance().GetNativeDeviceImageView(sBeginInfo.vecRenderTarget[i]))
+				.setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
+				.setLoadOp(sBeginInfo.vecColorLoadOp[i])
+				.setStoreOp(sBeginInfo.vecColorStoreOp[i])
+				.setClearValue(clearColor)
+				;
+			vecColorAttackmentInfo.push_back(rai);
+		}
 		// 深度
 		vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
 		vk::RenderingAttachmentInfo raiDepth;
@@ -365,8 +290,7 @@ namespace LT {
 		ri
 			.setRenderArea(renderArea)
 			.setLayerCount(1)
-			.setColorAttachmentCount(1)
-			.setPColorAttachments(&rai)
+			.setColorAttachments(vecColorAttackmentInfo)
 			.setPDepthAttachment(&raiDepth)
 			;
 
@@ -374,8 +298,8 @@ namespace LT {
 
 
 		// 创建并绑定Viewport Scissor State
-		vk::Viewport viewport;
-		viewport
+		std::array<vk::Viewport, 1> viewports;
+		viewports[0]
 			.setX(0)
 			.setY(0)
 			.setWidth(sBeginInfo.nWidth)
@@ -385,14 +309,14 @@ namespace LT {
 			;
 
 		// Scissor
-		vk::Rect2D scissor;
-		scissor
+		std::array<vk::Rect2D,1> scissors;
+		scissors[0]
 			.setOffset(vk::Offset2D(0, 0))
 			.setExtent(vk::Extent2D(sBeginInfo.nWidth, sBeginInfo.nHeight))
 			;
 
-		cmdBuffer.SetViewport(0, std::vector<vk::Viewport>{viewport});
-		cmdBuffer.SetScissor(0, std::vector<vk::Rect2D>{scissor});
+		cmdBuffer.SetViewport(0, viewports);
+		cmdBuffer.SetScissor(0, scissors);
 	}
 	void RenderStageOpaqueForward::DrawEnd(StageDrawEndInfo& sEndInfo)
 	{

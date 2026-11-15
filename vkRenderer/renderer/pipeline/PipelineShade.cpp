@@ -91,7 +91,8 @@ namespace LT {
 		sStageInfo.nWidth = m_nWidth;
 		sStageInfo.nHeight = m_nHeight;
 		sStageInfo.pPipeline = this;
-
+		sStageInfo.bDepthClear = true;
+		sStageInfo.vecColorClear.push_back(true);
 
 		if (sInOutFrameInfo.semAcquiring)
 		{
@@ -107,7 +108,8 @@ namespace LT {
 		// 遍历RenderEntity
 		// 按照Material分类
 		for (EntityRender* pEntity : sInOutFrameInfo.vecEntityRender) {
-			sStageInfo.mapRenderEntity[pEntity->GetMaterialID()].push_back(pEntity);
+			EntityRender3D* pEntity3D = reinterpret_cast<EntityRender3D*>(pEntity);
+			sStageInfo.mapRenderEntity[pEntity3D->GetMaterialID()].push_back(pEntity);
 		}
 
 		m_cStage.Execute(sStageInfo);

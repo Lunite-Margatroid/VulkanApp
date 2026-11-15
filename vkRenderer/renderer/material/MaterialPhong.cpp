@@ -35,5 +35,6 @@ namespace LT {
 		AddMaterialProp(MtlProp::eTexMeltalness);
 		AddMaterialProp(MtlProp::eTexIOR);
 		AddMaterialProp(MtlProp::eIOR);
+		AddMaterialProp(MtlProp::eRoughness);
 	}
 } // namespace

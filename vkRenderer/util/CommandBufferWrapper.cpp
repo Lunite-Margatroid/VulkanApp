@@ -94,7 +94,7 @@ namespace LT {
 	{
 		Front().cmdBuffer.bindPipeline(pipelineBindPoint, pipeline);
 	}
-	void CommandBufferWrapper::BindVertexBuffers(uint32_t firstBinding, const std::vector<vk::Buffer> buffers, const std::vector<vk::DeviceSize>& offsets)
+	void CommandBufferWrapper::BindVertexBuffers(uint32_t firstBinding, std::span<vk::Buffer> buffers, std::span<vk::DeviceSize> offsets)
 	{
 		Front().cmdBuffer.bindVertexBuffers(firstBinding, buffers, offsets);
 	}
@@ -119,11 +119,11 @@ namespace LT {
 
 		Front().cmdBuffer.bindDescriptorSets(pipelineBindPoint, layout, firstSet, vecDescriptorSets, dynamicOffsets);
 	}
-	void CommandBufferWrapper::SetViewport(uint32_t firstViewport, const std::vector<vk::Viewport>& viewports)
+	void CommandBufferWrapper::SetViewport(uint32_t firstViewport, std::span<vk::Viewport> viewports)
 	{
 		Front().cmdBuffer.setViewport(firstViewport, viewports);
 	}
-	void CommandBufferWrapper::SetScissor(uint32_t firstScissor, const std::vector<vk::Rect2D>& scissors)
+	void CommandBufferWrapper::SetScissor(uint32_t firstScissor, std::span<vk::Rect2D> scissors)
 	{
 		Front().cmdBuffer.setScissor(firstScissor, scissors);
 	}
