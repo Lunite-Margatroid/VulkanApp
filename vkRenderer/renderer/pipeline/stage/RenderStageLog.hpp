@@ -14,6 +14,7 @@ namespace LT {
 
 		void Execute(StageExecuteInfo& sInOutExecuteInfo) override;
 		
+		RenderStageType GetRenderStageType() const override;
 	};
 
 

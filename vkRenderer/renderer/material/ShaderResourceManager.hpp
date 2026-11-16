@@ -25,6 +25,11 @@ namespace LT {
 	constexpr uint32_t MTL_TEX_BINDING_MIN = 3u;
 	constexpr ShaderStage MTL_TEX_BINDING_SPACE = ShaderStage::eFragmentShader;
 
+	// 2D Trans Buffer的binding index
+	constexpr uint32_t TRANS_2D_BUFFER_BINDING_INDEX = 0u;
+	constexpr ShaderStage TRANS_2D_BUFFER_BINDING_SPACE = ShaderStage::eVertexShader;
+
+
 	// 材质Shader资源管理器 单例
 	// 管理材质的Shader资源（const buffer等）
 	class ShaderResourceManager {
@@ -85,7 +90,6 @@ namespace LT {
 		std::vector<std::shared_ptr<LightManager>> m_vecLightManagers;
 		vk::DescriptorSetLayout m_vkLightBufferLayout;
 
-
 		ShaderResourceManager();
 
 	public:
@@ -126,6 +130,10 @@ namespace LT {
 		static void UpdateDeviceTransBuffer();
 		static ConstBufferHandle CreateLightBufferHandle();
 		static void ReleaseLightBufferHandle(ConstBufferHandle nHandle);
+
+		static ConstBufferHandle CreateCommonConstBuffer(size_t nSize, const void* pData = nullptr);
+		static void ReleaseCommonConstBuffer(ConstBufferHandle nHandle);
+		static void UpdateCommonConstBuffer(ConstBufferHandle nHandle, const void* pData);
 
 		// 获取Trnas Buffer Layout
 		static vk::DescriptorSetLayout GetTransBufferDescriptorSetLayout();

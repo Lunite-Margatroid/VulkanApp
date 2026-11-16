@@ -11,17 +11,17 @@ namespace LT {
 		PipelineShade();
 		~PipelineShade();
 
-		virtual void Resize(uint32_t nWidth, uint32_t nHeight);
+		void Resize(uint32_t nWidth, uint32_t nHeight) override;
 
-		virtual void Execute(FrameInfo& sInOutFrameInfo);
+		void Execute(PipelineExecuteInfo& sInOutPipelineInfo) override;
 
 		DescriptorSetWrapper* GetLightBufferDescriptorSet();
 		ConstBufferHandle GetLightBufferHandle();
 
-		virtual void SetColorInType(const std::vector<PipelineIOType>& vecColorInType) override;
-		virtual void SetColorOutType(const std::vector<PipelineIOType>& vecColorOutType) override;
-		virtual void SetDepthInType(PipelineIOType eDepthInType) override;
-		virtual void SetDepthOutType(PipelineIOType eDepthOutType) override;
+		void SetColorInType(const std::vector<PipelineIOType>& vecColorInType) override;
+		void SetColorOutType(const std::vector<PipelineIOType>& vecColorOutType) override;
+		void SetDepthInType(PipelineIOType eDepthInType) override;
+		void SetDepthOutType(PipelineIOType eDepthOutType) override;
 	};
 
 } // namespace

@@ -364,6 +364,46 @@ namespace LT {
 		}
 	}
 
+	ConstBufferHandle ShaderResourceManager::CreateCommonConstBuffer(size_t nSize, const void* pData = nullptr)
+	{
+		auto& mgr = GetInstance();
+		BufferID nBuffer = BufferManager::CreateConstBuffer(nSize, pData)->GetBufferID();
+		ConstBufferHandle nHandle = mgr.GenConstBufferHandle();
+		mgr.m_mapHandle[nHandle] = BufferBinding{ nBuffer, 0, nSize };
+		return nHandle;
+	}
+
+	void ShaderResourceManager::ReleaseCommonConstBuffer(ConstBufferHandle nHandle)
+	{
+		auto& mgr = GetInstance();
+		auto iter = mgr.m_mapHandle.find(nHandle);
+		if (iter != mgr.m_mapHandle.end())
+		{
+			BufferManager::DeleteBuffer(iter->second.nBufferID);
+			mgr.m_mapHandle.erase(iter);
+		}
+		else
+		{
+			LOG_WARNING("invalid common const buffer Handle");
+		}
+	}
+
+	void ShaderResourceManager::UpdateCommonConstBuffer(ConstBufferHandle nHandle, const void* pData)
+	{
+		auto& mgr = GetInstance();
+		auto iter = mgr.m_mapHandle.find(nHandle);
+		if (iter != mgr.m_mapHandle.end())
+		{
+			Buffer* pBuffer = BufferManager::GetBuffer(iter->second.nBufferID);
+			if (ConstBuffer* pConstBuffer = dynamic_cast<ConstBuffer*>(pBuffer))
+			{
+				pConstBuffer->UpdateConstBuffer(pData, iter->second.nOffset, iter->second.nSize);
+				pConstBuffer->UpdateConstBuffer();
+			}
+
+		}
+	}
+
 	vk::DescriptorSetLayout ShaderResourceManager::GetTransBufferDescriptorSetLayout() {
 
 		ShaderResourceManager& mgr = GetInstance();

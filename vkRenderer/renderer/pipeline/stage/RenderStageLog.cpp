@@ -142,4 +142,9 @@ namespace LT {
 			sInOutExecuteInfo.refFence = fenceDraw;
 		}
 	}
+
+
+	RenderStageType RenderStageLog::GetRenderStageType() const {
+		return RenderStageType::eLog;
+	}
 } // namespace LT

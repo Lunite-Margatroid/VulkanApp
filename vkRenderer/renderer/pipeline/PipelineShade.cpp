@@ -60,19 +60,19 @@ namespace LT {
 		}
 	}
 
-	void PipelineShade::Execute(FrameInfo& sInOutFrameInfo)
+	void PipelineShade::Execute(PipelineExecuteInfo& sInOutPipelineInfo)
 	{
 		// 更新Trans Buffer
 		ShaderResourceManager::UpdateTransBuffer(
-			sInOutFrameInfo.pRenderView->GetTransBufferHandle(sInOutFrameInfo.nFightFrameIndex), sInOutFrameInfo.pRenderView->GetTransBuffer());
+			sInOutPipelineInfo.pRenderView->GetTransBufferHandle(sInOutPipelineInfo.nFightFrameIndex), sInOutPipelineInfo.pRenderView->GetTransBuffer());
 		ShaderResourceManager::UpdateDeviceTransBuffer();
 		// 更新Light Uniform Buffer
 
-		if (sInOutFrameInfo.bLightDirty)
+		if (sInOutPipelineInfo.bLightDirty)
 		{
 			m_pLightManager->ClearLightBuffer();
 
-			for (const auto& [sLightBuffer, bitsGroup] : sInOutFrameInfo.vecLightBuffer) {
+			for (const auto& [sLightBuffer, bitsGroup] : sInOutPipelineInfo.vecLightBuffer) {
 				m_pLightManager->PushLight(bitsGroup, sLightBuffer);
 			}
 
@@ -83,38 +83,38 @@ namespace LT {
 		ShaderResourceManager::UpdateDeviceMtlPropBuffer();
 
 		StageExecuteInfo sStageInfo;
-		sStageInfo.vecRenderTarget = sInOutFrameInfo.vecRenderTargets;
-		sStageInfo.nDepthBufferID = m_vecDepthBuffer[sInOutFrameInfo.nFightFrameIndex]->GetImageID();
-		//sStageInfo.vecRenderEntity = sInOutFrameInfo.vecEntityRender;
-		sStageInfo.pRenderView = sInOutFrameInfo.pRenderView;
-		sStageInfo.nFlightFrameIndex = sInOutFrameInfo.nFightFrameIndex;
+		sStageInfo.vecRenderTarget = sInOutPipelineInfo.vecRenderTargets;
+		sStageInfo.nDepthBufferID = m_vecDepthBuffer[sInOutPipelineInfo.nFightFrameIndex]->GetImageID();
+		//sStageInfo.vecRenderEntity = sInOutPipelineInfo.vecEntityRender;
+		sStageInfo.pRenderView = sInOutPipelineInfo.pRenderView;
+		sStageInfo.nFlightFrameIndex = sInOutPipelineInfo.nFightFrameIndex;
 		sStageInfo.nWidth = m_nWidth;
 		sStageInfo.nHeight = m_nHeight;
 		sStageInfo.pPipeline = this;
 		sStageInfo.bDepthClear = true;
 		sStageInfo.vecColorClear.push_back(true);
 
-		if (sInOutFrameInfo.semAcquiring)
+		if (!sInOutPipelineInfo.vecSemWait.empty())
 		{
-			sStageInfo.vecSemWait.push_back(sInOutFrameInfo.semAcquiring);
-			sStageInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+			sStageInfo.vecSemWait = sInOutPipelineInfo.vecSemWait;
+			sStageInfo.vecSemWaitMask = sInOutPipelineInfo.vecSemWaitMask;
 		}
 
-		if (sInOutFrameInfo.semDrawing)
+		if (!sInOutPipelineInfo.vecSemSignal.empty())
 		{
-			sStageInfo.vecSemSignal.push_back(sInOutFrameInfo.semDrawing);
+			sStageInfo.vecSemSignal = sInOutPipelineInfo.vecSemSignal;
 		}
 
 		// 遍历RenderEntity
 		// 按照Material分类
-		for (EntityRender* pEntity : sInOutFrameInfo.vecEntityRender) {
+		for (EntityRender* pEntity : sInOutPipelineInfo.vecEntityRender) {
 			EntityRender3D* pEntity3D = reinterpret_cast<EntityRender3D*>(pEntity);
 			sStageInfo.mapRenderEntity[pEntity3D->GetMaterialID()].push_back(pEntity);
 		}
 
 		m_cStage.Execute(sStageInfo);
 
-		sInOutFrameInfo.fenceDrawing = sStageInfo.refFence;
+		sInOutPipelineInfo.refFence = sStageInfo.refFence;
 	}
 
 	DescriptorSetWrapper* PipelineShade::GetLightBufferDescriptorSet()

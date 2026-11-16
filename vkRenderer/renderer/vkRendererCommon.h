@@ -53,6 +53,7 @@ namespace LT {
 	enum class RenderStageType : int {
 		eUnknown = -1,
 		eOpaqueForward,
+		eLog,
 	};
 
 	constexpr uint32_t VERTEX_POSITION_BIT_FLAG = (1 << 0);

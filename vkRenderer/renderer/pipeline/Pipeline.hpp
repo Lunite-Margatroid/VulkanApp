@@ -77,6 +77,38 @@ namespace LT {
 
 	};
 
+	struct PipelineExecuteInfo {
+		// 只增的帧序列
+		FrameIndex nFrameIndex;
+		// Flight Frame的索引
+		// 小于最大Flight Frame的数量
+		FlightFrameIndex nFightFrameIndex;
+		// 渲染对象
+		std::vector<EntityRender*> vecEntityRender;
+		// RenderView
+		RenderViewSingleCamera* pRenderView;
+
+		std::vector<ImageID> vecRenderTargets;
+
+		std::vector<vk::Semaphore> vecSemWait;
+		std::vector<vk::PipelineStageFlags> vecSemWaitMask;
+
+		std::vector<vk::Semaphore> vecSemSignal;
+
+		// 当前Pipeline最后一次Submit的Fence
+		// 通常作为输出参数
+		FenceRef refFence;
+
+		uint32_t nWidth;
+		uint32_t nHeight;
+
+		bool bLightDirty; // 该帧灯光是否有更新
+		std::vector<std::pair<LightUniformBuffer, std::bitset<LIGHT_GROUP_MAX_COUNT>>> vecLightBuffer;
+
+		// 该Pipeline是否需要clear color attachment
+		std::vector<bool> vecColorClear;
+	};
+
 
 	class Pipeline {
 	protected:
@@ -96,7 +128,7 @@ namespace LT {
 
 		virtual void Resize(uint32_t nWidth, uint32_t nHeight) = 0;
 
-		virtual void Execute(FrameInfo& sInOutFrameInfo) = 0;
+		virtual void Execute(PipelineExecuteInfo& sInOutFrameInfo) = 0;
 
 		uint32_t GetWidth() const { return m_nWidth; }
 		uint32_t GetHeight() const { return m_nHeight; }

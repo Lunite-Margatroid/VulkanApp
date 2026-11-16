@@ -4,5 +4,7 @@
 namespace LT {
 
 	LayerPrintLog::LayerPrintLog()
-	{}
+	{
+		
+	}
 }
