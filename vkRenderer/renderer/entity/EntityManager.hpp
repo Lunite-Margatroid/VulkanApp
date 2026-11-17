@@ -9,6 +9,7 @@ namespace LT {
 
 public:
 	static _EntityRef CreateEntityRenderMesh();
+	static _EntityRef CreateEntityRenderLogLine();
 
 	DECLEAR_SINGLETON_MANAGER_END(EntityManager, IEntity, EntityID, Entity)
 

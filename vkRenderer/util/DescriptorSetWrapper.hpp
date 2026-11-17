@@ -52,7 +52,7 @@ namespace LT {
 		DescriptorSetWrapper& operator = (const DescriptorSetWrapper&) = delete;
 		DescriptorSetWrapper& operator = (DescriptorSetWrapper&&) = delete;
 
-		// 这里控制权交给DescriptorSetWrapper
+		// 这里创建的vkDescriptorSet控制权交给DescriptorSetWrapper
 		// 调用Destroy释放
 		void Init(vk::DescriptorPool vkDescriptorPool, const vk::DescriptorSetLayout& sDescriptorSet);
 		void Destroy(vk::DescriptorPool vkDescriptorPool);

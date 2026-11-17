@@ -48,7 +48,9 @@ using BYTE = uint8_t;
 namespace LT {
 
 	constexpr unsigned int RENDERER_DEFAULT_FLIGHT_FRAME_NUM = 2u;
+	// 一个CommandBufferWrapper包含的vkCommandBuffer的数量
 	constexpr unsigned int RENDERER_COMMAND_BUFFER_COUNT = 4u;
+	// 一个DescriptorSetWrapper包含的vkDescritporSet的数量
 	constexpr unsigned int RENDERER_DESCRIPTOR_SET_COUNT = 4u;
 	enum class RenderStageType : int {
 		eUnknown = -1,

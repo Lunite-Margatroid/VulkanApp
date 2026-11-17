@@ -60,8 +60,6 @@ namespace LT {
 
 		virtual void Draw(EntityDrawInfo& sInOutDrawInfo) = 0;
 
-		virtual void UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) = 0;
-
 		virtual void SetModuleMat(const float* pMat) = 0;
 
 

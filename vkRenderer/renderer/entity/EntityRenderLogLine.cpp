@@ -21,4 +21,8 @@ namespace LT {
 			pCmdBuffer->Draw(m_pVertexBuffer->GetVertexCount(), 1, 0, 0);
 		}
 	}
+	void EntityRenderLogLine::SetVertexBuffer(VertexBuffer* pVertexBuffer)
+	{
+		m_pVertexBuffer = pVertexBuffer;
+	}
 } // namespace LT

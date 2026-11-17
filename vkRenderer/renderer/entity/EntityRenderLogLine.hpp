@@ -12,5 +12,6 @@ namespace LT {
 
 		void Draw(EntityDrawInfo& sInOutDrawInfo) override;
 
+		void SetVertexBuffer(VertexBuffer* pVertexBuffer);
 	};
 } // namespace LT

@@ -29,8 +29,6 @@ namespace LT {
 		MaterialID GetMaterialID() const;
 		void SetVertexBuffer(VertexBuffer* pVertex);
 		void SetIndexBuffer(IndexBuffer* pIndex);
-
-		void UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) override;
 		void Draw(EntityDrawInfo& sInOutDrawInfo) override;
 	};
 

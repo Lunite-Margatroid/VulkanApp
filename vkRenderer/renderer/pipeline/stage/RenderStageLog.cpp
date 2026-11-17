@@ -8,6 +8,34 @@
 #include "EntityRenderLogLine.hpp"
 
 namespace LT {
+	RenderStageLog::RenderStageLog()
+	{
+		VK_CONTEXT_DEVICE;
+
+		std::array<vk::DescriptorSetLayoutBinding, 1> bindings;
+		bindings[0]
+			.setBinding(TRANS_2D_BUFFER_BINDING_INDEX)
+			.setDescriptorCount(1)
+			.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+			.setStageFlags(GetShaderStageFlag(TRANS_2D_BUFFER_BINDING_SPACE))
+			;
+
+		vk::DescriptorSetLayoutCreateInfo dslci = {};
+		dslci.setBindings(bindings);
+
+		m_vk2DTransBufferDescSetLayout = device.createDescriptorSetLayout(dslci);
+
+
+		for (int i = 0; i < m_arrDescSet.size(); ++i) {
+			m_arrDescSet[i].Init(ShaderResourceManager::GetDescriptorPool(), m_vk2DTransBufferDescSetLayout);
+		}
+	}
+	RenderStageLog::~RenderStageLog()
+	{
+		VK_CONTEXT_DEVICE;
+
+		device.destroyDescriptorSetLayout(m_vk2DTransBufferDescSetLayout);
+	}
 	void LT::RenderStageLog::Execute(StageExecuteInfo& sInOutExecuteInfo)
 	{
 		if (sInOutExecuteInfo.mapRenderEntity.size() <= 0) return;

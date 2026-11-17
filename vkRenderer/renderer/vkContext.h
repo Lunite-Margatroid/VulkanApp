@@ -3,10 +3,11 @@
 
 
 namespace LT {
+#define VK_CONTEXT_DEVICE vk::Device& device = vkContext::GetVkDevice()
+
 	static uint32_t GetLastFlightFrameIndex(uint32_t nIndex) {
 		return (nIndex + RENDERER_DEFAULT_FLIGHT_FRAME_NUM - 1) % RENDERER_DEFAULT_FLIGHT_FRAME_NUM;
 	}
-
 
 	class SwapChain;
 

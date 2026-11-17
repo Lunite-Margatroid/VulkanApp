@@ -73,7 +73,7 @@ namespace LT {
 		// BufferID和引用标记
 		// 用于材质属性的Buffer Pool
 		std::map<MaterialType, ConstBufferPool> m_mapBuffers;
-		// 目前仅用于Trans Buffer和Light Uniform Buffer
+		// 目前仅用于Trans Buffer, Trans Buffer 2D和Light Uniform Buffer
 		vk::DescriptorPool m_vkDescriptorPool;
 		// 用于材质属性的Descriptor pool
 		vk::DescriptorPool m_vkMtlPropDescriptorPool;
@@ -201,6 +201,8 @@ namespace LT {
 
 		static void UpdateDeviceMtlPropBuffer();
 
+		// Note.由该DescriptorPool创建的DescriptorSetWrapper数量有限
+		// 它的大小是静态的
 		static vk::DescriptorPool GetDescriptorPool();
 		static vk::DescriptorPool GetMtlPropDescriptorPool();
 

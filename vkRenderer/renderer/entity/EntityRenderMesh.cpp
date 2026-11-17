@@ -58,18 +58,6 @@ namespace LT {
 		m_pIndexBuffer = pIndex;
 	}
 
-	void EntityRenderMesh::UpdateTransBuffer(const EntityDrawInfo& sDrawInfo) {
-		//sDrawInfo.pRenderView->SetModelMat(m_matModel);
-		//if (RenderViewSingleCamera* pRenderView = dynamic_cast<RenderViewSingleCamera*>(sDrawInfo.pRenderView))
-		//{
-		//	ShaderResourceManager::UpdateTransBuffer(m_arrConstBufferVertTrans[sDrawInfo.nFlightFrameIndex], pRenderView->GetTransBuffer());
-		//}
-		//else
-		//{
-		//	RENDERER_ASSERT(false, "Unsupport Render View.");
-		//}
-	}
-
 	void EntityRenderMesh::Draw(EntityDrawInfo& sInOutDrawInfo)
 	{
 		CommandBufferWrapper* pCmdBuffer = sInOutDrawInfo.pCommandBuffer;
