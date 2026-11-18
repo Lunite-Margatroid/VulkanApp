@@ -90,7 +90,7 @@ namespace LT {
 		return !m_qDescriptorSets.empty();
 	}
 
-	void DescriptorSetWrapper::UpdateDescriptorSets(std::vector<vk::WriteDescriptorSet>& descriptorWrites)
+	void DescriptorSetWrapper::UpdateDescriptorSets(std::span<vk::WriteDescriptorSet> descriptorWrites)
 	{
 		for (vk::WriteDescriptorSet& writeInfo : descriptorWrites)
 		{

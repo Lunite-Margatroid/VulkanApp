@@ -28,7 +28,9 @@ namespace LT {
 	// 2D Trans Buffer的binding index
 	constexpr uint32_t TRANS_2D_BUFFER_BINDING_INDEX = 0u;
 	constexpr ShaderStage TRANS_2D_BUFFER_BINDING_SPACE = ShaderStage::eVertexShader;
-
+	// ascii Text Texture
+	constexpr uint32_t LOG_PASS_TEXTURE_BINDING_INDEX = 1u;
+	constexpr ShaderStage LOG_PASS_TEXTURE_BINDING_SPACE = ShaderStage::eFragmentShader;
 
 	// 材质Shader资源管理器 单例
 	// 管理材质的Shader资源（const buffer等）

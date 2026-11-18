@@ -248,19 +248,28 @@ namespace LT {
 			// Trans Buffer 2D
 			nDescriptorCount += RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT;
 
-			vk::DescriptorPoolSize dps = {};
-			dps
+			std::array<vk::DescriptorPoolSize, 2> arrDescriptorPoolSize;
+
+
+			arrDescriptorPoolSize[0]
 				.setType(vk::DescriptorType::eUniformBuffer)
 				.setDescriptorCount(nDescriptorCount)
 				;
 
+			nDescriptorCount = 0;
+			// Log Pass ASCII Text texture
+			nDescriptorCount += RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT;
+
+			arrDescriptorPoolSize[1]
+				.setType(vk::DescriptorType::eCombinedImageSampler)
+				.setDescriptorCount(nDescriptorCount)
+				;
 
 			vk::DescriptorPoolCreateInfo dpci;
 			dpci
 				.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
 				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT * 2)
-				.setPoolSizeCount(1)
-				.setPPoolSizes(&dps)
+				.setPoolSizes(arrDescriptorPoolSize)
 				;
 			GetInstance().m_vkDescriptorPool = vkContext::GetVkDevice().createDescriptorPool(dpci);
 		}
@@ -372,7 +381,7 @@ namespace LT {
 		}
 	}
 
-	ConstBufferHandle ShaderResourceManager::CreateCommonConstBuffer(size_t nSize, const void* pData = nullptr)
+	ConstBufferHandle ShaderResourceManager::CreateCommonConstBuffer(size_t nSize, const void* pData)
 	{
 		auto& mgr = GetInstance();
 		BufferID nBuffer = BufferManager::CreateConstBuffer(nSize, pData)->GetBufferID();

@@ -51,7 +51,7 @@ namespace LT
 	struct ModelNormalMat {
 		glm::mat4 modelMat;
 // 列主序
-// 第四行无用 内存对齐 std130
+// 第四行无用 内存对齐 std140
 // 实际是一个3x3矩阵
 		glm::vec4 normalMatCol[3];
 
@@ -63,7 +63,7 @@ namespace LT
 		}
 	};
 
-	// std130
+	// std140
 	struct VPMatrixBuffer {
 		
 		glm::mat4 viewMat;
@@ -82,7 +82,7 @@ namespace LT
 
 		}
 	};
-	// std130
+	// std140
 	struct VPMatrixBuffer2D {
 		// 列主序
 		glm::mat2 vpMat;
@@ -93,7 +93,7 @@ namespace LT
 		{}
 	};
 
-	// std130
+	// std140
 	// 2D渲染使用push constant
 	struct ModelMat2D {
 		glm::mat2 modelMat;

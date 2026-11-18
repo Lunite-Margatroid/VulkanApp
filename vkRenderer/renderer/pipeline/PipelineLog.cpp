@@ -63,7 +63,12 @@ namespace LT {
 		m_nLogLineFlag = m_nLogLineFlag | (static_cast<uint64_t>(VertexChannel::UV) << 0);
 		// UV1 2维
 		m_nLogLineFlag = m_nLogLineFlag | (static_cast<uint64_t>(VertexChannel::UV) << 1);
+
+		PushLog("Hello World!");
 	}
+
+	PipelineLog::~PipelineLog()
+	{}
 
 	void PipelineLog::PushLog(std::string_view strLine)
 	{

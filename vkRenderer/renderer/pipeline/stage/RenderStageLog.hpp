@@ -2,9 +2,12 @@
 #include "IRenderStage.hpp"
 #include "LogPass.hpp"
 
-class EntityRenderLogLine;
+
 
 namespace LT {
+	class ConstBuffer;
+	class EntityRenderLogLine;
+
 	// Note.目前仅允许创建一个实例
 	class RenderStageLog : public IRenderStage {
 
@@ -17,6 +20,13 @@ namespace LT {
 		// DescritporSet
 		std::array<DescriptorSetWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrDescSet;
 
+		std::array<ConstBuffer*, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrTransBuffer2D;
+
+		VPMatrixBuffer2D m_sVPMat2D;
+
+		// 所有权不在该对象
+		ImageID m_nASCIITex;
+
 	public:
 		RenderStageLog();
 		~RenderStageLog();
@@ -24,6 +34,8 @@ namespace LT {
 		void Execute(StageExecuteInfo& sInOutExecuteInfo) override;
 		
 		RenderStageType GetRenderStageType() const override;
+
+
 	};
 
 

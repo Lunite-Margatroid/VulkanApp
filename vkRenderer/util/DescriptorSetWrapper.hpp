@@ -63,7 +63,7 @@ namespace LT {
 		FenceRef GetFenceDrawing();
 		void SetFenceDrawing(const FenceRef& refFence);
 
-		void UpdateDescriptorSets(std::vector<vk::WriteDescriptorSet>& descriptorWrites);
+		void UpdateDescriptorSets(std::span<vk::WriteDescriptorSet> descriptorWrites);
 
 		void PopFrontAndPushBack();
 

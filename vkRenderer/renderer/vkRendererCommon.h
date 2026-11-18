@@ -110,6 +110,8 @@ namespace LT {
 	// Color float4	VERT_COLOR
 	// AO float	VERT_AO
 
+	// 当绘制2D图形时 UV0 当作position
+
 	enum class VertexChannel {
 		Position = VERTEX_POSITION_BIT_FLAG,
 		UV = VERTEX_UV0_BIT_FLAG,

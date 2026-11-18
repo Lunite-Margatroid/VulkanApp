@@ -5,11 +5,11 @@
 
 namespace LT {
 	class LogPass : public GraphicPass {
-
+		friend class RenderStageLog;
 	protected:
 
 
-	public:
+	private:
 		LogPass();
 		~LogPass();
 		

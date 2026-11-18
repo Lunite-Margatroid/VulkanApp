@@ -1,0 +1,94 @@
+#include "CommonVertexInput.slang"
+#include "CommonVertexOutput.slang"
+
+struct ModelMat2D{
+	float2x2 modelMat;
+	float2 offset;
+};
+
+struct VPMatrix2D{
+	float2x2 vpMat;
+	float2 offset;
+};
+
+[[vk::push_constant]]
+ModelMat2D pc_ModelMat2D;
+
+[[vk::binding(0,0)]]
+ConstantBuffer<VPMatrix2D, Std140DataLayout> u_VPMatrix2D;
+
+[shader("vertex")]
+SVertexOutput VertMain(SVertexInput vertIn){
+	SVertexOutput output;
+
+// UV
+#ifdef VERT_UV0
+	output.fragUV0 = vertIn.vertUV0;
+	float2 vec2FragPos = 
+	mul(
+		u_VPMatrix2D.vpMat,
+		mul(pc_ModelMat2D.modelMat, vertIn.vertUV0) + pc_ModelMat.offset
+		) + u_VPMatrix2D.offset;
+	output.fragPos = float4(vec2FragPos, 0, 1.0);
+#else
+	float2 vec2FragPos = 
+	mul(
+		u_VPMatrix2D.vpMat,
+		mul(pc_ModelMat2D.modelMat, float2(0,0)) + pc_ModelMat.offset
+		) + u_VPMatrix2D.offset;
+	output.fragPos = float4(vec2FragPos, 0, 1.0);
+#endif
+
+#ifdef VERT_UV1
+	output.fragUV1 = vertIn.vertUV1;
+#endif
+
+#ifdef VERT_UV2
+	output.fragUV2 = vertIn.vertUV2;
+#endif
+
+#ifdef VERT_UV3
+	output.fragUV3 = vertIn.vertUV3;
+#endif
+
+#ifdef VERT_UV4
+	output.fragUV4 = vertIn.vertUV4;
+#endif
+
+// 法线和切线
+#ifdef VERT_NORMAL
+	output.fragNormal = mul(pc_ModelMat.normalMat, vertIn.vertNormal);
+#endif
+
+#ifdef VERT_TANGENT
+	output.fragTangent = mul(pc_ModelMat.normalMat, vertIn.vertTangent);
+#endif
+
+#ifdef VERT_BITANGENT
+	output.fragBitangent = mul(pc_ModelMat.normalMat, vertIn.vertBitangent);
+#endif
+	
+// 顶点颜色	
+#ifdef VERT_COLOR
+	output.fragVertexColor = vertIn.vertColor;
+#endif
+
+// 顶点AO
+#ifdef VERT_AO
+	output.fragAO = vertIn.vertAO;
+#endif
+
+// 相机世界坐标
+	output.cameraWorldPos = float3(-u_VPMatrix2D.offset, 0);
+
+// 观察向量
+	output.viewVec = output.cameraWorldPos - float3(-pc_ModelMat2D.offset, 0);
+
+// 模型坐标
+#ifdef VERT_UV0
+	output.modelPos = float3(vertIn.vertUV0, 0);
+#else
+	output.modelPos = float3(0.0, 0.0, 0.0);
+#endif
+	return output;
+}
