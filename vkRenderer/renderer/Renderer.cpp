@@ -22,10 +22,29 @@ namespace LT {
 		: m_pDisplayDevice(nullptr)
 		, m_pView(nullptr)
 	{
+		VK_CONTEXT_DEVICE;
+
 		m_pRenderView.reset(new RenderViewSingleCamera());
+
+		for (int i = 0; i < m_arrSemphores.size(); ++i)
+		{
+			for (int j = 0; j < m_arrSemphores[i].size(); ++j)
+			{
+				m_arrSemphores[i][j] = device.createSemaphore(vk::SemaphoreCreateInfo({}));
+			}
+		}
 	}
 	Renderer::~Renderer()
 	{
+		VK_CONTEXT_DEVICE;
+		for (int i = 0; i < m_arrSemphores.size(); ++i)
+		{
+			for (int j = 0; j < m_arrSemphores[i].size(); ++j)
+			{
+				device.destroySemaphore(m_arrSemphores[i][j]);
+			}
+		}
+
 		m_pRenderView.reset();
 	}
 
@@ -46,8 +65,12 @@ namespace LT {
 	void Renderer::DrawFrame(FrameInfo& sInOutFrameInfo) {
 		vk::Device& device = vkContext::GetVkDevice();		
 
+		FlightFrameIndex nFlightFrameIndex = sInOutFrameInfo.nFightFrameIndex;
+
 		// Update RenderView
 		Camera* pCamera = m_pView->GetCamera();
+		std::array<vk::Semaphore, RENDERER_SEMPHORE_COUNT>& arrSemphore = m_arrSemphores[nFlightFrameIndex];
+
 
 		m_pRenderView->SetCameraPos(pCamera->GetEye());
 		m_pRenderView->SetProjectionMat(pCamera->GetProjectionMat());
@@ -62,26 +85,55 @@ namespace LT {
 
 		PipelineExecuteInfo sPipelineExecuteInfo = {};
 		sPipelineExecuteInfo.nFrameIndex = sInOutFrameInfo.nFrameIndex;
-		sPipelineExecuteInfo.nFightFrameIndex = sInOutFrameInfo.nFightFrameIndex;
+		sPipelineExecuteInfo.nFightFrameIndex = nFlightFrameIndex;
 		sPipelineExecuteInfo.vecEntityRender = sInOutFrameInfo.vecEntityRender;
 		sPipelineExecuteInfo.pRenderView = sInOutFrameInfo.pRenderView;
 		sPipelineExecuteInfo.vecRenderTargets = sInOutFrameInfo.vecRenderTargets;
-		sPipelineExecuteInfo.vecSemSignal.push_back(sInOutFrameInfo.semDrawing);
-		sPipelineExecuteInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
-		sPipelineExecuteInfo.vecSemWait.push_back(sInOutFrameInfo.semAcquiring);
 		sPipelineExecuteInfo.nWidth = sInOutFrameInfo.nWidth;
 		sPipelineExecuteInfo.nHeight = sInOutFrameInfo.nHeight;
 		sPipelineExecuteInfo.bLightDirty = sInOutFrameInfo.bLightDirty;
 		sPipelineExecuteInfo.vecLightBuffer = sInOutFrameInfo.vecLightBuffer;
 		sPipelineExecuteInfo.vecColorClear.push_back(true);
 
-		for (Layer* pLayer : layers)
+		bool bFirstPipeline = true;
+		uint32_t nPipelineCounter = 0;
+		for (int i =0; i < layers.size();++i)
 		{
-			const std::vector<Pipeline*> pipelines = pLayer->GetPipelines();
-			for (Pipeline* pPipeline : pipelines)
+			const std::vector<Pipeline*> pipelines = layers[i]->GetPipelines();
+
+			for (int j = 0; j < pipelines.size(); ++j)
 			{
-				pPipeline->Resize(sInOutFrameInfo.nWidth, sInOutFrameInfo.nHeight);
-				pPipeline->Execute(sPipelineExecuteInfo);
+				nPipelineCounter += 1;
+
+				bool bLastPipeline = (i == layers.size() - 1) && (j == pipelines.size() - 1);
+
+				sPipelineExecuteInfo.vecSemSignal.clear();
+				if (bLastPipeline)
+				{
+					sPipelineExecuteInfo.vecSemSignal.push_back(sInOutFrameInfo.semDrawing);
+				}
+				else
+				{
+					sPipelineExecuteInfo.vecSemSignal.push_back(arrSemphore[nPipelineCounter % RENDERER_SEMPHORE_COUNT]);
+				}
+
+				if (bFirstPipeline)
+				{
+					bFirstPipeline = false;
+					sPipelineExecuteInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
+					sPipelineExecuteInfo.vecSemWait.push_back(sInOutFrameInfo.semAcquiring);
+				}
+				else
+				{
+					sPipelineExecuteInfo.vecSemWaitMask.clear();
+					sPipelineExecuteInfo.vecSemWait.clear();
+
+					sPipelineExecuteInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
+					sPipelineExecuteInfo.vecSemWait.push_back(arrSemphore[(nPipelineCounter - 1) % RENDERER_SEMPHORE_COUNT]);
+				}
+
+				pipelines[j]->Resize(sInOutFrameInfo.nWidth, sInOutFrameInfo.nHeight);
+				pipelines[j]->Execute(sPipelineExecuteInfo);
 
 				for (int i = 0; i < sPipelineExecuteInfo.vecColorClear.size(); ++i)
 				{

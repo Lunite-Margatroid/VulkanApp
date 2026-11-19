@@ -59,12 +59,15 @@ namespace LT {
 		SetPolygonMode(m_nLogLineFlag, vk::PolygonMode::eFill);
 		SetBackCull(m_nLogLineFlag, false);
 		SetBlendEnable(m_nLogLineFlag, true);
+		SetLineWidth(m_nLogLineFlag, 1.f);
 		// UV0 2维
 		m_nLogLineFlag = m_nLogLineFlag | (static_cast<uint64_t>(VertexChannel::UV) << 0);
 		// UV1 2维
 		m_nLogLineFlag = m_nLogLineFlag | (static_cast<uint64_t>(VertexChannel::UV) << 1);
 
 		PushLog("Hello World!");
+
+		m_stageLog.SetASCIITex(m_nTextTable);
 	}
 
 	PipelineLog::~PipelineLog()

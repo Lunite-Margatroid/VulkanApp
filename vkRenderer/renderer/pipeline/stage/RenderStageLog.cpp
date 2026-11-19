@@ -7,6 +7,8 @@
 
 #include "EntityRenderLogLine.hpp"
 
+#include "PipelineLog.hpp"
+
 namespace LT {
 	RenderStageLog::RenderStageLog()
 		: m_nASCIITex(INVALID_IMAGE_ID)
@@ -186,6 +188,7 @@ namespace LT {
 
 		EntityDrawInfo sEntityDrawInfo;
 		sEntityDrawInfo.pCommandBuffer = &cmdBuffer;
+		sEntityDrawInfo.vkLayout = m_pass.GetPipelineLayout();
 
 		for (auto* pEntity : sInOutExecuteInfo.mapRenderEntity[MATERIAL_ID_2D_0]) {
 			EntityRenderLogLine* pEntityLogLine = dynamic_cast<EntityRenderLogLine*>(pEntity);
@@ -249,5 +252,9 @@ namespace LT {
 
 	RenderStageType RenderStageLog::GetRenderStageType() const {
 		return RenderStageType::eLog;
+	}
+	void RenderStageLog::SetASCIITex(ImageID nASCIITex)
+	{
+		m_nASCIITex = nASCIITex;
 	}
 } // namespace LT

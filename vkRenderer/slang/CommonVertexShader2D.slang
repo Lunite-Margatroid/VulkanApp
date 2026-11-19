@@ -27,14 +27,14 @@ SVertexOutput VertMain(SVertexInput vertIn){
 	float2 vec2FragPos = 
 	mul(
 		u_VPMatrix2D.vpMat,
-		mul(pc_ModelMat2D.modelMat, vertIn.vertUV0) + pc_ModelMat.offset
+		mul(pc_ModelMat2D.modelMat, vertIn.vertUV0) + pc_ModelMat2D.offset
 		) + u_VPMatrix2D.offset;
 	output.fragPos = float4(vec2FragPos, 0, 1.0);
 #else
 	float2 vec2FragPos = 
 	mul(
 		u_VPMatrix2D.vpMat,
-		mul(pc_ModelMat2D.modelMat, float2(0,0)) + pc_ModelMat.offset
+		mul(pc_ModelMat2D.modelMat, float2(0,0)) + pc_ModelMat2D.offset
 		) + u_VPMatrix2D.offset;
 	output.fragPos = float4(vec2FragPos, 0, 1.0);
 #endif
@@ -57,15 +57,15 @@ SVertexOutput VertMain(SVertexInput vertIn){
 
 // 法线和切线
 #ifdef VERT_NORMAL
-	output.fragNormal = mul(pc_ModelMat.normalMat, vertIn.vertNormal);
+	output.fragNormal = mul(pc_ModelMat2D.normalMat, vertIn.vertNormal);
 #endif
 
 #ifdef VERT_TANGENT
-	output.fragTangent = mul(pc_ModelMat.normalMat, vertIn.vertTangent);
+	output.fragTangent = mul(pc_ModelMat2D.normalMat, vertIn.vertTangent);
 #endif
 
 #ifdef VERT_BITANGENT
-	output.fragBitangent = mul(pc_ModelMat.normalMat, vertIn.vertBitangent);
+	output.fragBitangent = mul(pc_ModelMat2D.normalMat, vertIn.vertBitangent);
 #endif
 	
 // 顶点颜色	

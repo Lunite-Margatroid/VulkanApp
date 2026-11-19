@@ -239,7 +239,8 @@ namespace LT {
 
 		// 其他描述符
 		{
-			
+			uint32_t nMaxSize = 0;
+
 			uint32_t nDescriptorCount = 0;
 			// Trans Buffer 
 			nDescriptorCount += RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT;
@@ -255,20 +256,24 @@ namespace LT {
 				.setType(vk::DescriptorType::eUniformBuffer)
 				.setDescriptorCount(nDescriptorCount)
 				;
+			nMaxSize += nDescriptorCount;
 
 			nDescriptorCount = 0;
 			// Log Pass ASCII Text texture
 			nDescriptorCount += RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT;
 
+			
+
 			arrDescriptorPoolSize[1]
 				.setType(vk::DescriptorType::eCombinedImageSampler)
 				.setDescriptorCount(nDescriptorCount)
 				;
+			nMaxSize += nDescriptorCount;
 
 			vk::DescriptorPoolCreateInfo dpci;
 			dpci
 				.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
-				.setMaxSets(RENDERER_DEFAULT_FLIGHT_FRAME_NUM * RENDERER_DESCRIPTOR_SET_COUNT * 2)
+				.setMaxSets(nMaxSize)
 				.setPoolSizes(arrDescriptorPoolSize)
 				;
 			GetInstance().m_vkDescriptorPool = vkContext::GetVkDevice().createDescriptorPool(dpci);

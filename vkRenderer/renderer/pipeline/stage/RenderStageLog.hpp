@@ -35,7 +35,7 @@ namespace LT {
 		
 		RenderStageType GetRenderStageType() const override;
 
-
+		void SetASCIITex(ImageID nASCIITex);
 	};
 
 
