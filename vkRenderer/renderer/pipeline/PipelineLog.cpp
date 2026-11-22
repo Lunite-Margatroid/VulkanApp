@@ -13,10 +13,6 @@ namespace LT {
 		: m_nTextTable(INVALID_IMAGE_ID)
 		, m_bLogLineDirt(true)
 	{
-		for (int i = 0; i < m_arrTransBuffer.size(); ++i)
-		{
-			m_arrTransBuffer[i] = ShaderResourceManager::CreateCommonConstBuffer(sizeof(VPMatrixBuffer2D), nullptr);
-		}
 
 		vk::Device& device = vkContext::GetVkDevice();
 
@@ -66,12 +62,26 @@ namespace LT {
 		m_nLogLineFlag = m_nLogLineFlag | (static_cast<uint64_t>(VertexChannel::UV) << 1);
 
 		PushLog("Hello World!");
+		PushLog("The quick brown fox jumps over the lazy dog.");
 
 		m_stageLog.SetASCIITex(m_nTextTable);
+
+		m_stageLog.UpdateCamera(m_nWidth, m_nHeight);
+
+		logger::GetInstance().RegisterOnLog(std::bind(&PipelineLog::RenderOnLog, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), nullptr);
 	}
 
 	PipelineLog::~PipelineLog()
-	{}
+	{
+		logger::GetInstance().UnregisterOnLog();
+
+		for (auto& [bufferID, refEntity] : m_listLogLine)
+		{
+			BufferManager::DeleteBuffer(bufferID);
+		}
+		m_listLogLine.clear();
+		ImageManager::DeleteImage(m_nTextTable);
+	}
 
 	void PipelineLog::PushLog(std::string_view strLine)
 	{
@@ -179,15 +189,16 @@ namespace LT {
 	}
 
 	void PipelineLog::Resize(uint32_t nWidth, uint32_t nHeight) {
-		m_nWidth = nWidth;
-		m_nHeight = nHeight;
+		if (m_nWidth != nWidth || m_nHeight != nHeight)
+		{
+			m_nWidth = nWidth;
+			m_nHeight = nHeight;
+			m_stageLog.UpdateCamera(nWidth, nHeight);
+		}
 	}
 
 	void PipelineLog::Execute(PipelineExecuteInfo& sInOutPipelineInfo) {
 		FlightFrameIndex nFlightFrameIndex = sInOutPipelineInfo.nFightFrameIndex;
-		ConstBufferHandle nTransBuffer = m_arrTransBuffer[nFlightFrameIndex];
-
-		ShaderResourceManager::UpdateCommonConstBuffer(nTransBuffer,&m_sTransBuffer);
 
 		if (m_bLogLineDirt)
 		{
@@ -247,6 +258,46 @@ namespace LT {
 	{
 		Pipeline::SetDepthOutType(eDepthOutType);
 		m_stageLog.SetDepthOutType(eDepthOutType);
+	}
+
+	void PipelineLog::RenderOnLog(int nLogLevel, std::string_view strLog, void* pUserData)
+	{
+		char strLogBuffer[512] = { '\0' };
+
+		std::time_t curTime = std::time(nullptr);
+		std::tm* pLocalTime = std::localtime(&curTime);
+
+		memcpy(strLogBuffer, strLog.data(), strLog.size());
+
+		const char* strLogLevel = "";
+		if (nLogLevel == LOG_LEVEL_TRACING)
+		{
+			strLogLevel = STR_LOG_LEVEL_TRACING;
+		}
+		else if (nLogLevel == LOG_LEVEL_INFO)
+		{
+			strLogLevel = STR_LOG_LEVEL_INFO;
+		}
+		else if (nLogLevel == LOG_LEVEL_WARNING)
+		{
+			strLogLevel = STR_LOG_LEVEL_WARNING;
+		}
+		else if (nLogLevel == LOG_LEVEL_ERROR)
+		{
+			strLogLevel = STR_LOG_LEVEL_ERROR;
+		}
+
+		snprintf(strLogBuffer, sizeof(strLogBuffer),
+			"[%s][%02d:%02d:%02d]%.*s",
+			strLogLevel,
+			pLocalTime->tm_hour,
+			pLocalTime->tm_min,
+			pLocalTime->tm_sec,
+			static_cast<int>(strLog.size()),
+			strLog.empty() ? "" : strLog.data()
+		);
+
+		PushLog(strLogBuffer);
 	}
 
 } // namespace LT

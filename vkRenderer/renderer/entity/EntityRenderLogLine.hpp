@@ -8,7 +8,7 @@ namespace LT {
 
 	public:
 		EntityRenderLogLine(EntityID id);
-		~EntityRenderLogLine() = default;
+		~EntityRenderLogLine();
 
 		void Draw(EntityDrawInfo& sInOutDrawInfo) override;
 

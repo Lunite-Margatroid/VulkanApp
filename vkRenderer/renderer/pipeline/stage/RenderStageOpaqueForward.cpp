@@ -17,23 +17,6 @@ namespace LT {
 	}
 	RenderStageOpaqueForward::~RenderStageOpaqueForward()
 	{
-		// 销毁Semaphore
-		vk::Device& device = vkContext::GetVkDevice();
-		for (int i = 0; i < m_arrSemTransitionBegin.size(); ++i)
-		{
-			if (m_arrSemTransitionBegin[i])
-			{
-				device.destroySemaphore(m_arrSemTransitionBegin[i]);
-			}
-		}
-
-		for (int i = 0; i < m_arrSemTransitionEnd.size(); ++i)
-		{
-			if (m_arrSemTransitionEnd[i])
-			{
-				device.destroySemaphore(m_arrSemTransitionEnd[i]);
-			}
-		}
 	}
 	void RenderStageOpaqueForward::Execute(StageExecuteInfo& sInOutExecuteInfo)
 	{

@@ -123,7 +123,7 @@ namespace LT {
 
 	public:
 		IRenderStage();
-		virtual ~IRenderStage() = default;
+		virtual ~IRenderStage();
 	
 
 		virtual RenderStageType GetRenderStageType() const = 0;

@@ -12,7 +12,7 @@
 namespace LT {
 	RenderStageLog::RenderStageLog()
 		: m_nASCIITex(INVALID_IMAGE_ID)
-
+		, m_bVPMat2DDirt(true)
 	{
 		VK_CONTEXT_DEVICE;
 
@@ -46,7 +46,7 @@ namespace LT {
 		vecPushConstRange.emplace_back(
 			vk::ShaderStageFlagBits::eVertex,
 			0,
-			sizeof(ModelMat2D)
+			static_cast<uint32_t>(sizeof(ModelMat2D))
 		);
 
 		{
@@ -58,7 +58,7 @@ namespace LT {
 
 
 		m_sVPMat2D.offset = glm::vec2(0.f, 0.f);
-		m_sVPMat2D.vpMat = glm::mat2(1.f,0.f,1.f,0.f);
+		m_sVPMat2D.vpMat = glm::mat2(1.f / 1024.f,0.f,0.f,1.f / 1024.f);
 		for (int i = 0; i < m_arrTransBuffer2D.size(); ++i)
 		{
 			m_arrTransBuffer2D[i] = BufferManager::CreateConstBuffer(sizeof(VPMatrixBuffer2D), &m_sVPMat2D);
@@ -67,6 +67,10 @@ namespace LT {
 	RenderStageLog::~RenderStageLog()
 	{
 		VK_CONTEXT_DEVICE;
+
+		for (int i = 0; i < m_arrDescSet.size(); ++i) {
+			m_arrDescSet[i].Destroy(ShaderResourceManager::GetDescriptorPool());
+		}
 
 		for (int i = 0; i < m_arrTransBuffer2D.size(); ++i)
 		{
@@ -80,6 +84,16 @@ namespace LT {
 
 		const FlightFrameIndex nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
 		CommandBufferWrapper& cmdBuffer = vkContext::GetCmdBuffer(nFlightFrameIndex);
+
+		if (m_bVPMat2DDirt)
+		{
+			m_sVPMat2D.vpMat = m_camera.GetVPMat();
+			m_sVPMat2D.offset = m_camera.GetOffset();
+			m_bVPMat2DDirt = false;
+		}
+
+		m_arrTransBuffer2D[nFlightFrameIndex]->UpdateConstBuffer(&m_sVPMat2D);
+		m_arrTransBuffer2D[nFlightFrameIndex]->UpdateConstBuffer();
 
 		// UpdateDescriptorSet
 		{
@@ -190,14 +204,22 @@ namespace LT {
 		sEntityDrawInfo.pCommandBuffer = &cmdBuffer;
 		sEntityDrawInfo.vkLayout = m_pass.GetPipelineLayout();
 
-		for (auto* pEntity : sInOutExecuteInfo.mapRenderEntity[MATERIAL_ID_2D_0]) {
-			EntityRenderLogLine* pEntityLogLine = dynamic_cast<EntityRenderLogLine*>(pEntity);
+		glm::mat3 modelMat(1.f);
+		glm::vec3 offset(0.f);
+
+
+		const auto& entities = sInOutExecuteInfo.mapRenderEntity[MATERIAL_ID_2D_0];
+		for (auto iter = entities.rbegin(); iter != entities.rend(); ++iter)
+		{
+			EntityRenderLogLine* pEntityLogLine = dynamic_cast<EntityRenderLogLine*>(*iter);
 			if (pEntityLogLine)
 			{
+				modelMat[2] = offset;
+				pEntityLogLine->SetModuleMat(glm::value_ptr(modelMat));
 				pEntityLogLine->Draw(sEntityDrawInfo);
+				offset.y += LOG_PASS_DEFAULT_LINE_HEIGHT;
 			}
 		}
-
 		cmdBuffer.EndRendering();
 		cmdBuffer.End();
 
@@ -239,6 +261,7 @@ namespace LT {
 			sStageEndInfo.nFlightFrameIndex = nFlightFrameIndex;
 			sStageEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
 			sStageEndInfo.vecSemWait.push_back(m_arrSemTransitionEnd[nFlightFrameIndex]);
+			sStageEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllGraphics);
 			StageEnd(sStageEndInfo);
 
 			sInOutExecuteInfo.refFence = sStageEndInfo.refFence;
@@ -256,5 +279,19 @@ namespace LT {
 	void RenderStageLog::SetASCIITex(ImageID nASCIITex)
 	{
 		m_nASCIITex = nASCIITex;
+	}
+	void RenderStageLog::UpdateCamera(uint32_t nWidth, uint32_t nHeight)
+	{
+		float fWidth = static_cast<float>(nWidth);
+		float fHeight = static_cast<float>(nHeight);
+
+		float fAspect = fWidth / fHeight;
+
+		m_camera.SetWidth(static_cast<float>(fWidth));
+		m_camera.SetAspect(fAspect);
+
+		m_camera.SetPosition(glm::vec2(fWidth / 2, fHeight / 2));
+
+		m_bVPMat2DDirt = true;
 	}
 } // namespace LT

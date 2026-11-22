@@ -9,6 +9,8 @@ namespace LT {
 	EntityRenderLogLine::EntityRenderLogLine(EntityID id)
 		: EntityRender2D(id)
 	{}
+	EntityRenderLogLine::~EntityRenderLogLine()
+	{}
 	void EntityRenderLogLine::Draw(EntityDrawInfo& sInOutDrawInfo)
 	{
 		if (m_pVertexBuffer)
@@ -17,7 +19,7 @@ namespace LT {
 			std::array<vk::Buffer, 1> arrVertexBuffer{ m_pVertexBuffer->GetNativeBuffer() };
 			std::array<vk::DeviceSize, 1> arrVertexBufferOffset{ 0 };
 			pCmdBuffer->BindVertexBuffers(0, arrVertexBuffer, arrVertexBufferOffset);
-			pCmdBuffer->PushConstants(sInOutDrawInfo.vkLayout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(ModelMat2D), &m_matModel);
+			pCmdBuffer->PushConstants(sInOutDrawInfo.vkLayout, vk::ShaderStageFlagBits::eVertex, 0, static_cast<uint32_t>(sizeof(ModelMat2D)), &m_matModel);
 			pCmdBuffer->Draw(m_pVertexBuffer->GetVertexCount(), 1, 0, 0);
 		}
 	}

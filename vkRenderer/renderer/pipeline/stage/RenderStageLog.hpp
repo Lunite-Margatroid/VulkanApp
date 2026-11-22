@@ -1,7 +1,7 @@
 #pragma once
 #include "IRenderStage.hpp"
 #include "LogPass.hpp"
-
+#include "Camera2D.hpp"
 
 
 namespace LT {
@@ -24,8 +24,12 @@ namespace LT {
 
 		VPMatrixBuffer2D m_sVPMat2D;
 
+		Camera2D m_camera;
+
 		// 所有权不在该对象
 		ImageID m_nASCIITex;
+
+		bool m_bVPMat2DDirt;
 
 	public:
 		RenderStageLog();
@@ -36,6 +40,8 @@ namespace LT {
 		RenderStageType GetRenderStageType() const override;
 
 		void SetASCIITex(ImageID nASCIITex);
+
+		void UpdateCamera(uint32_t nWidth, uint32_t nHeight);
 	};
 
 

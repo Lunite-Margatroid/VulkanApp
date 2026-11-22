@@ -10,8 +10,8 @@ namespace LT {
 
 	constexpr uint32_t LOG_PASS_MAX_LINE = 64u;
 	constexpr uint32_t LOG_PASS_MAX_CHAR_COUNT = 128u;
-	constexpr uint32_t LOG_PASS_DEFAULT_RESOLUTION = 64u;
-	constexpr uint32_t LOG_PASS_DEFAULT_LINE_HEIGHT = 64u;
+	constexpr uint32_t LOG_PASS_DEFAULT_RESOLUTION = 24u;
+	constexpr uint32_t LOG_PASS_DEFAULT_LINE_HEIGHT = 24u;
 
 	class EntityRender;
 
@@ -42,7 +42,6 @@ namespace LT {
 
 	protected:
 		RenderStageLog m_stageLog;
-		std::array<ConstBufferHandle, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrTransBuffer;
 		VPMatrixBuffer2D m_sTransBuffer;
 		std::vector<EntityRender*> m_vecLogLine;
 		bool m_bLogLineDirt;
@@ -64,5 +63,7 @@ namespace LT {
 		void SetColorOutType(const std::vector<PipelineIOType>& vecColorOutType) override;
 		void SetDepthInType(PipelineIOType eDepthInType) override;
 		void SetDepthOutType(PipelineIOType eDepthOutType) override;
+
+		void RenderOnLog(int nLogLevel, std::string_view strLog, void* pUserData);
 	};
 }
