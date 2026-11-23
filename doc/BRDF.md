@@ -1,9 +1,19 @@
+## BRDF
+
+### 方程
+
+$$
+f_{brdf}(\mathbf l, \mathbf v) = \frac{F(\mathbf l, \mathbf h)G(\mathbf l, \mathbf v, \mathbf h)D(\mathbf h)}{4(\mathbf n \cdot \mathbf l)(\mathbf n \cdot \mathbf v)} \tag 1
+$$
+
+
+
 ## 菲涅尔项 Schlick近似
 
 ### 方程
 
 $$
-F_{Schlick}(F_0,\mathbf l, \mathbf h ) = F_0 + (1 - F_0)(1 - (\mathbf l \cdot \mathbf h))^5 \tag 1
+F_{Schlick}(F_0,\mathbf l, \mathbf h ) = F_0 + (1 - F_0)(1 - (\mathbf l \cdot \mathbf h))^5 \tag 2
 $$
 
 ### slang代码
@@ -19,12 +29,12 @@ float3 FresnelSchlick(float fCosTheta, float3 cF0){
 ### 方程
 
 $$
-F_0 = (\frac{ior - 1}{ior + 1})^2 \tag 2
+F_0 = (\frac{ior - 1}{ior + 1})^2 \tag 3
 $$
 
 代入金属度和反射颜色
 $$
-F_0 = lerp((\frac{ior - 1}{ior + 1})^2, c_{spec}, metalness) \tag 3
+F_0 = lerp((\frac{ior - 1}{ior + 1})^2, c_{spec}, metalness) \tag 4
 $$
 
 ### slang代码
@@ -42,7 +52,7 @@ float3 ComputeF0(float3 cSpecularColor, float fMetalness, float fIOR){
 ### 方程
 
 $$
-D_p(\mathbf m) = \frac{\alpha_p + 2}{2\pi}(\mathbf n \cdot \mathbf m)^{\alpha_p} \tag{4}
+D_p(\mathbf m) = \frac{\alpha_p + 2}{2\pi}(\mathbf n \cdot \mathbf m)^{\alpha_p} \tag{5}
 $$
 
 其中$\alpha_p \in [0, +\infin)$，$\alpha_p$越大表面越光滑。
@@ -59,7 +69,26 @@ float PhongDistribution(float fRoughness, float fNDotH){
 
 把"粗糙度"映射到$\alpha_p$:
 $$
-\alpha_p = \frac{2}{roughness^2} - 2 \tag5
+\alpha_p = \frac{2}{roughness^2} - 2 \tag6
 $$
 $roughness \in [0, 1]$, $\alpha\in[0, +\infin)$
+
+## Cook-Torrance几何函数
+
+### 方程
+
+$$
+G_{ct}(\mathbf l, \mathbf v, \mathbf h) = min(1, \frac{2(\mathbf n \cdot \mathbf h)(\mathbf n \cdot \mathbf v)}{(\mathbf v \cdot \mathbf h)}, \frac{2(\mathbf n \cdot \mathbf h)(\mathbf n \cdot \mathbf l)}{(\mathbf v \cdot \mathbf h)}) \tag{7}
+$$
+
+### slang代码
+
+```c
+float CookTorranceGeometry(float fNDotV, float fNDotL, float fNDotH, float fVDotH){
+	float fRecip = 2.0 * fNDotH / max(fVDotH, 1e-5);
+	float g1 = fRecip * fNDotV;
+	float g2 = fRecip * fNDotL;
+	return min(1.0, min(g1, g2));
+}
+```
 

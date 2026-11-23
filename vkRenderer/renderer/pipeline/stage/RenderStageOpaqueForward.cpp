@@ -88,10 +88,6 @@ namespace LT {
 				pMaterial->SetLightBuffer(sMtlBindInfo.pPipeline->GetLightBufferHandle());
 			}
 
-			// 这里会更新DescriptorSet
-			// UpdateDescriptorSets会被调用
-			pMaterial->BindShaderResource(sMtlBindInfo);
-
 			// 把Entity按照RenderPassFlag排序
 			std::vector<std::pair<RenderPassFlag, EntityRender*>> entities;
 			for (EntityRender* pEntity : vecEntityRender)
@@ -106,14 +102,17 @@ namespace LT {
 				});
 			// 遍历Entity
 			// 当RenderPassFlag改变时重新绑定Mateiral
-			sMtlBindInfo.nFlag = entities.front().first;
-			RenderPassFlag nLastFlag = sMtlBindInfo.nFlag;
-			// DescriptorSet在这里绑定
-			GraphicPass* pGraphicPass = dynamic_cast<GraphicPass*>(pMaterial->Bind(sMtlBindInfo));
+			RenderPassFlag nLastFlag = static_cast<uint64_t>(RenderPassFlagBits::eInvalid);
+			GraphicPass* pGraphicPass = nullptr;
 			for (const auto &[nFlag, pEntity] : entities) {
 				if (nLastFlag != nFlag)
 				{
 					sMtlBindInfo.nFlag = entities.front().first;
+					// 这里会更新DescriptorSet
+					// UpdateDescriptorSets会被调用
+					pMaterial->BindShaderResource(sMtlBindInfo);
+
+					// DescriptorSet在这里绑定
 					pGraphicPass = dynamic_cast<GraphicPass*>(pMaterial->Bind(sMtlBindInfo));
 					nLastFlag = nFlag;
 				}

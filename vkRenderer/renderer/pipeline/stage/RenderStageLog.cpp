@@ -61,7 +61,7 @@ namespace LT {
 		m_sVPMat2D.vpMat = glm::mat2(1.f / 1024.f,0.f,0.f,1.f / 1024.f);
 		for (int i = 0; i < m_arrTransBuffer2D.size(); ++i)
 		{
-			m_arrTransBuffer2D[i] = BufferManager::CreateConstBuffer(sizeof(VPMatrixBuffer2D), &m_sVPMat2D);
+			m_arrTransBuffer2D[i] = ShaderResourceManager::CreateCommonConstBuffer(sizeof(VPMatrixBuffer2D), &m_sVPMat2D);
 		}
 	}
 	RenderStageLog::~RenderStageLog()
@@ -74,7 +74,7 @@ namespace LT {
 
 		for (int i = 0; i < m_arrTransBuffer2D.size(); ++i)
 		{
-			BufferManager::DeleteBuffer(m_arrTransBuffer2D[i]);
+			ShaderResourceManager::ReleaseCommonConstBuffer(m_arrTransBuffer2D[i]);
 		}
 		device.destroyDescriptorSetLayout(m_vk2DTransBufferDescSetLayout);
 	}
@@ -92,44 +92,13 @@ namespace LT {
 			m_bVPMat2DDirt = false;
 		}
 
-		m_arrTransBuffer2D[nFlightFrameIndex]->UpdateConstBuffer(&m_sVPMat2D);
-		m_arrTransBuffer2D[nFlightFrameIndex]->UpdateConstBuffer();
+		ShaderResourceManager::UpdateCommonConstBuffer(m_arrTransBuffer2D[nFlightFrameIndex], &m_sVPMat2D);
 
 		// UpdateDescriptorSet
-		{
-			std::array<vk::WriteDescriptorSet, 2> arrWDS = {};
-			vk::DescriptorBufferInfo dbi = {};
-			dbi
-				.setBuffer(m_arrTransBuffer2D[nFlightFrameIndex]->GetNativeBuffer())
-				.setOffset(0)
-				.setRange(m_arrTransBuffer2D[nFlightFrameIndex]->Size())
-				;
-			arrWDS[0]
-				.setPBufferInfo(&dbi)
-				.setDstBinding(TRANS_2D_BUFFER_BINDING_INDEX)
-				.setDstArrayElement(0)
-				.setDescriptorCount(1)
-				.setDescriptorType(vk::DescriptorType::eUniformBuffer)
-				;
-
-			vk::DescriptorImageInfo dii = {};
-
-			dii
-				.setImageView(ImageManager::GetNativeDeviceImageView(m_nASCIITex))
-				.setSampler(SamplerManager::GetDefaultImageSampler()->GetNativeSampler())
-				.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-				;
-			arrWDS[1]
-				.setPImageInfo(&dii)
-				.setDstBinding(LOG_PASS_TEXTURE_BINDING_INDEX)
-				.setDstArrayElement(0)
-				.setDescriptorCount(1)
-				.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
-				;
-
-			m_arrDescSet[nFlightFrameIndex].UpdateDescriptorSets(arrWDS);
-		}
-
+		m_pass.SetDescriptorSets({ &m_arrDescSet[nFlightFrameIndex] });
+		m_pass.BindConstBuffer(m_arrTransBuffer2D[nFlightFrameIndex], TRANS_2D_BUFFER_BINDING_INDEX, 0, ShaderStage::eVertexShader);
+		m_pass.BindImage(m_nASCIITex, LOG_PASS_TEXTURE_BINDING_INDEX, 0, ShaderStage::eFragmentShader);
+		m_pass.UpdateDescriptorSet();
 		// ----------------------------- Stage Begin------------------------
 		// Barrier
 		// 进行Transition
@@ -197,7 +166,6 @@ namespace LT {
 		cmdBuffer.SetScissor(0, scissors);
 
 		// Bind Descriptor Set
-		m_pass.SetDescriptorSets({&m_arrDescSet[nFlightFrameIndex]});
 		m_pass.Bind(&cmdBuffer);
 
 		EntityDrawInfo sEntityDrawInfo;

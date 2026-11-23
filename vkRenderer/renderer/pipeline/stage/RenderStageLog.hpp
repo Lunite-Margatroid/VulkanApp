@@ -20,7 +20,7 @@ namespace LT {
 		// DescritporSet
 		std::array<DescriptorSetWrapper, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrDescSet;
 
-		std::array<ConstBuffer*, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrTransBuffer2D;
+		std::array<ConstBufferHandle, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrTransBuffer2D;
 
 		VPMatrixBuffer2D m_sVPMat2D;
 

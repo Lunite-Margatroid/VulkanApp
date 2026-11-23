@@ -61,7 +61,20 @@ namespace LT {
 	struct SlotKey {
 		ShaderStage eSpace; 
 		uint32_t nBindingIndex;
+		uint32_t nSetIndex;
 		vk::DescriptorType eType;
+
+		SlotKey(
+			ShaderStage stage,
+			uint32_t bindingIndex,
+			uint32_t setIndex,
+			vk::DescriptorType type
+		)
+			: eSpace(stage)
+			, nBindingIndex(bindingIndex)
+			, nSetIndex(setIndex)
+			, eType(type)		
+		{}
 
 		bool operator == (const SlotKey& other) const {
 			return eSpace == other.eSpace && nBindingIndex == other.nBindingIndex && eType == other.eType;
@@ -70,7 +83,11 @@ namespace LT {
 
 	struct SlotKeyHash {
 		size_t operator() (const SlotKey& key) const {
-			size_t nHash = (static_cast<uint64_t>(key.eType) << 32) | (static_cast<uint64_t>(key.nBindingIndex) << 16) | (static_cast<uint64_t>(key.eSpace));
+			size_t nHash = 
+				(static_cast<uint64_t>(key.eType) << 32) | 
+				(static_cast<uint64_t>(key.eSpace) << 16) | 
+				(static_cast<uint64_t>(key.nBindingIndex) << 8) | 
+				(static_cast<uint64_t>(key.nSetIndex));
 			return std::hash<uint64_t>{}(nHash);
 		}
 	};
@@ -110,6 +127,10 @@ namespace LT {
 			);
 
 		void SetDescriptorSets(const std::vector<DescriptorSetWrapper*>& vecDescriptorSets);
+		void SetDescriptorSet(DescriptorSetWrapper* pDescriptorSet, int32_t nSetIndex);
+		void BindImage(ImageID nImage, int32_t nBindingIndex, int32_t nSetIndex, ShaderStage eSpace = ShaderStage::eFragmentShader);
+		void BindConstBuffer(ConstBufferHandle nHandle, int32_t nBindingIndex, int32_t nSetIndex, ShaderStage eSpace = ShaderStage::eVertexShader);
+		void UpdateDescriptorSet();
 		/// <summary>
 		/// 添加基于代码文件的模块
 		/// </summary>

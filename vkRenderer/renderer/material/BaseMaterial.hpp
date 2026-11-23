@@ -98,107 +98,121 @@ namespace LT {
 			return EngineResult::eSuccess;
 		}
 
-		void BindShaderResource(const MaterialBindInfo& sMtlBindInfo) override{
-			// 绑定资源
-			std::vector<vk::WriteDescriptorSet> vecWDSMtlProp;
-			std::vector<vk::WriteDescriptorSet> vecWDSTrans;
-			std::vector<vk::WriteDescriptorSet> vecWDSLight;
-			for (auto& [bindings, mtlSlot] : m_mapSlots) {
+		GraphicPass* GetRenderPass(RenderStageType eStage, RenderPassFlag flag) {
+			GraphicPass* pPass = nullptr;
 
-				if (mtlSlot.nSrcID == INVALID_ITEM_ID)
-					continue;
+			auto iterPasses = s_mapRenderPasses.find(eStage);
+			if (iterPasses == s_mapRenderPasses.end())
+			{
+				return nullptr;
+			}
+			auto& mapPass = iterPasses->second;
 
-				vk::WriteDescriptorSet wds;
-				bool bInvalidSrc = true;
+			RenderPassFlag nFlag = static_cast<uint64_t>(flag) & (~MTL_PROP_TEX_MASK) | static_cast<uint64_t>(m_nMtlFlag) & MTL_PROP_TEX_MASK;
+			nFlag = nFlag | m_nMtlFlag & static_cast<uint64_t>(RenderPassFlagBits::eLighting);
+			bool bLighting = m_nMtlFlag & static_cast<uint64_t>(RenderPassFlagBits::eLighting);
 
-				switch (mtlSlot.eDescType) {
-					case vk::DescriptorType::eUniformBuffer:
-					{
-						BufferBinding binding = ShaderResourceManager::GetConstBufferBinding(mtlSlot.nSrcID);
-						Buffer* pBuffer = BufferManager::GetBuffer(binding.nBufferID);
+			auto iterPass = mapPass.find(nFlag);
+			if (iterPass == mapPass.end())
+			{
+				pPass = new GraphicPass();
+				pPass->SetRenderPassFlag(nFlag);
+				// 注册的属性列表用于生成MTL_PROP_宏
+				pPass->SetMtlProps(s_vecMtlPropDataLayout);
 
-						RENDERER_ASSERT(pBuffer, "Invalid Const Buffer Handle");
-						vk::DescriptorBufferInfo& bufferInfo = mtlSlot.bufferInfo;
-						bufferInfo
-							.setBuffer(pBuffer->GetNativeBuffer())
-							.setOffset(binding.nOffset)
-							.setRange(binding.nSize)
-							;
-						// BufferInfo不能使用临时对象
-						wds.setPBufferInfo(&bufferInfo);
-					}
-					break;
-					case vk::DescriptorType::eCombinedImageSampler:
-					{
-						vk::DescriptorImageInfo& imageInfo = mtlSlot.imageInfo;
-						imageInfo
-							.setImageView(ImageManager::GetNativeDeviceImageView(mtlSlot.nSrcID))
-							.setSampler(SamplerManager::GetDefaultImageSampler()->GetNativeSampler())
-							.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-							;
-						// ImageInfo不能使用临时对象
-						wds.setPImageInfo(&imageInfo);
-					}
-					break;
-					default:
-						bInvalidSrc = false;
-						break;
+				InitShaderModule(pPass);
+
+				std::vector<vk::DescriptorSetLayout> vecSetLayout;
+
+				//跟 enum ShaderResSpace 的顺序保持一致
+				//	eTransBuffer = 0,
+				//	eMtlProp = 1,
+
+				// 0 Trans Buffer
+				auto vkTransBufferSetLayout = ShaderResourceManager::GetTransBufferDescriptorSetLayout();
+				vecSetLayout.push_back(vkTransBufferSetLayout);
+				// 1 Mtl Prop
+				auto vkMtlPropDescSet = GetMtlPropDescriptorSetLayout();
+				vecSetLayout.push_back(vkMtlPropDescSet);
+				// 2 Light Uniform Buffer
+				if (bLighting)
+				{
+					vecSetLayout.push_back(ShaderResourceManager::GetLightBufferDescriptorSetLayout());
 				}
 
-				if (bInvalidSrc)
+				if (!pPass->Init(vecSetLayout))
 				{
-					wds
-						.setDstBinding(bindings.nIndex)
-						.setDstArrayElement(0)
-						.setDescriptorCount(1)
-						.setDescriptorType(mtlSlot.eDescType)
-						;
+					delete pPass;
+					pPass = nullptr;
+				}
 
+				mapPass[nFlag] = pPass;
+			}
+			else
+			{
+				pPass = reinterpret_cast<GraphicPass*>(iterPass->second);
+			}
+
+			return pPass;
+		}
+
+		void BindShaderResource(const MaterialBindInfo& sMtlBindInfo) override{
+			GraphicPass* pPass = GetRenderPass(sMtlBindInfo.eStage, sMtlBindInfo.nFlag);
+			FlightFrameIndex nFlightFrameIndex = sMtlBindInfo.nFlightIndex;
+			bool bLighting = m_nMtlFlag & static_cast<uint64_t>(RenderPassFlagBits::eLighting);
+			//BindShaderResource(sMtlBindInfo);
+			if (pPass) {
+				std::vector<DescriptorSetWrapper*> vecDescriptors{ &ShaderResourceManager::GetTransBufferDescriptorSet(nFlightFrameIndex), &s_sDescriptorSets.GetDescriptorSet(nFlightFrameIndex) };
+
+				if (bLighting && sMtlBindInfo.pPipeline)
+				{
+					vecDescriptors.push_back(sMtlBindInfo.pPipeline->GetLightBufferDescriptorSet());
+				}
+				pPass->SetDescriptorSets(vecDescriptors);
+
+				for (auto& [bindings, mtlSlot] : m_mapSlots) {
+
+					int32_t nSetIndex = 0;
 					switch (bindings.eResSpace)
 					{
 						case ShaderResSpace::eTransBuffer:
 						{
-							vecWDSTrans.push_back(std::move(wds));
+							nSetIndex = 0;
 							break;
 						}
 						case ShaderResSpace::eMtlProp:
 						{
-							vecWDSMtlProp.push_back(std::move(wds));
+							nSetIndex = 1;
 							break;
 						}
 						// 前向渲染的灯光
 						case ShaderResSpace::eLightUniformBuffer: {
-							vecWDSLight.push_back(std::move(wds));
+							nSetIndex = 2;
 							break;
 						}
 						default:
 							break;
 					}
+
+					switch (mtlSlot.eDescType) {
+						case vk::DescriptorType::eUniformBuffer:
+						{
+							pPass->BindConstBuffer(mtlSlot.nSrcID, bindings.nIndex, nSetIndex, bindings.eSpace);
+						}
+						break;
+						case vk::DescriptorType::eCombinedImageSampler:
+						{
+							pPass->BindImage(mtlSlot.nSrcID, bindings.nIndex, nSetIndex, bindings.eSpace);
+						}
+						break;
+						default:
+							break;
+					}
 				}
+				pPass->UpdateDescriptorSet();
 			}
 
-			DescriptorSetWrapper& descriptorSetMtlProp = s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex);
-			DescriptorSetWrapper& descriptorSetTrans = ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex);
-
-			if(!vecWDSMtlProp.empty())
-			{
-				descriptorSetMtlProp.WaitForFenceDrawing();
-				descriptorSetMtlProp.UpdateDescriptorSets(vecWDSMtlProp);
-			}
-
-			if(!vecWDSTrans.empty())
-			{
-				descriptorSetTrans.WaitForFenceDrawing();
-				descriptorSetTrans.UpdateDescriptorSets(vecWDSTrans);
-			}
-
-			// 灯光统一缓冲 由Pipeline持有 更新后所有受光照材质共用
-			if(!vecWDSLight.empty() && sMtlBindInfo.pPipeline)
-			{
-				DescriptorSetWrapper* pLightDescSet = sMtlBindInfo.pPipeline->GetLightBufferDescriptorSet();
-				pLightDescSet->WaitForFenceDrawing();
-				pLightDescSet->UpdateDescriptorSets(vecWDSLight);
-			}
+			return;
 		}
 
 		RenderPass* Bind(const MaterialBindInfo& sMtlBindInfo) override
@@ -260,13 +274,13 @@ namespace LT {
 			//BindShaderResource(sMtlBindInfo);
 			if (pPass)
 			{
-				std::vector<DescriptorSetWrapper*> vecDescriptors{ &ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), &s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) };
+				//std::vector<DescriptorSetWrapper*> vecDescriptors{ &ShaderResourceManager::GetTransBufferDescriptorSet(sMtlBindInfo.nFlightIndex), &s_sDescriptorSets.GetDescriptorSet(sMtlBindInfo.nFlightIndex) };
 
-				if (bLighting && sMtlBindInfo.pPipeline)
-				{
-					vecDescriptors.push_back(sMtlBindInfo.pPipeline->GetLightBufferDescriptorSet());
-				}
-				pPass->SetDescriptorSets(vecDescriptors);
+				//if (bLighting && sMtlBindInfo.pPipeline)
+				//{
+				//	vecDescriptors.push_back(sMtlBindInfo.pPipeline->GetLightBufferDescriptorSet());
+				//}
+				//pPass->SetDescriptorSets(vecDescriptors);
 				pPass->Bind(sMtlBindInfo.pCmdBuffer);
 			}
 			return pPass;

@@ -319,6 +319,123 @@ namespace LT {
 		m_vecDescriptorSets = vecDescriptorSets;
 	}
 
+	void GraphicPass::SetDescriptorSet(DescriptorSetWrapper* pDescriptorSet, int32_t nSetIndex)
+	{
+		if (m_vecDescriptorSets.size() <= nSetIndex)
+		{
+			m_vecDescriptorSets.resize(nSetIndex + 1, nullptr);
+		}
+
+		m_vecDescriptorSets[nSetIndex] = pDescriptorSet;
+	}
+
+	void GraphicPass::BindImage(ImageID nImage, int32_t nBindingIndex, int32_t nSetIndex, ShaderStage eSpace)
+	{
+		if (nImage != INVALID_IMAGE_ID)
+		{
+			m_mapSlots[SlotKey(eSpace, nBindingIndex, nSetIndex, vk::DescriptorType::eCombinedImageSampler)] = nImage;
+		}
+		else
+		{
+			m_mapSlots.erase(SlotKey(eSpace, nBindingIndex, nSetIndex, vk::DescriptorType::eCombinedImageSampler));
+		}
+	}
+
+	void GraphicPass::BindConstBuffer(ConstBufferHandle nHandle, int32_t nBindingIndex, int32_t nSetIndex, ShaderStage eSpace)
+	{
+		if (nHandle != INVALID_CONST_BUFFER_HANDLE)
+		{
+			m_mapSlots[SlotKey(eSpace, nBindingIndex, nSetIndex, vk::DescriptorType::eUniformBuffer)] = nHandle;
+		}
+		else
+		{
+			m_mapSlots.erase(SlotKey(eSpace, nBindingIndex, nSetIndex, vk::DescriptorType::eUniformBuffer));
+		}
+	}
+
+	void GraphicPass::UpdateDescriptorSet()
+	{
+		std::vector<std::vector<vk::WriteDescriptorSet>> vecDesctWrite(m_vecDescriptorSets.size(), {});
+
+		union DescriptorResrouceInfo {
+			vk::DescriptorBufferInfo bufferInfo;
+			vk::DescriptorImageInfo imageInfo;
+			DescriptorResrouceInfo() {
+				bufferInfo = vk::DescriptorBufferInfo{};
+			}
+		};
+
+		std::vector<DescriptorResrouceInfo> vecDescResInfo(m_mapSlots.size());
+
+		
+
+		int32_t nDescResInfoCount = 0;
+		for (auto& [key, source] : m_mapSlots)
+		{
+			if (key.eType == vk::DescriptorType::eUniformBuffer && source == INVALID_CONST_BUFFER_HANDLE)
+				continue;
+			if (key.eType == vk::DescriptorType::eCombinedImageSampler && source == INVALID_IMAGE_ID)
+				continue;
+
+			vk::WriteDescriptorSet wds;
+			bool bInvalidSrc = true;
+
+			switch (key.eType) {
+				case vk::DescriptorType::eUniformBuffer:
+				{
+					BufferBinding binding = ShaderResourceManager::GetConstBufferBinding(source);
+					Buffer* pBuffer = BufferManager::GetBuffer(binding.nBufferID);
+
+					RENDERER_ASSERT(pBuffer, "Invalid Const Buffer Handle");
+					vk::DescriptorBufferInfo& bufferInfo = vecDescResInfo[nDescResInfoCount ++].bufferInfo;
+					bufferInfo
+						.setBuffer(pBuffer->GetNativeBuffer())
+						.setOffset(binding.nOffset)
+						.setRange(binding.nSize)
+						;
+					// BufferInfo不能使用临时对象
+					wds.setPBufferInfo(&bufferInfo);
+				}
+				break;
+				case vk::DescriptorType::eCombinedImageSampler:
+				{
+					vk::DescriptorImageInfo& imageInfo = vecDescResInfo[nDescResInfoCount++].imageInfo;
+					imageInfo
+						.setImageView(ImageManager::GetNativeDeviceImageView(source))
+						.setSampler(SamplerManager::GetDefaultImageSampler()->GetNativeSampler())
+						.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
+						;
+					// ImageInfo不能使用临时对象
+					wds.setPImageInfo(&imageInfo);
+				}
+				break;
+				default:
+					bInvalidSrc = false;
+					break;
+			}
+
+			if (bInvalidSrc)
+			{
+				wds
+					.setDstBinding(key.nBindingIndex)
+					.setDstArrayElement(0)
+					.setDescriptorCount(1)
+					.setDescriptorType(key.eType)
+					;
+
+				vecDesctWrite[key.nSetIndex].push_back(std::move(wds));
+			}
+		}
+
+		for (int i = 0; i < m_vecDescriptorSets.size(); ++i)
+		{
+			if (vecDesctWrite[i].size() > 0)
+			{
+				m_vecDescriptorSets[i]->UpdateDescriptorSets(vecDesctWrite[i]);
+			}
+		}
+	}
+
 	void GraphicPass::AddShaderModule(const char* strShaderModule, const std::vector<std::string>& vecDepMod)
 	{
 		ShaderModuleSrc sModSrc;
