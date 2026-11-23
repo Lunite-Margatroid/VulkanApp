@@ -68,7 +68,17 @@ endif()
 if(NOT DEFINED HARFBUZZ_INSTALLED_DIR)
     set(HARFBUZZ_INSTALLED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/dist" CACHE PATH "HarfBuzz installed dir")
 endif()
-    
+
+# Lua
+if(NOT DEFINED LUA_INSTALLED_DIR)
+	set(LUA_INSTALLED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/dist")
+endif()
+
+# sol2
+if(NOT DEFINED SOL2_INSTALLED_DIR)
+	set(SOL2_INSTALLED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/dist")
+endif()
+
 message(STATUS "SDL3_INSTALLED_DIR = ${SDL3_INSTALLED_DIR}")
 message(STATUS "GLM_INSTALLED_DIR = ${GLM_INSTALLED_DIR}")
 message(STATUS "OIIO_INSTALLED_DIR = ${OIIO_INSTALLED_DIR}")
@@ -88,6 +98,7 @@ add_subdirectory(SlangCompiler)
 add_subdirectory(vkRenderer)
 add_subdirectory(SlangTest)
 add_subdirectory(sandbox)
+add_subdirectory(TestSol2)
 
 # 拷贝dll
 include(cmake/cpydll.cmake)
