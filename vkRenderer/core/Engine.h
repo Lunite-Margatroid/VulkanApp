@@ -84,6 +84,8 @@ namespace LT {
 
 		EngineResult CreateCamera(CameraID& nOutCameraID);
 		EngineResult DeleteCamera(CameraID nCameraID);
+		EngineResult SetCameraPosition(CameraID nCamera, std::array<float, 3> arrPositon);
+		EngineResult SetCameraPositionAndLookAt(CameraID nCamera, std::array<float, 3> arrPositon, std::array<float, 3> arrLookAt);
 
 		EngineResult CreateDisplaySurface(DisplaySurface*& pOutSurface, vk::SurfaceKHR, uint32_t nWidth, uint32_t nHeight, DisplayDeviceFlag nFlag);
 		EngineResult DeleteDisplaySurface(DisplaySurface* pDiplaySurface);
@@ -100,7 +102,8 @@ namespace LT {
 
 		EngineResult SetMaterial(NodeID nNodeID, MaterialID nMtlID);
 
-
+		// -------------------- Image ---------------------
+		EngineResult LoadImageFromFile(ImageID& nImageID, std::string_view strFilePath);
 		// ------- static ----------
 	private:
 		static Renderer* s_pDefaultRenderer;

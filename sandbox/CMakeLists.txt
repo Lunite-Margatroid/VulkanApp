@@ -1,12 +1,18 @@
 # sandbox
 
 # 源文件
-set(SOURCES
-    sandbox.cpp
+file(GLOB SOURCES
+    "./*.cpp"
 )
 
+file(GLOB HEADERS
+	"./*.hpp"
+	"./*.h"
+)
+
+
 # 创建可执行文件
-add_executable(sandbox ${SOURCES})
+add_executable(sandbox ${SOURCES} ${HEADERS})
 
 # 仅在windows下使用传递utf-8编码选项
 if(	WIN32)

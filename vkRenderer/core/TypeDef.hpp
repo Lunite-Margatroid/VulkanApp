@@ -139,10 +139,26 @@ namespace LT {
 		eCopyDst,
 	};
 
-	using TPropVar = std::variant<int, float, ImageID, std::array<float, 2>, std::array<float, 3>, std::array<float, 4>, std::array<int, 2>, std::array<int, 3>, std::array<int, 4>>;
+	enum DataType {
+		eUnknown = - 1,
+		eInt,
+		eFloat,
+		eInt64,
+		eFloat2,
+		eFloat3,
+		eFloat4,
+		eInt2,
+		eInt3,
+		eInt4,
+		eString
+	};
 
+	using TPropVar = std::variant<int, float, int64_t, std::array<float, 2>, std::array<float, 3>, std::array<float, 4>, std::array<int, 2>, std::array<int, 3>, std::array<int, 4>>;
+
+	using TValue = TPropVar;
 	using MtlPropVar = TPropVar;
 	using SceneNodePropVar = TPropVar;
+	
 
 	struct RGBA_8 {
 		unsigned char r, g, b, a;

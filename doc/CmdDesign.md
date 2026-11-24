@@ -16,6 +16,8 @@
 
 `SELECTED_D` 当前选中的显示设备ID
 
+`SELECTED_IMG` 当前选中的图像ID
+
 # Scene
 
 `engine.displayDevice <type>` 创建显示设备
@@ -65,6 +67,10 @@
 `mesh.sphere <radius>`  创建半径为radius的球体
 
 `mesh.plane <side_len>` 创建边长为side_len的正方形面片
+
+# Image
+
+`img.file <str_file>`  从文件创建Image
 
 
 

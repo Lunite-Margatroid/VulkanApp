@@ -619,10 +619,35 @@ namespace LT {
 	EngineResult Engine::DeleteCamera(CameraID nCameraID)
 	{
 		auto iter = m_mapCamera.find(nCameraID);
-		if (iter == m_mapCamera.end())
+		if (iter != m_mapCamera.end())
 		{
 			delete iter->second;
 			m_mapCamera.erase(iter);
+			return EngineResult::eSuccess;
+		}
+
+		return EngineResult::eFailed;
+	}
+
+	EngineResult Engine::SetCameraPosition(CameraID nCamera, std::array<float, 3> arrPositon)
+	{
+		auto iter = m_mapCamera.find(nCamera);
+		if (iter != m_mapCamera.end())
+		{
+			iter->second->SetEye(glm::vec3(arrPositon[0], arrPositon[1], arrPositon[2]));
+			return EngineResult::eSuccess;
+		}
+
+		return EngineResult::eFailed;
+	}
+
+	EngineResult Engine::SetCameraPositionAndLookAt(CameraID nCamera, std::array<float, 3> arrPositon, std::array<float, 3> arrLookAt)
+	{
+		auto iter = m_mapCamera.find(nCamera);
+		if (iter != m_mapCamera.end())
+		{
+			iter->second->SetEye(glm::vec3(arrPositon[0], arrPositon[1], arrPositon[2]));
+			iter->second->SetLookAt(glm::vec3(arrLookAt[0], arrLookAt[1], arrLookAt[2]));
 			return EngineResult::eSuccess;
 		}
 
@@ -718,6 +743,14 @@ namespace LT {
 		}
 		else
 			return EngineResult::eNoSceneNode;
+	}
+
+	EngineResult Engine::LoadImageFromFile(ImageID& nImageID, std::string_view strFilePath) {
+		LIIO::ImgRes img(std::string(strFilePath).c_str(), 8);
+		auto* pImg = ImageManager::CreateImage2DShaderResource(vk::Format::eR8G8B8A8Unorm, img.GetWidth(), img.GetHeight());
+		pImg->AssignMemory(img.GetDataPtr(), img.GetDepth() / 8 * img.GetPixelCount() * img.GetChannal());
+		nImageID = pImg->GetImageID();
+		return nImageID == INVALID_IMAGE_ID ? EngineResult::eFailed : EngineResult::eSuccess;
 	}
 
 } // namespace LT

@@ -50,7 +50,6 @@ namespace LIIO {
             return;
         }
 
-
         if (!std::filesystem::exists(path)) {
             LOG_ERROR("File does not exist. %s\n", path);
             return;
