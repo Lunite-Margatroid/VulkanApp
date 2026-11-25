@@ -58,17 +58,15 @@
 
 `node.scale <node_id> vec(<x>,<y>,<z>)` 缩放
 
-`node.light <node_id> <light_type>` 创建灯光节点 id赋给`SELECTED_N` 并把它置为`SELECTED_S`的子节点
+`node.light <light_type>` 创建灯光节点 id赋给`SELECTED_N` 并把它置为`SELECTED_S`的子节点
 
 # Model
 
-`mesh` 创建mesh
+`node.mesh.cube <side_len>` 创建边长为side_len的立方体节点 置为`SELECTED_S`的子节点
 
-`mesh.cube <side_len>` 创建边长为side_len的立方体
+`node.mesh.sphere <radius>`  创建半径为radius的球体节点 置为`SELECTED_S`的子节点
 
-`mesh.sphere <radius>`  创建半径为radius的球体
-
-`mesh.plane <side_len>` 创建边长为side_len的正方形面片
+`node.mesh.plane <side_len>` 创建边长为side_len的正方形面片节点 置为`SELECTED_S`的子节点
 
 # Image
 

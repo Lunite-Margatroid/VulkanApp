@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <set>
 
 class Shell{
 
@@ -41,8 +42,15 @@ private:
 	// 参数/变量 携带明确的数据类型
 	struct ShellVar {
 		LT::TValue m_value;
+		// 字符串值 或 变量引用(eCustomedType0)时保存m_mapVar中的变量名
 		std::string m_str;
+		// 数据类型 eCustomedType0表示对m_mapVar中变量的引用
 		LT::DataType m_eType;
+
+		// 是否是变量引用
+		bool IsVarRef() const {
+			return m_eType == LT::DataType::eCustomedType0;
+		}
 	};
 
 	// 命令回调 参数为带类型的Shell变量列表
@@ -106,6 +114,7 @@ private:
 	CmdTree m_cmdTree;
 	
 	std::queue<Cmd> m_qCmd;
+	std::mutex m_mtxCmdQueue;
 
 	std::map<std::string, ShellVar> m_mapVar;
 
@@ -113,10 +122,62 @@ private:
 
 	std::thread m_thrShell;
 
+	std::set<LT::NodeID> m_setNode;
+	std::set<LT::ImageID> m_setImg;
+	std::set<LT::MaterialID> m_setMtl;
+
 private:
 	// 依赖模板参数的false 用于在不支持的模板分支触发static_assert
 	template<typename>
 	static constexpr bool s_bAlwaysFalse = false;
+
+	// 解析参数指向的实际变量：若参数是变量引用(eCustomedType0)则到m_mapVar中查找
+	// 解析成功时顺带把引用链上各变量的引用写回为实际值 尽量减少m_mapVar中的引用
+	// 引用的变量不存在或引用链成环时返回nullptr
+	ShellVar* ResolveParam(ShellVar* pVar) {
+		ShellVar* arrVisited[16];
+		size_t nVisited = 0;
+		while (nVisited < 16 && pVar != nullptr && pVar->IsVarRef()) {
+			arrVisited[nVisited++] = pVar;
+			auto iter = m_mapVar.find(pVar->m_str);
+			pVar = iter == m_mapVar.end() ? nullptr : &iter->second;
+		}
+		if (pVar == nullptr || pVar->IsVarRef()) {
+			return nullptr;
+		}
+		// 引用链上的变量全部写回为实际值
+		for (size_t i = 0; i < nVisited; ++i) {
+			if (arrVisited[i] != pVar) {
+				*arrVisited[i] = *pVar;
+			}
+		}
+		return pVar;
+	}
+
+	const ShellVar* ResolveParam(const ShellVar* pVar) const {
+		for (size_t i = 0; i < 16; ++i) {
+			if (pVar == nullptr || !pVar->IsVarRef()) {
+				return pVar;
+			}
+			auto iter = m_mapVar.find(pVar->m_str);
+			pVar = iter == m_mapVar.end() ? nullptr : &iter->second;
+		}
+		return nullptr;
+	}
+
+	// 获取变量的当前值 尽量减少m_mapVar中的引用
+	// 变量本身若存的是引用(别名) 解析时会把引用链上的变量写回为实际值
+	// 变量不存在或引用无法解析时返回nullptr
+	ShellVar* GetVarValue(std::string_view strVarName) {
+		auto iter = m_mapVar.find(std::string(strVarName));
+		if (iter == m_mapVar.end()) {
+			return nullptr;
+		}
+		if (iter->second.IsVarRef()) {
+			return ResolveParam(&iter->second);
+		}
+		return &iter->second;
+	}
 
 	template<typename ... Args>
 	void RegisterCommand(FuncEngineCall func, Args ... keys) {
@@ -244,5 +305,7 @@ public:
 	void Terminate();
 
 	bool Flush();
-	
+	bool HasCmd();
+
+	void Echo(std::string_view strEcho);
 };

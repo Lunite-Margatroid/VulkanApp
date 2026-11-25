@@ -51,16 +51,6 @@ namespace LT {
 	constexpr MaterialID INVALID_MATERIAL_ID = INVALID_ITEM_ID;
 	constexpr MaterialID MATERIAL_ID_2D_0 = -2;
 
-	enum class MaterialType : int{
-		eUndifined = -1,
-		eMainTexture,
-		eExample,
-		ePhong,
-		eError, // 着色器编译错误或者材质ID不存在则使用该材质
-		MaterialTypeCount
-	};
-
-
 	using MeshID = int64_t;
 	constexpr MeshID INVALID_MESH_ID = INVALID_ITEM_ID;
 
@@ -156,7 +146,11 @@ namespace LT {
 		eInt2,
 		eInt3,
 		eInt4,
-		eString
+		eString,
+		eCustomedType0 = 1024,
+		eCustomedType1,
+		eCustomedType2,
+		eCustomedType3,
 	};
 
 	using TPropVar = std::variant<int, float, int64_t, std::array<float, 2>, std::array<float, 3>, std::array<float, 4>, std::array<int, 2>, std::array<int, 3>, std::array<int, 4>>;

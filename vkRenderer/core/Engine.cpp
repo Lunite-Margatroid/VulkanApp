@@ -228,12 +228,12 @@ namespace LT {
 		m_pView->SetCamera(m_mapCamera[m_nCameraID]);
 		m_pView->SetMainScene(m_nMainScene);
 
-		LIIO::ImgRes img("./TestAsset/UVTest.png", 8);
-		auto* pImg = ImageManager::CreateImage2DShaderResource(vk::Format::eR8G8B8A8Unorm, img.GetWidth(), img.GetHeight());
-		pImg->AssignMemory(img.GetDataPtr(), img.GetDepth() / 8 * img.GetPixelCount() * img.GetChannal());
-		m_nImageID = pImg->GetImageID();
+		//LIIO::ImgRes img("./TestAsset/UVTest.png", 8);
+		//auto* pImg = ImageManager::CreateImage2DShaderResource(vk::Format::eR8G8B8A8Unorm, img.GetWidth(), img.GetHeight());
+		//pImg->AssignMemory(img.GetDataPtr(), img.GetDepth() / 8 * img.GetPixelCount() * img.GetChannal());
+		//m_nImageID = pImg->GetImageID();
 
-		MaterialID nMtlID = INVALID_MATERIAL_ID;
+		/*MaterialID nMtlID = INVALID_MATERIAL_ID;*/
 		//ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eMainTexture));
 		//ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID));
 		//m_vecMtlID.push_back(nMtlID);
@@ -262,48 +262,48 @@ namespace LT {
 		//ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexAlpha, m_nImageID));
 		//m_vecMtlID.push_back(nMtlID);
 
-		ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::ePhong));
-		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID));
-		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eColorDiffuse, std::array<float, 3>{1.f, 1.f, 1.f}));
-		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eRoughness, 0.5f));
-		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eIOR, 1.5f));
-		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eMetalness, 0.f));
-		ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eColorSpecular, std::array<float, 3>{1.f, 1.f, 1.f}));
-		m_vecMtlID.push_back(nMtlID);
+		//ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::ePhong));
+		//ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eTexDiffuse, m_nImageID));
+		//ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eColorDiffuse, std::array<float, 3>{1.f, 1.f, 1.f}));
+		//ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eRoughness, 0.5f));
+		//ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eIOR, 1.5f));
+		//ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eMetalness, 0.f));
+		//ENGINE_CALL_CHECK(SetMaterialProp(nMtlID, MtlProp::eColorSpecular, std::array<float, 3>{1.f, 1.f, 1.f}));
+		//m_vecMtlID.push_back(nMtlID);
 
 
 		//ENGINE_CALL_CHECK(CreateMaterial(nMtlID, MaterialType::eError));
 		//m_vecMtlID.push_back(nMtlID);
 
-		// 灯光
-		{
-			NodeID nLightNode = INVALID_NODE_ID;
-			// 环境光
-			//ENGINE_CALL_CHECK(CreateLightNode(nLightNode, m_nMainScene, LightType::eLightAmbient));
-			//ENGINE_CALL_CHECK(SetLightColor(nLightNode, { 0.1f, 0.1f, 0.1f }));
+		//// 灯光
+		//{
+		//	NodeID nLightNode = INVALID_NODE_ID;
+		//	// 环境光
+		//	//ENGINE_CALL_CHECK(CreateLightNode(nLightNode, m_nMainScene, LightType::eLightAmbient));
+		//	//ENGINE_CALL_CHECK(SetLightColor(nLightNode, { 0.1f, 0.1f, 0.1f }));
 
-			// 平行光
-			ENGINE_CALL_CHECK(CreateLightNode(nLightNode, m_nMainScene, LightType::eLightDirectional));
-			ENGINE_CALL_CHECK(SetLightColor(nLightNode, { 1.f, 1.f, 1.f }));
+		//	// 平行光
+		//	ENGINE_CALL_CHECK(CreateLightNode(nLightNode, m_nMainScene, LightType::eLightDirectional));
+		//	ENGINE_CALL_CHECK(SetLightColor(nLightNode, { 1.f, 1.f, 1.f }));
 
-			// 点光源
-			//ENGINE_CALL_CHECK(CreateLightNode(nLightNode, m_nMainScene, LightType::eLightPoint));
-			//ENGINE_CALL_CHECK(SetLightColor(nLightNode, { 1.f, 0.9f, 0.7f }));
-			//ENGINE_CALL_CHECK(SetLightRange(nLightNode, 50.f));
-		}
+		//	// 点光源
+		//	//ENGINE_CALL_CHECK(CreateLightNode(nLightNode, m_nMainScene, LightType::eLightPoint));
+		//	//ENGINE_CALL_CHECK(SetLightColor(nLightNode, { 1.f, 0.9f, 0.7f }));
+		//	//ENGINE_CALL_CHECK(SetLightRange(nLightNode, 50.f));
+		//}
 
-		for (int i = 0; i < 400; i++)
-		{
-			NodeID nNode;
-			ENGINE_CALL_CHECK(CreateCubeMeshNode(nNode, 1.f));
-			ENGINE_CALL_CHECK(SetMaterial(nNode, m_vecMtlID[i % m_vecMtlID.size()]));
-			ENGINE_CALL_CHECK(SceneNodeRebase(m_nMainScene, nNode));
-			ENGINE_CALL_CHECK(SetSceneNodePosition(nNode, util::RandomGenerator::RandomSampleSphere(20.f)));
-			ENGINE_CALL_CHECK(SetSceneNodeEulerRotation(nNode, 
-				{util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f),
-				util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f), 
-				util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f)}));
-		}
+		//for (int i = 0; i < 400; i++)
+		//{
+		//	NodeID nNode;
+		//	ENGINE_CALL_CHECK(CreateCubeMeshNode(nNode, 1.f));
+		//	ENGINE_CALL_CHECK(SetMaterial(nNode, m_vecMtlID[i % m_vecMtlID.size()]));
+		//	ENGINE_CALL_CHECK(SceneNodeRebase(m_nMainScene, nNode));
+		//	ENGINE_CALL_CHECK(SetSceneNodePosition(nNode, util::RandomGenerator::RandomSampleSphere(20.f)));
+		//	ENGINE_CALL_CHECK(SetSceneNodeEulerRotation(nNode, 
+		//		{util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f),
+		//		util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f), 
+		//		util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f)}));
+		//}
 		pDisplayDivice->SetView(m_pView);
 	}
 
@@ -587,6 +587,16 @@ namespace LT {
 			return EngineResult::eNoSceneNode;
 	}
 
+	EngineResult Engine::GetRootSceneNodes(std::vector<NodeID>& vecOutNodes)
+	{
+		if (m_pView)
+		{
+			vecOutNodes.push_back(m_pView->GetMainScene());
+		}
+
+		return EngineResult::eSuccess;
+	}
+
 	EngineResult Engine::AddComponent(NodeID nNodeID, ComponentType eCompType)
 	{
 		if (Node* pNode = SceneManager::GetNode(nNodeID)) {
@@ -751,6 +761,11 @@ namespace LT {
 		pImg->AssignMemory(img.GetDataPtr(), img.GetDepth() / 8 * img.GetPixelCount() * img.GetChannal());
 		nImageID = pImg->GetImageID();
 		return nImageID == INVALID_IMAGE_ID ? EngineResult::eFailed : EngineResult::eSuccess;
+	}
+
+	EngineResult Engine::DeleteImage(ImageID nImageID) {
+		ImageManager::DeleteImage(nImageID);
+		return EngineResult::eSuccess;
 	}
 
 } // namespace LT

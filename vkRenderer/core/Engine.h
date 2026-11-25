@@ -69,6 +69,8 @@ namespace LT {
 
 		EngineResult SetSceneNodeScale(NodeID nNodeID, const std::array<float, 3>& arrScale);
 
+		EngineResult GetRootSceneNodes(std::vector<NodeID>& vecOutNodes);
+
 		// ---------------- Light Node ----------------
 		EngineResult SetLightColor(NodeID nNodeID, const std::array<float, 3>& arrColor);
 		// 光照范围 点光源/聚光灯
@@ -104,6 +106,7 @@ namespace LT {
 
 		// -------------------- Image ---------------------
 		EngineResult LoadImageFromFile(ImageID& nImageID, std::string_view strFilePath);
+		EngineResult DeleteImage(ImageID nImageID);
 		// ------- static ----------
 	private:
 		static Renderer* s_pDefaultRenderer;

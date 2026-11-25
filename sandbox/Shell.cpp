@@ -207,6 +207,36 @@ namespace
 Shell::Shell(LT::Engine* pEngine)
 	:m_pEngine(pEngine)
 {
+#define IS_REAL(PType) (PType == LT::DataType::eInt64 || PType == LT::DataType::eFloat || PType == LT::DataType::eInt)
+
+#define GET_FLOAT(PVar, POutFloat) do{ \
+	if(PVar.m_eType == LT::DataType::eInt64) \
+		{(POutFloat) = static_cast<float>(std::get<int64_t>((PVar).m_value));}\
+	else if(PVar.m_eType == LT::DataType::eInt)\
+		{(POutFloat) = static_cast<float>(std::get<int>((PVar).m_value));}\
+	else if(PVar.m_eType == LT::DataType::eFloat)\
+		{(POutFloat) = std::get<float>((PVar).m_value);}\
+	}while(false)
+
+	// 退出
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+				return LT::EngineResult::eSuccess;
+		}
+		,"quit"
+	);
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			return LT::EngineResult::eSuccess;
+		}
+		, "exit"
+	);
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			return LT::EngineResult::eSuccess;
+		}
+		, "terminate"
+	);
 
 	// ----------------- 注册命令函数 ---------------------------
 	// 回调参数为std::vector<ShellVar> 每项携带数据类型与值
@@ -215,8 +245,10 @@ Shell::Shell(LT::Engine* pEngine)
 	// node.position
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult{
-			if (vecParams.size() < 2)
+			if (vecParams.size() < 2 || vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eFloat3)
+			{
 				return LT::EngineResult::eInvalidParam;
+			}
 			return m_pEngine->SetSceneNodePosition(
 				std::get<LT::NodeID>(vecParams[0].m_value),
 				std::get<std::array<float, 3>>(vecParams[1].m_value)
@@ -235,6 +267,7 @@ Shell::Shell(LT::Engine* pEngine)
 			if (nImg != LT::INVALID_IMAGE_ID)
 			{
 				SetShellVar(SELECTED_IMG, static_cast<int64_t>(nImg));
+				m_setImg.insert(nImg);
 			}
 			return nResult;
 		},
@@ -257,6 +290,7 @@ Shell::Shell(LT::Engine* pEngine)
 			if (nMtl != LT::INVALID_MATERIAL_ID)
 			{
 				SetShellVar(SELECTED_MTL, static_cast<int64_t>(nMtl));
+				m_setMtl.insert(nMtl);
 			}
 			return nResult;
 		}
@@ -319,7 +353,7 @@ Shell::Shell(LT::Engine* pEngine)
 		, "mtl", "prop"
 	);
 
-	// node.light
+	// node.light <light_type>
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
 			if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
@@ -338,8 +372,11 @@ Shell::Shell(LT::Engine* pEngine)
 
 			LT::EngineResult nResult = LT::EngineResult::eFailed;
 			nResult = m_pEngine->CreateLightNode(nNode, nRoot, iterLightType->second);
-			if(nNode != LT::INVALID_NODE_ID)
+			if (nNode != LT::INVALID_NODE_ID)
+			{
 				SetShellVar(SELECTED_N, nNode);
+				m_setNode.insert(nNode);
+			}
 			return nResult;
 		}
 		, "node", "light"
@@ -369,6 +406,7 @@ Shell::Shell(LT::Engine* pEngine)
 			if (nNode != LT::INVALID_NODE_ID)
 			{
 				SetShellVar(SELECTED_S, nNode);
+				m_setNode.insert(nNode);
 			}
 
 			return nResult;
@@ -376,10 +414,112 @@ Shell::Shell(LT::Engine* pEngine)
 		}
 		, "scene"
 	);
+	// node.mesh.cube <side_len>
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			if (vecParams.size() < 1 || !IS_REAL(vecParams[0].m_eType))
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+
+			float fSideLen = 1.f;
+			GET_FLOAT(vecParams[0], fSideLen);
+
+			LT::EngineResult nResult = LT::EngineResult::eFailed;
+			nResult = m_pEngine->CreateCubeMeshNode(nNode, fSideLen);
+
+			if (nNode != LT::INVALID_NODE_ID)
+			{
+				LT::NodeID nSceneRoot = LT::INVALID_NODE_ID;
+				auto iter = m_mapVar.find(std::string(SELECTED_S));
+				if (iter != m_mapVar.end())
+				{
+					nSceneRoot = std::get<int64_t>(iter->second.m_value);
+					m_pEngine->SceneNodeRebase(nSceneRoot, nNode);
+				}
+				SetShellVar(SELECTED_N, nNode);
+				m_setNode.insert(nNode);
+			}
+			return nResult;
+		}
+		, "node", "mesh", "cube"
+		);
+
+	// node.mtl <node_id> <mtl_id>
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			if (vecParams.size() < 2 || vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eInt64)
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			return m_pEngine->SetMaterial(std::get<int64_t>(vecParams[0].m_value), std::get<int64_t>(vecParams[1].m_value));
+		}
+		, "node", "mtl"
+	);
+
+	// node.eulerXYZ <node_id> vec(<x>, <y>, <z>)
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			if (vecParams.size() < 2 || vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eFloat3)
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			return m_pEngine->SetSceneNodeEulerRotation(
+				std::get<int64_t>(vecParams[0].m_value),
+				std::get<std::array<float, 3>>(vecParams[1].m_value)
+			);
+		}
+		, "node", "eulerXYZ"
+	);
+
+	// node.scale <node_id> vec(<x>, <y>, <z>)
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			if (vecParams.size() < 2 || vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eFloat3)
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			return m_pEngine->SetSceneNodeScale(
+				std::get<int64_t>(vecParams[0].m_value),
+				std::get<std::array<float, 3>>(vecParams[1].m_value)
+			);
+		}
+		, "node", "scale"
+	);
+
+	// node.list
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			std::ostringstream oss;
+			for (LT::NodeID nNode : m_setNode)
+			{
+				oss << "Node: " << nNode << std::endl;
+			}
+			Echo(oss.view());
+			return LT::EngineResult::eSuccess;
+		}
+		, "node", "list"
+	);
 }
 
 Shell::~Shell()
 {
+	for (LT::NodeID nNode : m_setNode) {
+		m_pEngine->DeleteSceneNode(nNode);
+	}
+	for (LT::MaterialID nMtl : m_setMtl)
+	{
+		m_pEngine->DeleteMaterial(nMtl);
+	}
+	for (LT::ImageID nImg : m_setImg)
+	{
+		m_pEngine->DeleteImage(nImg);
+	}
 }
 
 void Shell::Command(std::string_view strCmd)
@@ -451,19 +591,25 @@ void Shell::Command(std::string_view strCmd)
 		}
 
 		// 变量引用 $name
+		// 保存为对m_mapVar中变量的引用(eCustomedType0) 执行命令时再解析为实际值
+		// 变量可能由同一批命令中更早执行的命令创建 因此此处不检查变量是否存在
 		if (strArgs[nPos] == '$')
 		{
 			size_t nTokenEnd = strArgs.find_first_of(STR_WHITESPACE, nPos + 1);
 			size_t nTokenLen = nTokenEnd == std::string_view::npos ? std::string_view::npos : nTokenEnd - (nPos + 1);
 			std::string_view strVarName = strArgs.substr(nPos + 1, nTokenLen);
-			auto iterVar = strVarName.empty() ? m_mapVar.end() : m_mapVar.find(std::string(strVarName));
-			if (iterVar == m_mapVar.end())
+			if (strVarName.empty())
 			{
-				LogInvalid("undefined variable");
+				LogInvalid("empty variable name");
 				return false;
 			}
-			outVar = iterVar->second;
+			outVar.m_eType = LT::DataType::eCustomedType0;
+			outVar.m_str = std::string(strVarName);
 			nPos = nTokenEnd;
+
+			// 同时尽量消除m_mapVar中的引用
+			// 变量本身若存的是引用(别名) 解析时把它的引用写回为实际值
+			GetVarValue(strVarName);
 			return true;
 		}
 
@@ -552,6 +698,22 @@ void Shell::Command(std::string_view strCmd)
 			LogInvalid("unexpected token after value");
 			return;
 		}
+		// 尽量不把引用存进m_mapVar：右值若是变量引用且当前能解析 直接存实际值
+		if (var.IsVarRef())
+		{
+			ShellVar* pValue = GetVarValue(var.m_str);
+			if (pValue != nullptr)
+			{
+				var = *pValue;
+			}
+			else if (var.m_str == strName)
+			{
+				// 不允许把变量赋值为对自身的引用
+				LogInvalid("undefined variable");
+				return;
+			}
+		}
+
 		m_mapVar[std::string(strName)] = std::move(var);
 		return;
 	}
@@ -599,7 +761,9 @@ void Shell::Command(std::string_view strCmd)
 		cmd.m_vecParams.push_back(std::move(var));
 	}
 
+	m_mtxCmdQueue.lock();
 	m_qCmd.push(std::move(cmd));
+	m_mtxCmdQueue.unlock();
 }
 
 
@@ -617,8 +781,10 @@ bool Shell::Run()
 		std::istringstream iss(line);
 		std::string cmd;
 		iss >> cmd;
-
-		if (cmd == "quit" || cmd == "exit") break;
+		Command(line);
+		if (cmd == "quit" || cmd == "exit") { 
+			break;
+		}
 
 
 	}
@@ -647,14 +813,56 @@ bool Shell::Flush()
 		return false;
 	}
 
+	m_mtxCmdQueue.lock();
 	while (!m_qCmd.empty())
 	{
-		m_qCmd.front().operator()();
+		Cmd& cmd = m_qCmd.front();
+
+		// 执行前把变量引用(eCustomedType0)解析为变量的实际值
+		// 变量可能由同一批中更早执行的命令创建 所以只能在执行时解析
+		bool bValid = true;
+		for (ShellVar& param : cmd.m_vecParams)
+		{
+			if (!param.IsVarRef())
+			{
+				continue;
+			}
+
+			// 解析变量引用时 若变量本身存的是引用(别名) 一并写回为实际值
+			ShellVar* pValue = GetVarValue(param.m_str);
+			if (pValue == nullptr)
+			{
+				LOG_WARNING("Shell command skipped: undefined variable \"%s\"", param.m_str.c_str());
+				bValid = false;
+				break;
+			}
+			param = *pValue;
+		}
+
+		if (bValid)
+		{
+			cmd();
+		}
+
 		m_qCmd.pop();
 	}
-
+	m_mtxCmdQueue.unlock();
 
 	return true;
+}
+
+bool Shell::HasCmd()
+{
+	bool bHasCmd = false;
+	m_mtxCmdQueue.lock();
+	bHasCmd = !m_qCmd.empty();
+	m_mtxCmdQueue.unlock();
+	return bHasCmd;
+}
+
+void Shell::Echo(std::string_view strEcho)
+{
+	std::cout << strEcho << std::endl;
 }
 
 Shell::CmdTree::CmdTree()

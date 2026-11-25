@@ -26,6 +26,7 @@ namespace LT {
 		View& operator=(View&&) = delete;
 
 		void SetMainScene(NodeID nScene) { m_nMainScene = nScene;}
+		NodeID GetMainScene() const { return m_nMainScene; }
 
 		void SetCamera(Camera* pCamera) { m_pCamera = pCamera; }
 		Camera* GetCamera() const { return m_pCamera; }
