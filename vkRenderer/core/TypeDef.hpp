@@ -94,14 +94,20 @@ namespace LT {
 	constexpr uint32_t LIGHT_MAX_COUNT_PER_GROUP = 1024u;
 	constexpr uint32_t LIGHT_MAX_COUNT_PER_GROUP_FORWARD = 16u;
 
+#define LightTypeList(X)\
+		X(LightPoint)\
+		X(LightSphere)\
+		X(LightSpot)\
+		X(LightRect)\
+		X(LightDirectional)\
+		X(LightAmbient)
+
+
 	enum class LightType : int {
 		eNone = -1,
-		eLightPoint,
-		eLightSphere,
-		eLightSpot,
-		eLightRect,
-		eLightDirectional,
-		eLightAmbient
+#define X(PLightType) e##PLightType,
+		LightTypeList(X)
+#undef X
 	};
 
 	//std::140

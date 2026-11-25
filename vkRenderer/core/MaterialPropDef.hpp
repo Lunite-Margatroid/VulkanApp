@@ -1,6 +1,21 @@
 #pragma once
 
 namespace LT {
+#define MaterialTypeList(X)\
+	X(MainTexture)\
+	X(Example)\
+	X(Phong)\
+	X(Error)
+
+	enum class MaterialType : int {
+		eUndifined = -1,
+#define X(MtlType) e##MtlType,
+
+		MaterialTypeList(X)
+
+#undef X
+		MaterialTypeCount
+	};
 
 
 	// 保证图片类型的属性在最后面

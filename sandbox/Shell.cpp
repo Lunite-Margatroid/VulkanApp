@@ -28,6 +28,27 @@ namespace
 		return mapStr2Enum;
 		}();
 
+	// 材质类型名到枚材质类型举的映射
+	std::map<std::string, LT::MaterialType> g_mapMtlTypeStr2Enum = []() {
+		std::map<std::string, LT::MaterialType> mapStr2Enum;
+
+#define X(MtlType) mapStr2Enum[#MtlType] = LT::MaterialType::e##MtlType;
+		MaterialTypeList(X)
+#undef X
+
+		return mapStr2Enum;
+		
+		}();
+
+	// 灯光类型名到灯光类型枚举的映射
+	std::map<std::string, LT::LightType> g_mapLightTypeStr2Enum = []() {
+		std::map<std::string, LT::LightType> mapStr2Enum;
+#define X(PLightType) mapStr2Enum[#PLightType] = LT::LightType::e##PLightType;
+		LightTypeList(X)
+#undef X
+			return mapStr2Enum;
+		}();
+
 	// 判断Shell参数类型与材质属性期望的数据类型是否匹配
 	bool IsMtlPropTypeMatch(LT::MtlPropDataType ePropType, LT::DataType eParamType)
 	{
@@ -194,6 +215,8 @@ Shell::Shell(LT::Engine* pEngine)
 	// node.position
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult{
+			if (vecParams.size() < 2)
+				return LT::EngineResult::eInvalidParam;
 			return m_pEngine->SetSceneNodePosition(
 				std::get<LT::NodeID>(vecParams[0].m_value),
 				std::get<std::array<float, 3>>(vecParams[1].m_value)
@@ -204,6 +227,8 @@ Shell::Shell(LT::Engine* pEngine)
 	// img.file
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			if (vecParams.size() < 1)
+				return LT::EngineResult::eInvalidParam;
 
 			LT::ImageID nImg = LT::INVALID_IMAGE_ID;
 			LT::EngineResult nResult = m_pEngine->LoadImageFromFile(nImg, vecParams[0].m_str);
@@ -219,8 +244,16 @@ Shell::Shell(LT::Engine* pEngine)
 	// mtl
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
+				return LT::EngineResult::eFailed;
 			LT::MaterialID nMtl = LT::INVALID_MATERIAL_ID;
-			LT::EngineResult nResult = m_pEngine->CreateMaterial(nMtl, static_cast<LT::MaterialType>(std::get<int64_t>(vecParams[0].m_value)));
+			auto iter = g_mapMtlTypeStr2Enum.find(vecParams[0].m_str);
+			if (iter == g_mapMtlTypeStr2Enum.end())
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			LT::EngineResult nResult = m_pEngine->CreateMaterial(nMtl, iter->second);
 			if (nMtl != LT::INVALID_MATERIAL_ID)
 			{
 				SetShellVar(SELECTED_MTL, static_cast<int64_t>(nMtl));
@@ -259,6 +292,8 @@ Shell::Shell(LT::Engine* pEngine)
 			}
 			else if (eDataType == LT::MtlPropDataType::eFloat && (vecParams[2].m_eType == LT::DataType::eInt || vecParams[2].m_eType == LT::DataType::eInt64))
 			{
+				// 由于标量数字默认解析为整数int64
+				// 如果属性类型是浮点数，先从整数转成浮点数
 				LT::TValue mtlPorpValue;
 				if (vecParams[2].m_eType == LT::DataType::eInt)
 				{
@@ -282,6 +317,64 @@ Shell::Shell(LT::Engine* pEngine)
 
 		}
 		, "mtl", "prop"
+	);
+
+	// node.light
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
+				return LT::EngineResult::eInvalidParam;
+
+			auto iterLightType = g_mapLightTypeStr2Enum.find(vecParams[0].m_str);
+			if (iterLightType == g_mapLightTypeStr2Enum.end())
+				return LT::EngineResult::eInvalidParam;
+
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			LT::NodeID nRoot = LT::INVALID_NODE_ID;
+			auto iterVar = m_mapVar.find(std::string(SELECTED_S));
+			if (iterVar != m_mapVar.end()) {
+				nRoot = std::get<int64_t>(iterVar->second.m_value);
+			}
+
+			LT::EngineResult nResult = LT::EngineResult::eFailed;
+			nResult = m_pEngine->CreateLightNode(nNode, nRoot, iterLightType->second);
+			if(nNode != LT::INVALID_NODE_ID)
+				SetShellVar(SELECTED_N, nNode);
+			return nResult;
+		}
+		, "node", "light"
+	);
+
+	// node.light.color
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			if (vecParams.size() < 2 && (vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eFloat3))
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			return m_pEngine->SetLightColor(std::get<int64_t>(vecParams[0].m_value), std::get<std::array<float,3>>(vecParams[1].m_value));
+
+		}
+		, "node", "light", "color"
+	);
+	// sence
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			LT::EngineResult nResult = LT::EngineResult::eFailed;
+
+			nResult = m_pEngine->CreateSceneNode(nNode, LT::NodeType::eNode);
+
+			if (nNode != LT::INVALID_NODE_ID)
+			{
+				SetShellVar(SELECTED_S, nNode);
+			}
+
+			return nResult;
+
+		}
+		, "scene"
 	);
 }
 

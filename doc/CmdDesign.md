@@ -52,11 +52,13 @@
 
 `node.mtl [node_id:SELECTED_N] [mtl_id:SELECTED_MTL]`  把mtl_id挂在node_id上
 
-`node.position <node_id> <x> <y> <z>` 设置节点位置
+`node.position <node_id> vec(<x>,<y>,<z>)` 设置节点位置
 
-`node.eulerXYZ <node_id> <roll> <pitch> <yaw>` 欧拉旋转 XYZ外旋
+`node.eulerXYZ <node_id> vec(<roll>,<pitch>,<yaw>)` 欧拉旋转 XYZ外旋
 
-`node.scale <node_id> <x> <y> <z>` 缩放
+`node.scale <node_id> vec(<x>,<y>,<z>)` 缩放
+
+`node.light <node_id> <light_type>` 创建灯光节点 id赋给`SELECTED_N` 并把它置为`SELECTED_S`的子节点
 
 # Model
 
