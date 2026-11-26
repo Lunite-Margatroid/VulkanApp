@@ -7,6 +7,8 @@
 
 #include "CommandBufferWrapper.hpp"
 
+#include "SemaphoreManager.hpp"
+
 namespace LT {
 	IRenderStage::IRenderStage() 
 	: m_eDepthInType(PipelineIOType::eUndefined)
@@ -105,12 +107,17 @@ namespace LT {
 
 			m_passTransition.RecordCommand(sRecordInfo);
 
+			SemaphoreBarrier barrier = SemaphoreManager::Barrier(sInOutBeginInfo.nFlightFrameIndex, sInOutBeginInfo.refFence);
+
+			
 			TransitionSubmitInfo sSubmitInfo;
 			sSubmitInfo.nFlightFrameIndex = sInOutBeginInfo.nFlightFrameIndex;
-			sSubmitInfo.vecSemToSignal = sInOutBeginInfo.vecSemSignal;
-			sSubmitInfo.vecSemToWait = sInOutBeginInfo.vecSemWait;
-			sSubmitInfo.vecSemWaitMasks = sInOutBeginInfo.vecSemWaitMask;
-
+			//sSubmitInfo.vecSemToSignal = sInOutBeginInfo.vecSemSignal;
+			//sSubmitInfo.vecSemToWait = sInOutBeginInfo.vecSemWait;
+			//sSubmitInfo.vecSemWaitMasks = sInOutBeginInfo.vecSemWaitMask;
+			sSubmitInfo.vecSemToSignal .push_back( barrier.m_vkSemaphoreToSignal);
+			sSubmitInfo.vecSemToWait = barrier.GetWaitSemaphores();
+			sSubmitInfo.vecSemWaitMasks.resize(sSubmitInfo.vecSemToWait.size(), vk::PipelineStageFlagBits::eAllGraphics);
 			m_passTransition.Submit(sSubmitInfo);
 
 			sInOutBeginInfo.refFence = sSubmitInfo.refFence;

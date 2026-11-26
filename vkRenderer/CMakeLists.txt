@@ -23,6 +23,7 @@ file(GLOB SOURCES
 	"core/view/*.cpp"
 	"core/displayDevice/*.cpp"
 	"renderer/layer/*.cpp"
+	"renderer/SemaphoreManager/*.cpp"
 )
 
 #set(HEADERS
@@ -73,6 +74,8 @@ file(GLOB PRIVATE_HEADERS
 	"core/scene/lightNode/*.hpp"
 	"renderer/layer/*.h"
 	"renderer/layer/*.hpp"
+	"renderer/SemaphoreManager/*.h"
+	"renderer/SemaphoreManager/*.hpp"
 )
 
 # 添加筛选器
@@ -122,6 +125,7 @@ target_include_directories(vkRenderer
 		"${CMAKE_CURRENT_SOURCE_DIR}/core/scene/lightNode"
 		"${CMAKE_CURRENT_SOURCE_DIR}/core/view"
 		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/layer"
+		"${CMAKE_CURRENT_SOURCE_DIR}/renderer/SemaphoreManager"
         "${GLM_INSTALLED_DIR}/include"
 		"${SLANG_INSTALLED_DIR}/include"
 		"${Vulkan_INCLUDE_DIRS}"

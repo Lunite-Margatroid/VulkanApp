@@ -11,6 +11,8 @@
 
 #include "PipelineShade.hpp"
 
+#include "SemaphoreManager.hpp"
+
 namespace LT {
 	RenderStageOpaqueForward::RenderStageOpaqueForward()
 	{
@@ -32,9 +34,12 @@ namespace LT {
 		sStageBeginInfo.nDepthBufferID = sInOutExecuteInfo.nDepthBufferID;
 		sStageBeginInfo.vecRenderTarget = sInOutExecuteInfo.vecRenderTarget;
 		sStageBeginInfo.nFlightFrameIndex = nFlightFrameIndex;
-		sStageBeginInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
-		sStageBeginInfo.vecSemWaitMask = sInOutExecuteInfo.vecSemWaitMask;
-		sStageBeginInfo.vecSemSignal.push_back(m_arrSemTransitionBegin[nFlightFrameIndex]);
+		//sStageBeginInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
+		//sStageBeginInfo.vecSemWait = barrierStageBegin.GetWaitSemaphores();
+		//sStageBeginInfo.vecSemWaitMask = sInOutExecuteInfo.vecSemWaitMask;
+		//sStageBeginInfo.vecSemSignal.push_back(m_arrSemTransitionBegin[nFlightFrameIndex]);
+		//sStageBeginInfo.vecSemSignal.push_back(barrierStageBegin.GetSignalSemaphore());
+		sStageBeginInfo.refFence = sInOutExecuteInfo.refFence;
 		StageBegin(sStageBeginInfo);
 
 		//sStageBeginInfo.refFence.WaitFence();
@@ -53,6 +58,7 @@ namespace LT {
 
 		// 遍历每个Material
 		size_t nMtlCounter = 0;
+		FenceRef fenceDraw = sStageBeginInfo.refFence;
 		for (const auto& [nMtlID, vecEntityRender] : sInOutExecuteInfo.mapRenderEntity) {
 			// 跳过无效材质ID和特殊材质
 			if (nMtlID <= INVALID_MATERIAL_ID)
@@ -131,28 +137,35 @@ namespace LT {
 			}
 
 			sEndInfo.nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
-			if (bFirstDraw)
-			{
-				// 等待Transition
-				sEndInfo.vecSemWait.push_back(m_arrSemTransitionBegin[sInOutExecuteInfo.nFlightFrameIndex]);
-				sEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
-			}
+			//if (bFirstDraw)
+			//{
+			//	// 等待Transition
+			//	sEndInfo.vecSemWait.push_back(m_arrSemTransitionBegin[sInOutExecuteInfo.nFlightFrameIndex]);
+			//	sEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
+			//}
 
-			if (bLastDraw) {
-				if (bNeedOutTransition)
-				{
-					// 发射Semaphore 让Transition等待
-					sEndInfo.vecSemSignal.push_back(m_arrSemTransitionEnd[sInOutExecuteInfo.nFlightFrameIndex]);
-				}
-				else
-				{
-					// 如果不需要Transition 那么就把外部的Semaphore发射出去
-					sEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
-				}
-			}
+			//if (bLastDraw) {
+			//	if (bNeedOutTransition)
+			//	{
+			//		// 发射Semaphore 让Transition等待
+			//		sEndInfo.vecSemSignal.push_back(m_arrSemTransitionEnd[sInOutExecuteInfo.nFlightFrameIndex]);
+			//	}
+			//	else
+			//	{
+			//		// 如果不需要Transition 那么就把外部的Semaphore发射出去
+			//		sEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
+			//	}
+			//}
+
+			auto barrierDraw = SemaphoreManager::Barrier(nFlightFrameIndex, fenceDraw);
+
+			sEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
+			sEndInfo.vecSemWait = barrierDraw.GetWaitSemaphores();
+			sEndInfo.vecSemSignal.push_back(barrierDraw.GetSignalSemaphore());
 
 			DrawEnd(sEndInfo);
 
+			fenceDraw = sEndInfo.refFence;
 			bFirstDraw = false;
 		}
 
@@ -206,25 +219,26 @@ namespace LT {
 		// Barrier
 		if (bNeedOutTransition)
 		{
+			SemaphoreBarrier barrierStageEnd = SemaphoreManager::Barrier(nFlightFrameIndex, fenceDraw);
 
 			StageEndInfo sStageEndInfo;
 			sStageEndInfo.nDepthBufferID = sInOutExecuteInfo.nDepthBufferID;
 			sStageEndInfo.vecRenderTarget = sInOutExecuteInfo.vecRenderTarget;
 			sStageEndInfo.nFlightFrameIndex = nFlightFrameIndex;
-			sStageEndInfo.vecSemWait.push_back(m_arrSemTransitionEnd[nFlightFrameIndex]);
-			sStageEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllGraphics);
-			if (!sInOutExecuteInfo.vecSemSignal.empty())
-			{
-				sStageEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
-			}
+			//sStageEndInfo.vecSemWait.push_back(m_arrSemTransitionEnd[nFlightFrameIndex]);
+			sStageEndInfo.vecSemWait = barrierStageEnd.GetWaitSemaphores();
+			sStageEndInfo.vecSemWaitMask.resize(sStageEndInfo.vecSemWait.size(), vk::PipelineStageFlagBits::eAllGraphics);
+			//if (!sInOutExecuteInfo.vecSemSignal.empty())
+			//{
+			//	sStageEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
+			//}
 			StageEnd(sStageEndInfo);
 
 			sInOutExecuteInfo.refFence = sStageEndInfo.refFence;
-
 		}
 		else
 		{
-			sInOutExecuteInfo.refFence = sEndInfo.refFence;
+			sInOutExecuteInfo.refFence = fenceDraw;
 		}
 
 	}

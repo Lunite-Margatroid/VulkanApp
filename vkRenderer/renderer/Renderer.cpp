@@ -94,6 +94,7 @@ namespace LT {
 		sPipelineExecuteInfo.bLightDirty = sInOutFrameInfo.bLightDirty;
 		sPipelineExecuteInfo.vecLightBuffer = sInOutFrameInfo.vecLightBuffer;
 		sPipelineExecuteInfo.vecColorClear.push_back(true);
+		sPipelineExecuteInfo.refFence = sInOutFrameInfo.fenceDrawing;
 
 		bool bFirstPipeline = true;
 		uint32_t nPipelineCounter = 0;
@@ -105,39 +106,41 @@ namespace LT {
 			{
 				nPipelineCounter += 1;
 
-				bool bLastPipeline = (i == layers.size() - 1) && (j == pipelines.size() - 1);
+				//bool bLastPipeline = (i == layers.size() - 1) && (j == pipelines.size() - 1);
 
-				sPipelineExecuteInfo.vecSemSignal.clear();
-				if (bLastPipeline)
-				{
-					sPipelineExecuteInfo.vecSemSignal.push_back(sInOutFrameInfo.semDrawing);
-				}
-				else
-				{
-					sPipelineExecuteInfo.vecSemSignal.push_back(arrSemphore[nPipelineCounter % RENDERER_SEMPHORE_COUNT]);
-				}
+				//sPipelineExecuteInfo.vecSemSignal.clear();
+				//if (bLastPipeline)
+				//{
+				//	sPipelineExecuteInfo.vecSemSignal.push_back(sInOutFrameInfo.semDrawing);
+				//}
+				//else
+				//{
+				//	sPipelineExecuteInfo.vecSemSignal.push_back(arrSemphore[nPipelineCounter % RENDERER_SEMPHORE_COUNT]);
+				//}
 
-				if (bFirstPipeline)
-				{
-					bFirstPipeline = false;
-					sPipelineExecuteInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
-					sPipelineExecuteInfo.vecSemWait.push_back(sInOutFrameInfo.semAcquiring);
-				}
-				else
-				{
-					sPipelineExecuteInfo.vecSemWaitMask.clear();
-					sPipelineExecuteInfo.vecSemWait.clear();
+				//if (bFirstPipeline)
+				//{
+				//	bFirstPipeline = false;
+				//	sPipelineExecuteInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
+				//	sPipelineExecuteInfo.vecSemWait.push_back(sInOutFrameInfo.semAcquiring);
+				//}
+				//else
+				//{
+				//	sPipelineExecuteInfo.vecSemWaitMask.clear();
+				//	sPipelineExecuteInfo.vecSemWait.clear();
 
-					sPipelineExecuteInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
-					sPipelineExecuteInfo.vecSemWait.push_back(arrSemphore[(nPipelineCounter - 1) % RENDERER_SEMPHORE_COUNT]);
-				}
+				//	sPipelineExecuteInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
+				//	sPipelineExecuteInfo.vecSemWait.push_back(arrSemphore[(nPipelineCounter - 1) % RENDERER_SEMPHORE_COUNT]);
+				//}
 
 				pipelines[j]->Resize(sInOutFrameInfo.nWidth, sInOutFrameInfo.nHeight);
 				pipelines[j]->Execute(sPipelineExecuteInfo);
-
-				for (int i = 0; i < sPipelineExecuteInfo.vecColorClear.size(); ++i)
+				if (sPipelineExecuteInfo.refFence)
 				{
-					sPipelineExecuteInfo.vecColorClear[i] = false;
+					for (int i = 0; i < sPipelineExecuteInfo.vecColorClear.size(); ++i)
+					{
+						sPipelineExecuteInfo.vecColorClear[i] = false;
+					}
 				}
 			}
 		}

@@ -9,6 +9,8 @@
 
 #include "PipelineLog.hpp"
 
+#include "SemaphoreManager.hpp"
+
 namespace LT {
 	RenderStageLog::RenderStageLog()
 		: m_nASCIITex(INVALID_IMAGE_ID)
@@ -102,15 +104,20 @@ namespace LT {
 		// ----------------------------- Stage Begin------------------------
 		// Barrier
 		// 进行Transition
+
 		StageBeginInfo sStageBeginInfo;
 		sStageBeginInfo.nDepthBufferID = sInOutExecuteInfo.nDepthBufferID;
 		sStageBeginInfo.vecRenderTarget = sInOutExecuteInfo.vecRenderTarget;
 		sStageBeginInfo.nFlightFrameIndex = nFlightFrameIndex;
-		sStageBeginInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
-		sStageBeginInfo.vecSemWaitMask = sInOutExecuteInfo.vecSemWaitMask;
-		sStageBeginInfo.vecSemSignal.push_back(m_arrSemTransitionBegin[nFlightFrameIndex]);
+		//sStageBeginInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
+		//sStageBeginInfo.vecSemWaitMask = sInOutExecuteInfo.vecSemWaitMask;
+		//sStageBeginInfo.vecSemWait = barrierStageBegin.GetWaitSemaphores();
+		//sStageBeginInfo.vecSemWaitMask.resize(sStageBeginInfo.vecSemWait.size(), vk::PipelineStageFlagBits::eAllGraphics);
+		//sStageBeginInfo.vecSemSignal.push_back(barrierStageBegin.GetSignalSemaphore());
+		sStageBeginInfo.refFence = sInOutExecuteInfo.refFence;
+		//sStageBeginInfo.vecSemSignal.push_back(m_arrSemTransitionBegin[nFlightFrameIndex]);
 		StageBegin(sStageBeginInfo);
-
+		sInOutExecuteInfo.refFence = sStageBeginInfo.refFence;
 		// -------------------------- Draw ---------------------------------
 
 		vk::CommandBufferBeginInfo cbbi = {};
@@ -194,42 +201,52 @@ namespace LT {
 		CmdSubmitInfo sCmdSubmitInfo;
 
 		// 开始阶段的Transiton的fence
-		if (sStageBeginInfo.refFence) {
-			// 等待开始阶段的sem
-			sCmdSubmitInfo.vecSemToWait.push_back(m_arrSemTransitionBegin[nFlightFrameIndex]);
-			sCmdSubmitInfo.vecSemWaitMasks.push_back(vk::PipelineStageFlagBits::eAllGraphics);
-		}
-		else
-		{
-			// 等待stage输入的sem
-			sCmdSubmitInfo.vecSemToWait = sInOutExecuteInfo.vecSemWait;
-			sCmdSubmitInfo.vecSemWaitMasks = sInOutExecuteInfo.vecSemWaitMask;
-		}
-		
+		//if (sStageBeginInfo.refFence) {
+		//	// 等待开始阶段的sem
+		//	sCmdSubmitInfo.vecSemToWait.push_back(m_arrSemTransitionBegin[nFlightFrameIndex]);
+		//	sCmdSubmitInfo.vecSemWaitMasks.push_back(vk::PipelineStageFlagBits::eAllGraphics);
+		//}
+		//else
+		//{
+		//	// 等待stage输入的sem
+		//	sCmdSubmitInfo.vecSemToWait = sInOutExecuteInfo.vecSemWait;
+		//	sCmdSubmitInfo.vecSemWaitMasks = sInOutExecuteInfo.vecSemWaitMask;
+		//}
+		//
 		const bool bNeedOutTransition = OutNeedTransiton(sInOutExecuteInfo.vecRenderTarget);
-		if (bNeedOutTransition)
-		{
-			// 如果需要执行输出的Transition，则发射结束阶段的sem
-			sCmdSubmitInfo.vecSemToSignal.push_back(m_arrSemTransitionEnd[nFlightFrameIndex]);
-		}
-		else
-		{
-			// 如果不需要执行输出的Transition，则发射stage输出的sem
-			sCmdSubmitInfo.vecSemToSignal = sInOutExecuteInfo.vecSemSignal;
-		}
+		//if (bNeedOutTransition)
+		//{
+		//	// 如果需要执行输出的Transition，则发射结束阶段的sem
+		//	sCmdSubmitInfo.vecSemToSignal.push_back(m_arrSemTransitionEnd[nFlightFrameIndex]);
+		//}
+		//else
+		//{
+		//	// 如果不需要执行输出的Transition，则发射stage输出的sem
+		//	sCmdSubmitInfo.vecSemToSignal = sInOutExecuteInfo.vecSemSignal;
+		//}
+
+		SemaphoreBarrier barrierDraw = SemaphoreManager::Barrier(nFlightFrameIndex, sStageBeginInfo.refFence);
+		sCmdSubmitInfo.vecSemToSignal.push_back(barrierDraw.GetSignalSemaphore());
+		sCmdSubmitInfo.vecSemToWait = barrierDraw.GetWaitSemaphores();
+		sCmdSubmitInfo.vecSemWaitMasks.resize(sCmdSubmitInfo.vecSemToWait.size(), vk::PipelineStageFlagBits::eAllGraphics);
 
 		FenceRef fenceDraw = cmdBuffer.Submit(sCmdSubmitInfo);
 
 		// ------------------------- stage end -----------------------------
 		if (bNeedOutTransition)
 		{
+			SemaphoreBarrier barrierStageEnd = SemaphoreManager::Barrier(nFlightFrameIndex, fenceDraw);
+
 			StageEndInfo sStageEndInfo;
 			sStageEndInfo.nDepthBufferID = sInOutExecuteInfo.nDepthBufferID;
 			sStageEndInfo.vecRenderTarget = sInOutExecuteInfo.vecRenderTarget;
 			sStageEndInfo.nFlightFrameIndex = nFlightFrameIndex;
-			sStageEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
-			sStageEndInfo.vecSemWait.push_back(m_arrSemTransitionEnd[nFlightFrameIndex]);
-			sStageEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllGraphics);
+			//sStageEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
+			//sStageEndInfo.vecSemWait.push_back(m_arrSemTransitionEnd[nFlightFrameIndex]);
+			//sStageEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllGraphics);
+			sStageEndInfo.vecSemSignal.push_back(barrierStageEnd.GetSignalSemaphore());
+			sStageEndInfo.vecSemWait = barrierStageEnd.GetWaitSemaphores();
+			sStageEndInfo.vecSemWaitMask.resize(sStageEndInfo.vecSemWait.size(), vk::PipelineStageFlagBits::eAllGraphics);
 			StageEnd(sStageEndInfo);
 
 			sInOutExecuteInfo.refFence = sStageEndInfo.refFence;

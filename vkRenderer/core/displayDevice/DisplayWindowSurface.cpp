@@ -15,6 +15,8 @@
 #include "View.hpp"
 #include "CameraPerspective.h"
 
+#include "SemaphoreManager.hpp"
+
 namespace LT {
 	DisplayWindowSurface::DisplayWindowSurface(vk::SurfaceKHR surface, uint32_t nWidth, uint32_t nHeight)
 		: DisplaySurface(surface)
@@ -33,6 +35,7 @@ namespace LT {
 		{
 			m_vecSemDrawing.push_back(device.createSemaphore(vk::SemaphoreCreateInfo({})));
 			m_vecSemAcquiring.push_back(device.createSemaphore(vk::SemaphoreCreateInfo({})));
+
 		}
 	}
 
@@ -79,10 +82,11 @@ namespace LT {
 			sFrameInfo.nFrameIndex = m_nFrameIndex;
 			sFrameInfo.nFightFrameIndex = nFlightFrameIndex;
 			sFrameInfo.vecRenderTargets.push_back(m_nSwapChainImageID);
-			sFrameInfo.semAcquiring = m_vecSemAcquiring[nFlightFrameIndex];
-			sFrameInfo.semDrawing = m_vecSemDrawing[nFlightFrameIndex];
+			//sFrameInfo.semAcquiring = m_vecSemAcquiring[nFlightFrameIndex];
+			//sFrameInfo.semDrawing = m_vecSemDrawing[nFlightFrameIndex];
 			sFrameInfo.nWidth = m_nWidth;
 			sFrameInfo.nHeight = m_nHeight;
+			sFrameInfo.fenceDrawing = m_fences[nFlightFrameIndex];
 
 			if (CameraPerspective* pCamera = dynamic_cast<CameraPerspective*>(m_pView->GetCamera()))
 			{
@@ -112,12 +116,17 @@ namespace LT {
 			vk::Result resultWaitFence = device.waitForFences(m_fences[nFlightFrameIndex].GetNativeFence(), vk::True, std::_Max_limit<uint64_t>());
 			RENDERER_ASSERT(resultWaitFence == vk::Result::eSuccess, "Wait for FenceDrawing Failed.");
 			// 重置Fence
-			//device.resetFences(m_fences[nFlightFrameIndex].GetNativeFence());
+			device.resetFences(m_fences[nFlightFrameIndex].GetNativeFence());
 		}
-		// acquire swapchain image
-		m_nSwapChainImageIndex = m_pSwapChain->AcquireNextImage(UINT64_MAX, m_vecSemAcquiring[nFlightFrameIndex], vk::Fence());
-		RENDERER_ASSERT(m_nSwapChainImageIndex >= 0, "Acquire Swapchain Image Failed.");
+		else
+		{
+			m_fences[nFlightFrameIndex] = FenceManager::CreateFence();
+		}
+		SemaphoreBarrier barrier = SemaphoreManager::TimelineBegin(nFlightFrameIndex);
 
+		// acquire swapchain image
+		m_nSwapChainImageIndex = m_pSwapChain->AcquireNextImage(UINT64_MAX, barrier.GetSignalSemaphore(), m_fences[nFlightFrameIndex].GetNativeFence());
+		RENDERER_ASSERT(m_nSwapChainImageIndex >= 0, "Acquire Swapchain Image Failed.");
 	}
 	void DisplayWindowSurface::FrameEnd()
 	{
@@ -128,16 +137,21 @@ namespace LT {
 		uint32_t nImageIndex = static_cast<uint32_t>(m_nSwapChainImageIndex);
 		vk::SwapchainKHR swapchain = m_pSwapChain->NativeVKSwapChain();
 
+		SemaphoreBarrier barrier = SemaphoreManager::Barrier(nFlightFrameIndex, m_fences[nFlightFrameIndex]);
+
 		vk::PresentInfoKHR pi;
 		pi
 			.setSwapchainCount(1)
 			.setPSwapchains(&swapchain)
 			.setPImageIndices(&nImageIndex)
-			.setPWaitSemaphores(&m_vecSemDrawing[nFlightFrameIndex])
+			.setWaitSemaphores(barrier.GetWaitSemaphores())
 			.setWaitSemaphoreCount(1)
 			;
+
 		// 提交交换链命令
 		vk::Result resultPresent = vkContext::GetCmdQueueForSurface().presentKHR(pi);
+
+		SemaphoreManager::TimelineEnd(nFlightFrameIndex, FenceRef(INVALID_FENCE_HANDLE));
 
 		if (resultPresent == vk::Result::eErrorOutOfDateKHR || resultPresent == vk::Result::eSuboptimalKHR)
 		{

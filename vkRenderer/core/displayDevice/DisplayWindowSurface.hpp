@@ -19,8 +19,6 @@ namespace LT
 
 		std::array<FenceRef, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_fences;
 
-
-
 	public:
 		uint32_t GetWidth() const { return m_nWidth; }
 		uint32_t GetHeight() const { return m_nHeight; }

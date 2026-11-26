@@ -218,15 +218,17 @@ namespace LT {
 		sStageExecuteInfo.vecRenderTarget = sInOutPipelineInfo.vecRenderTargets;
 		sStageExecuteInfo.mapRenderEntity[MATERIAL_ID_2D_0] = m_vecLogLine;
 		sStageExecuteInfo.pRenderView = nullptr;
-		sStageExecuteInfo.vecSemWait = sInOutPipelineInfo.vecSemWait;
-		sStageExecuteInfo.vecSemWaitMask = sInOutPipelineInfo.vecSemWaitMask;
-		sStageExecuteInfo.vecSemSignal = sInOutPipelineInfo.vecSemSignal;
+		//sStageExecuteInfo.vecSemWait = sInOutPipelineInfo.vecSemWait;
+		//sStageExecuteInfo.vecSemWaitMask = sInOutPipelineInfo.vecSemWaitMask;
+		//sStageExecuteInfo.vecSemSignal = sInOutPipelineInfo.vecSemSignal;
 
 		sStageExecuteInfo.pPipeline = this;
 		
 		sStageExecuteInfo.vecColorClear  = sInOutPipelineInfo.vecColorClear;
 
 		sStageExecuteInfo.bDepthClear = false;
+
+		sStageExecuteInfo.refFence = sInOutPipelineInfo.refFence;
 
 		m_stageLog.Execute(sStageExecuteInfo);
 

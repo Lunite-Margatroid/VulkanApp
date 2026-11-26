@@ -93,17 +93,18 @@ namespace LT {
 		sStageInfo.pPipeline = this;
 		sStageInfo.bDepthClear = true;
 		sStageInfo.vecColorClear.push_back(true);
+		sStageInfo.refFence = sInOutPipelineInfo.refFence;
 
-		if (!sInOutPipelineInfo.vecSemWait.empty())
-		{
-			sStageInfo.vecSemWait = sInOutPipelineInfo.vecSemWait;
-			sStageInfo.vecSemWaitMask = sInOutPipelineInfo.vecSemWaitMask;
-		}
+		//if (!sInOutPipelineInfo.vecSemWait.empty())
+		//{
+		//	sStageInfo.vecSemWait = sInOutPipelineInfo.vecSemWait;
+		//	sStageInfo.vecSemWaitMask = sInOutPipelineInfo.vecSemWaitMask;
+		//}
 
-		if (!sInOutPipelineInfo.vecSemSignal.empty())
-		{
-			sStageInfo.vecSemSignal = sInOutPipelineInfo.vecSemSignal;
-		}
+		//if (!sInOutPipelineInfo.vecSemSignal.empty())
+		//{
+		//	sStageInfo.vecSemSignal = sInOutPipelineInfo.vecSemSignal;
+		//}
 
 		// 遍历RenderEntity
 		// 按照Material分类
@@ -113,7 +114,6 @@ namespace LT {
 		}
 
 		m_cStage.Execute(sStageInfo);
-
 		sInOutPipelineInfo.refFence = sStageInfo.refFence;
 	}
 

@@ -29,6 +29,8 @@
 
 #include "FenceManager.hpp"
 
+#include "SemaphoreManager.hpp"
+
 // -- Image Process --
 #include "LunarImageIO.hpp"
 
@@ -177,12 +179,16 @@ namespace LT {
 
 		SceneManager::Init();
 
+		SemaphoreManager::Init();
+
 		s_pDefaultRenderer = new Renderer();
 	}
 	void Engine::DestroyVulkanContext()
 	{
 		delete s_pDefaultRenderer;
 		s_pDefaultRenderer = nullptr;
+
+		SemaphoreManager::Release();
 
 		SceneManager::Release();
 
