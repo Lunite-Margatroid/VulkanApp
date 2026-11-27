@@ -205,21 +205,68 @@ namespace
 	}
 }
 
+bool Shell::GetFloatValue(const ShellVar& var, float& fOut)
+{
+	switch (var.m_eType)
+	{
+	case LT::DataType::eInt64:
+		fOut = static_cast<float>(std::get<int64_t>(var.m_value));
+		return true;
+	case LT::DataType::eInt:
+		fOut = static_cast<float>(std::get<int>(var.m_value));
+		return true;
+	case LT::DataType::eFloat:
+		fOut = std::get<float>(var.m_value);
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool Shell::GetIntValue(const ShellVar& var, int64_t& nOut)
+{
+	switch (var.m_eType)
+	{
+	case LT::DataType::eInt64:
+		nOut = std::get<int64_t>(var.m_value);
+		return true;
+	case LT::DataType::eInt:
+		nOut = static_cast<int64_t>(std::get<int>(var.m_value));
+		return true;
+	default:
+		return false;
+	}
+}
+
+LT::NodeID Shell::GetNodeVarID(std::string_view strVarName)
+{
+	ShellVar* pVar = GetVarValue(strVarName);
+	int64_t nValue = 0;
+	if (pVar == nullptr || !GetIntValue(*pVar, nValue))
+	{
+		return LT::INVALID_NODE_ID;
+	}
+	return static_cast<LT::NodeID>(nValue);
+}
+
+void Shell::AttachToSelectedScene(LT::NodeID nNode)
+{
+	if (nNode == LT::INVALID_NODE_ID)
+	{
+		return;
+	}
+
+	LT::NodeID nSceneRoot = GetNodeVarID(SELECTED_S);
+	if (nSceneRoot != LT::INVALID_NODE_ID)
+	{
+		m_pEngine->SceneNodeRebase(nSceneRoot, nNode);
+	}
+}
+
 Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 	:m_pEngine(pEngine)
 	,m_pLua(pLua)
 {
-#define IS_REAL(PType) (PType == LT::DataType::eInt64 || PType == LT::DataType::eFloat || PType == LT::DataType::eInt)
-
-#define GET_FLOAT(PVar, POutFloat) do{ \
-	if(PVar.m_eType == LT::DataType::eInt64) \
-		{(POutFloat) = static_cast<float>(std::get<int64_t>((PVar).m_value));}\
-	else if(PVar.m_eType == LT::DataType::eInt)\
-		{(POutFloat) = static_cast<float>(std::get<int>((PVar).m_value));}\
-	else if(PVar.m_eType == LT::DataType::eFloat)\
-		{(POutFloat) = std::get<float>((PVar).m_value);}\
-	}while(false)
-
 	// 退出
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
@@ -244,40 +291,36 @@ Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 	// 回调参数为std::vector<ShellVar> 每项携带数据类型与值
 	// 向量默认是float向量
 
-	// 调用lua
-	RegisterCommand(
-		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
-			if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
-			{
-				return LT::EngineResult::eInvalidParam;
-			}
+	// 调用lua  lua.file <path>  lua.run <path>
+	auto FuncLuaRun = [this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+		if (m_pLua == nullptr || vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
+		{
+			return LT::EngineResult::eInvalidParam;
+		}
 
-			if (m_pLua->RunFile(vecParams[0].m_str))
-				return LT::EngineResult::eSuccess;
-			else
-				return LT::EngineResult::eFailed;
-		},
-		"lua","file"
-		);
+		return m_pLua->RunFile(vecParams[0].m_str)
+			? LT::EngineResult::eSuccess
+			: LT::EngineResult::eFailed;
+	};
+	RegisterCommand(FuncLuaRun, "lua", "file");
+	RegisterCommand(FuncLuaRun, "lua", "run");
 
-	// node.position
+	// node.position <node_id> vec(<x>, <y>, <z>)
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult{
-			if (vecParams.size() < 2 || vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eFloat3)
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			if (vecParams.size() < 2 || !GetIntValue(vecParams[0], nNode) || vecParams[1].m_eType != LT::DataType::eFloat3)
 			{
 				return LT::EngineResult::eInvalidParam;
 			}
-			return m_pEngine->SetSceneNodePosition(
-				std::get<LT::NodeID>(vecParams[0].m_value),
-				std::get<std::array<float, 3>>(vecParams[1].m_value)
-			);
+			return m_pEngine->SetSceneNodePosition(nNode, std::get<std::array<float, 3>>(vecParams[1].m_value));
 		},
 		"node", "position"
 		);
-	// img.file
+	// img.file <file_path>
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
-			if (vecParams.size() < 1)
+			if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
 				return LT::EngineResult::eInvalidParam;
 
 			LT::ImageID nImg = LT::INVALID_IMAGE_ID;
@@ -292,34 +335,35 @@ Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 	"img", "file"
 	);
 
-	// mtl
-	RegisterCommand(
-		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
-			if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
-				return LT::EngineResult::eFailed;
-			LT::MaterialID nMtl = LT::INVALID_MATERIAL_ID;
-			auto iter = g_mapMtlTypeStr2Enum.find(vecParams[0].m_str);
-			if (iter == g_mapMtlTypeStr2Enum.end())
-			{
-				return LT::EngineResult::eInvalidParam;
-			}
+	// mtl.create <mtl_type>  兼容旧写法 mtl <mtl_type>
+	auto FuncMtlCreate = [this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+		if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
+			return LT::EngineResult::eInvalidParam;
 
-			LT::EngineResult nResult = m_pEngine->CreateMaterial(nMtl, iter->second);
-			if (nMtl != LT::INVALID_MATERIAL_ID)
-			{
-				SetShellVar(SELECTED_MTL, static_cast<int64_t>(nMtl));
-				m_setMtl.insert(nMtl);
-			}
-			return nResult;
+		auto iter = g_mapMtlTypeStr2Enum.find(vecParams[0].m_str);
+		if (iter == g_mapMtlTypeStr2Enum.end())
+		{
+			return LT::EngineResult::eInvalidParam;
 		}
-	,"mtl"
-	);
+
+		LT::MaterialID nMtl = LT::INVALID_MATERIAL_ID;
+		LT::EngineResult nResult = m_pEngine->CreateMaterial(nMtl, iter->second);
+		if (nMtl != LT::INVALID_MATERIAL_ID)
+		{
+			SetShellVar(SELECTED_MTL, static_cast<int64_t>(nMtl));
+			m_setMtl.insert(nMtl);
+		}
+		return nResult;
+	};
+	RegisterCommand(FuncMtlCreate, "mtl", "create");
+	RegisterCommand(FuncMtlCreate, "mtl");
 
 	// mtl.prop <材质ID> <属性名> <值>
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
 
-			if (vecParams.size() < 3 || vecParams[1].m_eType != LT::DataType::eString)
+			LT::MaterialID nMtl = LT::INVALID_MATERIAL_ID;
+			if (vecParams.size() < 3 || !GetIntValue(vecParams[0], nMtl) || vecParams[1].m_eType != LT::DataType::eString)
 			{
 				return LT::EngineResult::eInvalidParam;
 			}
@@ -336,7 +380,7 @@ Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 			if (IsMtlPropTypeMatch(eDataType, vecParams[2].m_eType))
 			{
 				return m_pEngine->SetMaterialProp(
-					std::get<int64_t>(vecParams[0].m_value),
+					nMtl,
 					iter->second,
 					vecParams[2].m_value
 				);
@@ -357,7 +401,7 @@ Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 				}
 
 				return m_pEngine->SetMaterialProp(
-					std::get<int64_t>(vecParams[0].m_value),
+					nMtl,
 					iter->second,
 					mtlPorpValue
 				);
@@ -371,93 +415,151 @@ Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 		, "mtl", "prop"
 	);
 
-	// node.light <light_type>
-	RegisterCommand(
-		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
-			if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
-				return LT::EngineResult::eInvalidParam;
+	// node.light.create <light_type>  兼容旧写法 node.light <light_type>
+	auto FuncLightCreate = [this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+		if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
+			return LT::EngineResult::eInvalidParam;
 
-			auto iterLightType = g_mapLightTypeStr2Enum.find(vecParams[0].m_str);
-			if (iterLightType == g_mapLightTypeStr2Enum.end())
-				return LT::EngineResult::eInvalidParam;
+		auto iterLightType = g_mapLightTypeStr2Enum.find(vecParams[0].m_str);
+		if (iterLightType == g_mapLightTypeStr2Enum.end())
+			return LT::EngineResult::eInvalidParam;
 
-			LT::NodeID nNode = LT::INVALID_NODE_ID;
-			LT::NodeID nRoot = LT::INVALID_NODE_ID;
-			auto iterVar = m_mapVar.find(std::string(SELECTED_S));
-			if (iterVar != m_mapVar.end()) {
-				nRoot = std::get<int64_t>(iterVar->second.m_value);
-			}
-
-			LT::EngineResult nResult = LT::EngineResult::eFailed;
-			nResult = m_pEngine->CreateLightNode(nNode, nRoot, iterLightType->second);
-			if (nNode != LT::INVALID_NODE_ID)
-			{
-				SetShellVar(SELECTED_N, nNode);
-				m_setNode.insert(nNode);
-			}
-			return nResult;
+		LT::NodeID nNode = LT::INVALID_NODE_ID;
+		LT::NodeID nRoot = GetNodeVarID(SELECTED_S);
+		LT::EngineResult nResult = m_pEngine->CreateLightNode(nNode, nRoot, iterLightType->second);
+		if (nNode != LT::INVALID_NODE_ID)
+		{
+			SetShellVar(SELECTED_N, static_cast<int64_t>(nNode));
+			m_setNode.insert(nNode);
 		}
-		, "node", "light"
-	);
+		return nResult;
+	};
+	RegisterCommand(FuncLightCreate, "node", "light", "create");
+	RegisterCommand(FuncLightCreate, "node", "light");
 
-	// node.light.color
+	// node.light.color <node_id> vec(<r>, <g>, <b>)
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
-			if (vecParams.size() < 2 && (vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eFloat3))
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			if (vecParams.size() < 2 || !GetIntValue(vecParams[0], nNode) || vecParams[1].m_eType != LT::DataType::eFloat3)
 			{
 				return LT::EngineResult::eInvalidParam;
 			}
 
-			return m_pEngine->SetLightColor(std::get<int64_t>(vecParams[0].m_value), std::get<std::array<float,3>>(vecParams[1].m_value));
-
+			return m_pEngine->SetLightColor(nNode, std::get<std::array<float,3>>(vecParams[1].m_value));
 		}
 		, "node", "light", "color"
 	);
-	// sence
+
+	// node.light.range <node_id> <range>  点光源/聚光灯
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
 			LT::NodeID nNode = LT::INVALID_NODE_ID;
-			LT::EngineResult nResult = LT::EngineResult::eFailed;
-
-			nResult = m_pEngine->CreateSceneNode(nNode, LT::NodeType::eNode);
-
-			if (nNode != LT::INVALID_NODE_ID)
+			float fRange = 0.f;
+			if (vecParams.size() < 2 || !GetIntValue(vecParams[0], nNode) || !GetFloatValue(vecParams[1], fRange))
 			{
-				SetShellVar(SELECTED_S, nNode);
-				m_setNode.insert(nNode);
+				return LT::EngineResult::eInvalidParam;
 			}
 
-			return nResult;
-
+			return m_pEngine->SetLightRange(nNode, fRange);
 		}
-		, "scene"
+		, "node", "light", "range"
+	);
+
+	// node.light.radius <node_id> <radius>  球形光
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			float fRadius = 0.f;
+			if (vecParams.size() < 2 || !GetIntValue(vecParams[0], nNode) || !GetFloatValue(vecParams[1], fRadius))
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			return m_pEngine->SetLightRadius(nNode, fRadius);
+		}
+		, "node", "light", "radius"
+	);
+
+	// node.light.rectSize <node_id> <u> <v>  矩形光 U/V方向半宽
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			float fU = 0.f;
+			float fV = 0.f;
+			if (vecParams.size() < 3 || !GetIntValue(vecParams[0], nNode) ||
+				!GetFloatValue(vecParams[1], fU) || !GetFloatValue(vecParams[2], fV))
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			return m_pEngine->SetLightRectSize(nNode, std::array<float, 2>{ fU, fV });
+		}
+		, "node", "light", "rectSize"
+	);
+
+	// node.light.spotRadian <node_id> <inner> <outer>  聚光灯内/外锥角(弧度)
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			float fInner = 0.f;
+			float fOuter = 0.f;
+			if (vecParams.size() < 3 || !GetIntValue(vecParams[0], nNode) ||
+				!GetFloatValue(vecParams[1], fInner) || !GetFloatValue(vecParams[2], fOuter))
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			return m_pEngine->SetLightSpotRadian(nNode, std::array<float, 2>{ fInner, fOuter });
+		}
+		, "node", "light", "spotRadian"
+	);
+
+	// node.create  创建普通节点(不挂到场景下 可用node.rebase挂载) 赋值给SELECTED_N
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			LT::EngineResult nResult = m_pEngine->CreateSceneNode(nNode, LT::NodeType::eNode);
+			if (nNode != LT::INVALID_NODE_ID)
+			{
+				SetShellVar(SELECTED_N, static_cast<int64_t>(nNode));
+				m_setNode.insert(nNode);
+			}
+			return nResult;
+		}
+		, "node", "create"
+	);
+
+	// node.rebase <parent_node> <child_node>  把parent_node设为child_node的父节点
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			LT::NodeID nParent = LT::INVALID_NODE_ID;
+			LT::NodeID nChild = LT::INVALID_NODE_ID;
+			if (vecParams.size() < 2 || !GetIntValue(vecParams[0], nParent) || !GetIntValue(vecParams[1], nChild))
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			return m_pEngine->SceneNodeRebase(nParent, nChild);
+		}
+		, "node", "rebase"
 	);
 	// node.mesh.cube <side_len>
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
-			if (vecParams.size() < 1 || !IS_REAL(vecParams[0].m_eType))
+			float fSideLen = 1.f;
+			if (vecParams.size() < 1 || !GetFloatValue(vecParams[0], fSideLen))
 			{
 				return LT::EngineResult::eInvalidParam;
 			}
 
 			LT::NodeID nNode = LT::INVALID_NODE_ID;
-
-			float fSideLen = 1.f;
-			GET_FLOAT(vecParams[0], fSideLen);
-
-			LT::EngineResult nResult = LT::EngineResult::eFailed;
-			nResult = m_pEngine->CreateCubeMeshNode(nNode, fSideLen);
+			LT::EngineResult nResult = m_pEngine->CreateCubeMeshNode(nNode, fSideLen);
 
 			if (nNode != LT::INVALID_NODE_ID)
 			{
-				LT::NodeID nSceneRoot = LT::INVALID_NODE_ID;
-				auto iter = m_mapVar.find(std::string(SELECTED_S));
-				if (iter != m_mapVar.end())
-				{
-					nSceneRoot = std::get<int64_t>(iter->second.m_value);
-					m_pEngine->SceneNodeRebase(nSceneRoot, nNode);
-				}
-				SetShellVar(SELECTED_N, nNode);
+				AttachToSelectedScene(nNode);
+				SetShellVar(SELECTED_N, static_cast<int64_t>(nNode));
 				m_setNode.insert(nNode);
 			}
 			return nResult;
@@ -465,15 +567,73 @@ Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 		, "node", "mesh", "cube"
 		);
 
-	// node.mtl <node_id> <mtl_id>
+	// node.mesh.sphere <radius> <long_sub> <lat_sub>
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
-			if (vecParams.size() < 2 || vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eInt64)
+			float fRadius = 1.f;
+			int64_t nLongSub = 0;
+			int64_t nLatSub = 0;
+			if (vecParams.size() < 3 || !GetFloatValue(vecParams[0], fRadius) ||
+				!GetIntValue(vecParams[1], nLongSub) || !GetIntValue(vecParams[2], nLatSub))
 			{
 				return LT::EngineResult::eInvalidParam;
 			}
 
-			return m_pEngine->SetMaterial(std::get<int64_t>(vecParams[0].m_value), std::get<int64_t>(vecParams[1].m_value));
+			// 经细分最小3 纬细分最小1 (见MeshManager::CreateSphere)
+			if (nLongSub < 3 || nLatSub < 1 || nLongSub > UINT32_MAX || nLatSub > UINT32_MAX)
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			LT::EngineResult nResult = m_pEngine->CreateSphereMeshNode(
+				nNode, fRadius, static_cast<uint32_t>(nLongSub), static_cast<uint32_t>(nLatSub));
+
+			if (nNode != LT::INVALID_NODE_ID)
+			{
+				AttachToSelectedScene(nNode);
+				SetShellVar(SELECTED_N, static_cast<int64_t>(nNode));
+				m_setNode.insert(nNode);
+			}
+			return nResult;
+		}
+		, "node", "mesh", "sphere"
+		);
+
+	// node.mesh.plane <side_len>
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			float fSideLen = 1.f;
+			if (vecParams.size() < 1 || !GetFloatValue(vecParams[0], fSideLen))
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			LT::EngineResult nResult = m_pEngine->CreatePlaneMeshNode(nNode, fSideLen);
+
+			if (nNode != LT::INVALID_NODE_ID)
+			{
+				AttachToSelectedScene(nNode);
+				SetShellVar(SELECTED_N, static_cast<int64_t>(nNode));
+				m_setNode.insert(nNode);
+			}
+			return nResult;
+		}
+		, "node", "mesh", "plane"
+		);
+
+	// node.mtl <node_id> <mtl_id>
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			LT::MaterialID nMtl = LT::INVALID_MATERIAL_ID;
+			if (vecParams.size() < 2 || !GetIntValue(vecParams[0], nNode) || !GetIntValue(vecParams[1], nMtl))
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			return m_pEngine->SetMaterial(nNode, nMtl);
 		}
 		, "node", "mtl"
 	);
@@ -481,15 +641,13 @@ Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 	// node.eulerXYZ <node_id> vec(<x>, <y>, <z>)
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
-			if (vecParams.size() < 2 || vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eFloat3)
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			if (vecParams.size() < 2 || !GetIntValue(vecParams[0], nNode) || vecParams[1].m_eType != LT::DataType::eFloat3)
 			{
 				return LT::EngineResult::eInvalidParam;
 			}
 
-			return m_pEngine->SetSceneNodeEulerRotation(
-				std::get<int64_t>(vecParams[0].m_value),
-				std::get<std::array<float, 3>>(vecParams[1].m_value)
-			);
+			return m_pEngine->SetSceneNodeEulerRotation(nNode, std::get<std::array<float, 3>>(vecParams[1].m_value));
 		}
 		, "node", "eulerXYZ"
 	);
@@ -497,15 +655,13 @@ Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 	// node.scale <node_id> vec(<x>, <y>, <z>)
 	RegisterCommand(
 		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
-			if (vecParams.size() < 2 || vecParams[0].m_eType != LT::DataType::eInt64 || vecParams[1].m_eType != LT::DataType::eFloat3)
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			if (vecParams.size() < 2 || !GetIntValue(vecParams[0], nNode) || vecParams[1].m_eType != LT::DataType::eFloat3)
 			{
 				return LT::EngineResult::eInvalidParam;
 			}
 
-			return m_pEngine->SetSceneNodeScale(
-				std::get<int64_t>(vecParams[0].m_value),
-				std::get<std::array<float, 3>>(vecParams[1].m_value)
-			);
+			return m_pEngine->SetSceneNodeScale(nNode, std::get<std::array<float, 3>>(vecParams[1].m_value));
 		}
 		, "node", "scale"
 	);
@@ -704,6 +860,13 @@ void Shell::Command(std::string_view strCmd)
 	if (nAssignPos != std::string_view::npos && strArgs[nAssignPos] == '=' &&
 		(nAssignPos + 1 == strArgs.size() || STR_WHITESPACE.find(strArgs[nAssignPos + 1]) != std::string_view::npos))
 	{
+		// SELECTED_S暂时为常数 禁止通过命令修改
+		if (strName == SELECTED_S)
+		{
+			LogInvalid("SELECTED_S is read-only");
+			return;
+		}
+
 		size_t nValuePos = nAssignPos + 1;
 		ShellVar var;
 		if (!ParseValue(strArgs, nValuePos, var))
@@ -800,7 +963,7 @@ bool Shell::Run()
 		std::string cmd;
 		iss >> cmd;
 		Command(line);
-		if (cmd == "quit" || cmd == "exit") { 
+		if (cmd == "quit" || cmd == "exit" || cmd == "terminate") {
 			break;
 		}
 

@@ -112,15 +112,39 @@ namespace LT {
 	}
 
 	void SceneManager::ReleaseNode(Node* pNode) {
+		if (!pNode)
+		{
+			return;
+		}
 		ReleaseNode(pNode->GetID());
 	}
 	void SceneManager::ReleaseNode(NodeID id) {
 		SceneManager& instance = GetInstance();
 		auto it = instance.m_mapNodes.find(id);
-		if (it != instance.m_mapNodes.end()) {
-			delete it->second;
-			instance.m_mapNodes.erase(it);
+		if (it == instance.m_mapNodes.end()) {
+			return;
 		}
+
+		Node* pNode = it->second;
+
+		// 1. 先从父节点摘下 避免父节点析构时再次delete该节点
+		if (Node* pParent = pNode->GetParent()) {
+			pParent->RemoveChild(pNode);
+		}
+
+		// 2. 递归释放子节点
+		// 每轮先把子节点从pNode的子节点列表中摘下 再递归释放它
+		// 不能直接依赖Node析构函数的级联delete 否则子节点的ID会残留在m_mapNodes中成为悬空项
+		while (!pNode->GetChildren().empty()) {
+			Node* pChild = pNode->GetChildren().front();
+			pNode->RemoveChild(pChild);
+			ReleaseNode(pChild->GetID());
+		}
+
+		// 3. 此时pNode已经没有子节点 直接删除并从映射中移除
+		// 先取得迭代器再递归释放 递归只擦除其他元素 std::map的迭代器仍然有效
+		delete pNode;
+		instance.m_mapNodes.erase(it);
 	}
 
 } // namespace LT

@@ -93,6 +93,8 @@ namespace LT {
 		// ----------------- built-in static Mesh --------------------
 		EngineResult CreateCubeMeshNode(NodeID& nOutNode, float fSideLength);
 		EngineResult CreateSphereMeshNode(NodeID& nOutNode, float fRadius, uint32_t nLongSubdivision, uint32_t nLatSubdivision);
+		// XZ平面上的正方形面片 法线+Y
+		EngineResult CreatePlaneMeshNode(NodeID& nOutNode, float fSideLength);
 
 		// ------------ Renderer ---------------
 		EngineResult CreateMaterial(MaterialID& nOutMtlID, MaterialType eMtlType);

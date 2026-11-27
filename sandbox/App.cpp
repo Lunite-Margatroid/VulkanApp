@@ -79,7 +79,7 @@ App::App()
 
 //
 //	m_pShell->Command("img.file \"./TestAsset/UVTest.png\"");
-//	m_pShell->Command("mtl \"Phong\"");
+//	m_pShell->Command("mtl.create \"Phong\"");
 //	m_pShell->Command("mtl.prop $SELECTED_MTL \"TexDiffuse\" $SELECTED_IMG");
 //	m_pShell->Command("mtl.prop $SELECTED_MTL \"ColorDiffuse\" vec(1.0,1.0,1.0)");
 //	m_pShell->Command("mtl.prop $SELECTED_MTL \"Roughness\" 0.5");
@@ -87,7 +87,7 @@ App::App()
 //	m_pShell->Command("mtl.prop $SELECTED_MTL \"Metalness\" 0");
 //	m_pShell->Command("mtl.prop $SELECTED_MTL \"ColorSpecular\" vec(1.0,1.0,1.0)");
 //
-//	m_pShell->Command("node.light \"LightDirectional\"");
+//	m_pShell->Command("node.light.create \"LightDirectional\"");
 //	m_pShell->Command("node.light.color $SELECTED_N vec(1,1,1)");
 //
 //	for (int i = 0; i < 400; i++)

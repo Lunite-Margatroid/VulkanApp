@@ -442,6 +442,16 @@ namespace LT {
 			return EngineResult::eNoSceneNode;
 		}
 
+		// pChild不能是自身或pParient的祖先 否则会构成环
+		// (Node::AddChild内部会断言 这里先返回错误避免把异常抛给调用者)
+		for (Node* p = pParient; p; p = p->GetParent())
+		{
+			if (p == pChild)
+			{
+				return EngineResult::eInvalidParam;
+			}
+		}
+
 		if (Node* pTemp = pChild->GetParent())
 		{
 			pTemp->RemoveChild(pChild);
@@ -629,6 +639,14 @@ namespace LT {
 		nOutNode = SceneManager::CreateNode(NodeType::eNodeMesh);
 		NodeMesh* pNode = reinterpret_cast<NodeMesh*>(SceneManager::GetNode(nOutNode));
 		pNode->SetMesh(MeshManager::CreateSphere(fRadius, nLongSubdivision, nLatSubdivision));
+		return EngineResult::eSuccess;
+	}
+
+	EngineResult Engine::CreatePlaneMeshNode(NodeID& nOutNode, float fSideLength)
+	{
+		nOutNode = SceneManager::CreateNode(NodeType::eNodeMesh);
+		NodeMesh* pNode = reinterpret_cast<NodeMesh*>(SceneManager::GetNode(nOutNode));
+		pNode->SetMesh(MeshManager::CreatePlane(fSideLength));
 		return EngineResult::eSuccess;
 	}
 

@@ -181,4 +181,37 @@ namespace LT {
 
 		return refMesh;
 	}
+
+	MeshRef MeshManager::CreatePlane(float fSideLength) {
+		MeshRef refMesh = CreateStaticMesh();
+
+		const float h = fSideLength * 0.5f;	// 半边长度 面片以原点为中心
+
+		// XZ平面上的正方形 y=0 法线+Y
+		// 顶点顺序保证从+Y方向看向该面时为逆时针 与frontFace=eCounterClockwise的正面判定一致
+		MeshStatic::SPosition arrPosition[4] = {
+			{-h, 0.f, -h}, {-h, 0.f, h}, { h, 0.f, -h}, { h, 0.f, h},
+		};
+
+		MeshStatic::SNormal arrNormal[4] = {
+			{0.f, 1.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 1.f, 0.f},
+		};
+
+		// UV与立方体+Y面一致 从+Y方向看向该面时贴图为正立方向
+		MeshStatic::SUV arrUV[4] = {
+			{0.f, 1.f}, {0.f, 0.f}, {1.f, 1.f}, {1.f, 0.f},
+		};
+
+		IMesh::VertexIndex arrIndex[6] = {
+			0, 1, 2,  2, 1, 3,
+		};
+
+		refMesh->SetVertexPosition(arrPosition, 4);
+		refMesh->SetNormal(arrNormal, 4);
+		refMesh->SetUV(arrUV, 4, 0);
+		refMesh->SetIndexBuffer(arrIndex, 6);
+		refMesh->SetPrimitive(vk::PrimitiveTopology::eTriangleList);
+
+		return refMesh;
+	}
 } // namespace LT

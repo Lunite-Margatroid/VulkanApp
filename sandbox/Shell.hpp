@@ -185,6 +185,16 @@ private:
 		return &iter->second;
 	}
 
+	// ---------------- 命令参数辅助 ----------------
+	// 参数转float 接受int/int64/float
+	static bool GetFloatValue(const ShellVar& var, float& fOut);
+	// 参数转int64 只接受整数
+	static bool GetIntValue(const ShellVar& var, int64_t& nOut);
+	// 读取Shell变量中的节点ID 变量不存在或类型不符时返回INVALID_NODE_ID
+	LT::NodeID GetNodeVarID(std::string_view strVarName);
+	// 把节点挂到当前场景(SELECTED_S)下 SELECTED_S缺失时不挂载
+	void AttachToSelectedScene(LT::NodeID nNode);
+
 	template<typename ... Args>
 	void RegisterCommand(FuncEngineCall func, Args ... keys) {
 		std::vector<std::string_view> vecKeys;

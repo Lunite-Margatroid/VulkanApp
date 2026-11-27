@@ -4,6 +4,7 @@
 #include "Engine.h"
 
 #include <array>
+#include <limits>
 #include <map>
 #include <string>
 #include <string_view>
@@ -217,6 +218,24 @@ void LuaScriptEngine::RegisterBinding()
 	// ---------- node ---------------
 	sol::table node = engine["node"].get_or_create<sol::table>();
 
+	// 创建普通节点 不挂到场景下 可用node.rebase挂载
+	node.set_function("create", [this]()->int64_t {
+		LT::NodeID nNode = LT::INVALID_NODE_ID;
+		EngineCallCheck(m_pEngine->CreateSceneNode(nNode, LT::NodeType::eNode));
+		if (nNode != LT::INVALID_NODE_ID)
+		{
+			m_setNode.insert(nNode);
+		}
+		return nNode;
+		}
+	);
+
+	// 把nParentNode设为nChildNode的父节点
+	node.set_function("rebase", [this](int64_t nParentNode, int64_t nChildNode) {
+		EngineCallCheck(m_pEngine->SceneNodeRebase(nParentNode, nChildNode));
+		}
+	);
+
 	node.set_function("position", [this](int64_t nNodeID, const LuaVec3& pos) {
 		EngineCallCheck(m_pEngine->SetSceneNodePosition(nNodeID, ToArray(pos)));
 		});
@@ -255,10 +274,38 @@ void LuaScriptEngine::RegisterBinding()
 		}
 	);
 
-	mesh.set_function("sphere", [this](float fRadius, uint32_t nLongSubdivision, uint32_t nLatSubdivision,
+	mesh.set_function("sphere", [this](float fRadius, int64_t nLongSubdivision, int64_t nLatSubdivision,
 		sol::optional<int64_t> optParent)->int64_t {
+		// 经细分最小3 纬细分最小1 (见MeshManager::CreateSphere)
+		const int64_t nMaxSubdivision = static_cast<int64_t>(std::numeric_limits<uint32_t>::max());
+		if (nLongSubdivision < 3 || nLatSubdivision < 1 ||
+			nLongSubdivision > nMaxSubdivision || nLatSubdivision > nMaxSubdivision)
+		{
+			LOG_WARNING("Lua. node.mesh.sphere: long_sub must >= 3 and lat_sub must >= 1");
+			return LT::INVALID_NODE_ID;
+		}
+
 		LT::NodeID nNode = LT::INVALID_NODE_ID;
-		EngineCallCheck(m_pEngine->CreateSphereMeshNode(nNode, fRadius, nLongSubdivision, nLatSubdivision));
+		EngineCallCheck(m_pEngine->CreateSphereMeshNode(nNode, fRadius,
+			static_cast<uint32_t>(nLongSubdivision), static_cast<uint32_t>(nLatSubdivision)));
+		if (nNode == LT::INVALID_NODE_ID)
+		{
+			return nNode;
+		}
+		m_setNode.insert(nNode);
+
+		LT::NodeID nParent = optParent.value_or(m_nMainScene);
+		if (nParent != LT::INVALID_NODE_ID)
+		{
+			EngineCallCheck(m_pEngine->SceneNodeRebase(nParent, nNode));
+		}
+		return nNode;
+		}
+	);
+
+	mesh.set_function("plane", [this](float fSideLength, sol::optional<int64_t> optParent)->int64_t {
+		LT::NodeID nNode = LT::INVALID_NODE_ID;
+		EngineCallCheck(m_pEngine->CreatePlaneMeshNode(nNode, fSideLength));
 		if (nNode == LT::INVALID_NODE_ID)
 		{
 			return nNode;
@@ -275,45 +322,52 @@ void LuaScriptEngine::RegisterBinding()
 	);
 
 	// ---------- light -------------
+	// 灯光函数同时绑定到engine.light和engine.node.light 两种写法等价
+	auto BindLight = [this](sol::table light) {
+		light.set_function("create", [this](const std::string& strType, sol::optional<int64_t> optParent)->int64_t {
+			auto iter = GetLightTypeMap().find(strType);
+			if (iter == GetLightTypeMap().end())
+			{
+				LOG_WARNING("Lua. Unknown light type: %s", strType.c_str());
+				return LT::INVALID_NODE_ID;
+			}
+
+			LT::NodeID nNode = LT::INVALID_NODE_ID;
+			EngineCallCheck(m_pEngine->CreateLightNode(nNode, optParent.value_or(m_nMainScene), iter->second));
+			if (nNode != LT::INVALID_NODE_ID)
+			{
+				m_setNode.insert(nNode);
+			}
+			return nNode;
+			}
+		);
+
+		light.set_function("color", [this](int64_t nNodeID, const LuaVec3& color) {
+			EngineCallCheck(m_pEngine->SetLightColor(nNodeID, ToArray(color)));
+			});
+
+		light.set_function("range", [this](int64_t nNodeID, float fRange) {
+			EngineCallCheck(m_pEngine->SetLightRange(nNodeID, fRange));
+			});
+
+		light.set_function("radius", [this](int64_t nNodeID, float fRadius) {
+			EngineCallCheck(m_pEngine->SetLightRadius(nNodeID, fRadius));
+			});
+
+		light.set_function("rectSize", [this](int64_t nNodeID, float fU, float fV) {
+			EngineCallCheck(m_pEngine->SetLightRectSize(nNodeID, std::array<float, 2>{ fU, fV }));
+			});
+
+		light.set_function("spotRadian", [this](int64_t nNodeID, float fInner, float fOuter) {
+			EngineCallCheck(m_pEngine->SetLightSpotRadian(nNodeID, std::array<float, 2>{ fInner, fOuter }));
+			});
+		};
+
 	sol::table light = engine["light"].get_or_create<sol::table>();
+	BindLight(light);
 
-	light.set_function("create", [this](const std::string& strType, sol::optional<int64_t> optParent)->int64_t {
-		auto iter = GetLightTypeMap().find(strType);
-		if (iter == GetLightTypeMap().end())
-		{
-			LOG_WARNING("Lua. Unknown light type: %s", strType.c_str());
-			return LT::INVALID_NODE_ID;
-		}
-
-		LT::NodeID nNode = LT::INVALID_NODE_ID;
-		EngineCallCheck(m_pEngine->CreateLightNode(nNode, optParent.value_or(m_nMainScene), iter->second));
-		if (nNode != LT::INVALID_NODE_ID)
-		{
-			m_setNode.insert(nNode);
-		}
-		return nNode;
-		}
-	);
-
-	light.set_function("color", [this](int64_t nNodeID, const LuaVec3& color) {
-		EngineCallCheck(m_pEngine->SetLightColor(nNodeID, ToArray(color)));
-		});
-
-	light.set_function("range", [this](int64_t nNodeID, float fRange) {
-		EngineCallCheck(m_pEngine->SetLightRange(nNodeID, fRange));
-		});
-
-	light.set_function("radius", [this](int64_t nNodeID, float fRadius) {
-		EngineCallCheck(m_pEngine->SetLightRadius(nNodeID, fRadius));
-		});
-
-	light.set_function("rectSize", [this](int64_t nNodeID, float fU, float fV) {
-		EngineCallCheck(m_pEngine->SetLightRectSize(nNodeID, std::array<float, 2>{ fU, fV }));
-		});
-
-	light.set_function("spotRadian", [this](int64_t nNodeID, float fInner, float fOuter) {
-		EngineCallCheck(m_pEngine->SetLightSpotRadian(nNodeID, std::array<float, 2>{ fInner, fOuter }));
-		});
+	sol::table nodeLight = node["light"].get_or_create<sol::table>();
+	BindLight(nodeLight);
 }
 
 bool LuaScriptEngine::RunFile(std::string_view strFilePath)
