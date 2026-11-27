@@ -18,9 +18,6 @@ namespace LT {
 		DisplayDevice* m_pDisplayDevice;
 		View* m_pView;
 
-		// 在不同Pipeline之间使用的信号量
-		std::array<std::array<vk::Semaphore, RENDERER_SEMPHORE_COUNT>, RENDERER_DEFAULT_FLIGHT_FRAME_NUM> m_arrSemphores;
-
 	public:
 		Renderer();
 		~Renderer();

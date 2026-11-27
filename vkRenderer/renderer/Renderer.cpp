@@ -26,24 +26,10 @@ namespace LT {
 
 		m_pRenderView.reset(new RenderViewSingleCamera());
 
-		for (int i = 0; i < m_arrSemphores.size(); ++i)
-		{
-			for (int j = 0; j < m_arrSemphores[i].size(); ++j)
-			{
-				m_arrSemphores[i][j] = device.createSemaphore(vk::SemaphoreCreateInfo({}));
-			}
-		}
 	}
 	Renderer::~Renderer()
 	{
 		VK_CONTEXT_DEVICE;
-		for (int i = 0; i < m_arrSemphores.size(); ++i)
-		{
-			for (int j = 0; j < m_arrSemphores[i].size(); ++j)
-			{
-				device.destroySemaphore(m_arrSemphores[i][j]);
-			}
-		}
 
 		m_pRenderView.reset();
 	}
@@ -69,7 +55,6 @@ namespace LT {
 
 		// Update RenderView
 		Camera* pCamera = m_pView->GetCamera();
-		std::array<vk::Semaphore, RENDERER_SEMPHORE_COUNT>& arrSemphore = m_arrSemphores[nFlightFrameIndex];
 
 
 		m_pRenderView->SetCameraPos(pCamera->GetEye());
@@ -106,42 +91,8 @@ namespace LT {
 			{
 				nPipelineCounter += 1;
 
-				//bool bLastPipeline = (i == layers.size() - 1) && (j == pipelines.size() - 1);
-
-				//sPipelineExecuteInfo.vecSemSignal.clear();
-				//if (bLastPipeline)
-				//{
-				//	sPipelineExecuteInfo.vecSemSignal.push_back(sInOutFrameInfo.semDrawing);
-				//}
-				//else
-				//{
-				//	sPipelineExecuteInfo.vecSemSignal.push_back(arrSemphore[nPipelineCounter % RENDERER_SEMPHORE_COUNT]);
-				//}
-
-				//if (bFirstPipeline)
-				//{
-				//	bFirstPipeline = false;
-				//	sPipelineExecuteInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
-				//	sPipelineExecuteInfo.vecSemWait.push_back(sInOutFrameInfo.semAcquiring);
-				//}
-				//else
-				//{
-				//	sPipelineExecuteInfo.vecSemWaitMask.clear();
-				//	sPipelineExecuteInfo.vecSemWait.clear();
-
-				//	sPipelineExecuteInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
-				//	sPipelineExecuteInfo.vecSemWait.push_back(arrSemphore[(nPipelineCounter - 1) % RENDERER_SEMPHORE_COUNT]);
-				//}
-
 				pipelines[j]->Resize(sInOutFrameInfo.nWidth, sInOutFrameInfo.nHeight);
 				pipelines[j]->Execute(sPipelineExecuteInfo);
-				if (sPipelineExecuteInfo.refFence)
-				{
-					for (int i = 0; i < sPipelineExecuteInfo.vecColorClear.size(); ++i)
-					{
-						sPipelineExecuteInfo.vecColorClear[i] = false;
-					}
-				}
 			}
 		}
 

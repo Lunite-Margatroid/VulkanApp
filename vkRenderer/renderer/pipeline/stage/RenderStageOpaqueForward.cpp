@@ -22,8 +22,8 @@ namespace LT {
 	}
 	void RenderStageOpaqueForward::Execute(StageExecuteInfo& sInOutExecuteInfo)
 	{
-		if (sInOutExecuteInfo.mapRenderEntity.size() <= 0)
-			return;
+		//if (sInOutExecuteInfo.mapRenderEntity.size() <= 0)
+		//	return;
 		const FlightFrameIndex nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
 		const bool bNeedOutTransition = OutNeedTransiton(sInOutExecuteInfo.vecRenderTarget);
 
@@ -34,11 +34,6 @@ namespace LT {
 		sStageBeginInfo.nDepthBufferID = sInOutExecuteInfo.nDepthBufferID;
 		sStageBeginInfo.vecRenderTarget = sInOutExecuteInfo.vecRenderTarget;
 		sStageBeginInfo.nFlightFrameIndex = nFlightFrameIndex;
-		//sStageBeginInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
-		//sStageBeginInfo.vecSemWait = barrierStageBegin.GetWaitSemaphores();
-		//sStageBeginInfo.vecSemWaitMask = sInOutExecuteInfo.vecSemWaitMask;
-		//sStageBeginInfo.vecSemSignal.push_back(m_arrSemTransitionBegin[nFlightFrameIndex]);
-		//sStageBeginInfo.vecSemSignal.push_back(barrierStageBegin.GetSignalSemaphore());
 		sStageBeginInfo.refFence = sInOutExecuteInfo.refFence;
 		StageBegin(sStageBeginInfo);
 
@@ -76,8 +71,13 @@ namespace LT {
 
 			for (int i = 0; i < sInOutExecuteInfo.vecRenderTarget.size(); ++i)
 			{
-				sBeginInfo.vecColorLoadOp.push_back((bFirstDraw && sInOutExecuteInfo.vecColorClear[i]) ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad);
+				bool bClear = bFirstDraw && sInOutExecuteInfo.vecColorClear[i];
+				sBeginInfo.vecColorLoadOp.push_back(bClear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad);
 				sBeginInfo.vecColorStoreOp.push_back(vk::AttachmentStoreOp::eStore);
+				if (bClear)
+				{
+					sInOutExecuteInfo.vecColorClear[i] = false;
+				}
 			}
 
 			DrawBegin(sBeginInfo);
@@ -137,25 +137,7 @@ namespace LT {
 			}
 
 			sEndInfo.nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
-			//if (bFirstDraw)
-			//{
-			//	// 等待Transition
-			//	sEndInfo.vecSemWait.push_back(m_arrSemTransitionBegin[sInOutExecuteInfo.nFlightFrameIndex]);
-			//	sEndInfo.vecSemWaitMask.push_back(vk::PipelineStageFlagBits::eAllCommands);
-			//}
 
-			//if (bLastDraw) {
-			//	if (bNeedOutTransition)
-			//	{
-			//		// 发射Semaphore 让Transition等待
-			//		sEndInfo.vecSemSignal.push_back(m_arrSemTransitionEnd[sInOutExecuteInfo.nFlightFrameIndex]);
-			//	}
-			//	else
-			//	{
-			//		// 如果不需要Transition 那么就把外部的Semaphore发射出去
-			//		sEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
-			//	}
-			//}
 
 			auto barrierDraw = SemaphoreManager::Barrier(nFlightFrameIndex, fenceDraw);
 
@@ -168,52 +150,6 @@ namespace LT {
 			fenceDraw = sEndInfo.refFence;
 			bFirstDraw = false;
 		}
-
-		//EntityDrawInfo sDrawInfo;
-		//sDrawInfo.nWidth = sInOutExecuteInfo.nWidth;
-		//sDrawInfo.nHeight = sInOutExecuteInfo.nHeight;
-		//sDrawInfo.nFlightFrameIndex = sInOutExecuteInfo.nFlightFrameIndex;
-		//sDrawInfo.nDepthBuffer = sInOutExecuteInfo.nDepthBufferID;
-		//sDrawInfo.vecRenderTargets = sInOutExecuteInfo.vecRenderTarget;
-		//sDrawInfo.pRenderView = sInOutExecuteInfo.pRenderView;
-		//sDrawInfo.eRenderStage = GetRenderStageType();
-		//sDrawInfo.bClear = true;
-
-		//if (sInOutExecuteInfo.vecRenderEntity.size() >= 2)
-		//{
-		//	// 第一个渲染实体
-		//	// 等待Transition
-		//	sDrawInfo.vecSemWait.push_back(m_arrSemTransitionBegin[sInOutExecuteInfo.nFlightFrameIndex]);
-		//	sDrawInfo.vecSemWaitMasks.push_back(vk::PipelineStageFlagBits::eAllCommands);
-
-		//	sInOutExecuteInfo.vecRenderEntity.front()->Draw(sDrawInfo);
-
-		//	sDrawInfo.vecSemWait.clear();
-		//	sDrawInfo.vecSemWaitMasks.clear();
-
-		//	sDrawInfo.bClear = false;
-		//	// 第2到n个渲染实体
-		//	for (int i = 1; i < sInOutExecuteInfo.vecRenderEntity.size() - 1; i++)
-		//	{
-		//		sInOutExecuteInfo.vecRenderEntity[i]->Draw(sDrawInfo);
-		//	}
-		//	// 最后一个渲染实体
-
-		//	sDrawInfo.vecSemSignal.push_back(m_arrSemTransitionEnd[sInOutExecuteInfo.nFlightFrameIndex]);
-
-		//	sInOutExecuteInfo.vecRenderEntity.back()->Draw(sDrawInfo);
-		//}
-		//else if(sInOutExecuteInfo.vecRenderEntity.size() > 0)
-		//{
-		//	// 等待Transition
-		//	sDrawInfo.vecSemWait.push_back(m_arrSemTransitionBegin[sInOutExecuteInfo.nFlightFrameIndex]);
-		//	sDrawInfo.vecSemWaitMasks.push_back(vk::PipelineStageFlagBits::eAllCommands);
-
-		//	sDrawInfo.vecSemSignal.push_back(m_arrSemTransitionEnd[sInOutExecuteInfo.nFlightFrameIndex]);
-
-		//	sInOutExecuteInfo.vecRenderEntity.front()->Draw(sDrawInfo);
-		//}
-		//sDrawInfo.refFence.WaitFence();
 
 		// ---------------- Stage End -------------
 		// Barrier
@@ -228,10 +164,7 @@ namespace LT {
 			//sStageEndInfo.vecSemWait.push_back(m_arrSemTransitionEnd[nFlightFrameIndex]);
 			sStageEndInfo.vecSemWait = barrierStageEnd.GetWaitSemaphores();
 			sStageEndInfo.vecSemWaitMask.resize(sStageEndInfo.vecSemWait.size(), vk::PipelineStageFlagBits::eAllGraphics);
-			//if (!sInOutExecuteInfo.vecSemSignal.empty())
-			//{
-			//	sStageEndInfo.vecSemSignal = sInOutExecuteInfo.vecSemSignal;
-			//}
+
 			StageEnd(sStageEndInfo);
 
 			sInOutExecuteInfo.refFence = sStageEndInfo.refFence;

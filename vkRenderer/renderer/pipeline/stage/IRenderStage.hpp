@@ -21,10 +21,9 @@ namespace LT {
 		std::map<MaterialID, std::vector<EntityRender*>> mapRenderEntity;
 		RenderView* pRenderView;
 
-		std::vector<vk::Semaphore> vecSemWait;
+		// 暂时没有使用
+		// submit时 输入的总是eAllGraphic
 		std::vector<vk::PipelineStageFlags> vecSemWaitMask;
-
-		std::vector<vk::Semaphore> vecSemSignal;
 
 		// 当前Stage最后一次Submit的Fence
 		// 通常作为输出参数
@@ -33,6 +32,7 @@ namespace LT {
 		// 该Stage实例所属的Pipeline
 		Pipeline* pPipeline;
 		// 该Stage是否需要clear color attachment
+		// 一个inout参数
 		std::vector<bool> vecColorClear;
 		bool bDepthClear;
 

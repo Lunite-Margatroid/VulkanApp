@@ -803,7 +803,7 @@ void Shell::Execute()
 void Shell::Terminate()
 {
 	m_bShellRun.store(false);
-	m_thrShell.join();
+	m_thrShell.detach();
 }
 
 bool Shell::Flush()

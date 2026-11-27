@@ -218,9 +218,6 @@ namespace LT {
 		sStageExecuteInfo.vecRenderTarget = sInOutPipelineInfo.vecRenderTargets;
 		sStageExecuteInfo.mapRenderEntity[MATERIAL_ID_2D_0] = m_vecLogLine;
 		sStageExecuteInfo.pRenderView = nullptr;
-		//sStageExecuteInfo.vecSemWait = sInOutPipelineInfo.vecSemWait;
-		//sStageExecuteInfo.vecSemWaitMask = sInOutPipelineInfo.vecSemWaitMask;
-		//sStageExecuteInfo.vecSemSignal = sInOutPipelineInfo.vecSemSignal;
 
 		sStageExecuteInfo.pPipeline = this;
 		
@@ -232,10 +229,8 @@ namespace LT {
 
 		m_stageLog.Execute(sStageExecuteInfo);
 
-		if (sStageExecuteInfo.refFence)
-		{
-			sInOutPipelineInfo.refFence = sStageExecuteInfo.refFence;
-		}
+		sInOutPipelineInfo.refFence = sStageExecuteInfo.refFence;
+		sInOutPipelineInfo.vecColorClear = sStageExecuteInfo.vecColorClear;
 	}
 
 	void PipelineLog::SetColorInType(const std::vector<PipelineIOType>& vecColorInType)

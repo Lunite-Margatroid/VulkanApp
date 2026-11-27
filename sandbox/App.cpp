@@ -114,6 +114,15 @@ App::~App()
 {
 	m_pShell.reset();
 
+	m_pEngine->DestroyDebugScene();
+	m_pEngine->DeleteDisplaySurface(m_pDisplaySurface);
+
+	SDL_Vulkan_DestroySurface(m_pEngine->GetVkInstance(), m_vkSurface, nullptr);
+
+	delete m_pEngine;
+
+	SDL_DestroyWindow(m_pWindow);
+	
 	SDL_Quit();
 }
 

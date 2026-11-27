@@ -58,15 +58,10 @@ namespace LT {
 
 		std::vector<ImageID> vecRenderTargets;
 
-
-		// acquire发出的信号
-		vk::Semaphore semAcquiring;
-
-		// 渲染完成
-		vk::Semaphore semDrawing;
-
-		// 当前帧最后一次Submit的Fence
-		// 通常作为输出参数
+		
+		// inout参数
+		// 输入为acquireNextImage的Fence
+		// 输出当前帧最后一次Submit的Fence
 		FenceRef fenceDrawing;
 
 		uint32_t nWidth;
@@ -90,13 +85,9 @@ namespace LT {
 
 		std::vector<ImageID> vecRenderTargets;
 
-		std::vector<vk::Semaphore> vecSemWait;
 		std::vector<vk::PipelineStageFlags> vecSemWaitMask;
 
-		std::vector<vk::Semaphore> vecSemSignal;
-
-		// 当前Pipeline最后一次Submit的Fence
-		// 通常作为输出参数
+		// 通常作为inout参数
 		FenceRef refFence;
 
 		uint32_t nWidth;
@@ -106,6 +97,7 @@ namespace LT {
 		std::vector<std::pair<LightUniformBuffer, std::bitset<LIGHT_GROUP_MAX_COUNT>>> vecLightBuffer;
 
 		// 该Pipeline是否需要clear color attachment
+		// 一个inout参数
 		std::vector<bool> vecColorClear;
 	};
 

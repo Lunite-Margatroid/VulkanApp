@@ -82,8 +82,6 @@ namespace LT {
 			sFrameInfo.nFrameIndex = m_nFrameIndex;
 			sFrameInfo.nFightFrameIndex = nFlightFrameIndex;
 			sFrameInfo.vecRenderTargets.push_back(m_nSwapChainImageID);
-			//sFrameInfo.semAcquiring = m_vecSemAcquiring[nFlightFrameIndex];
-			//sFrameInfo.semDrawing = m_vecSemDrawing[nFlightFrameIndex];
 			sFrameInfo.nWidth = m_nWidth;
 			sFrameInfo.nHeight = m_nHeight;
 			sFrameInfo.fenceDrawing = m_fences[nFlightFrameIndex];

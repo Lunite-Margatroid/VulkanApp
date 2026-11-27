@@ -1,6 +1,7 @@
 #pragma once
 #include "FenceManager.hpp"
 #include "DescriptorSetWrapper.hpp"
+#include "SemaphoreBarrier.hpp"
 namespace LT {
 	struct CmdSubmitInfo {
 		std::vector<vk::Semaphore> vecSemToWait;
@@ -39,6 +40,7 @@ namespace LT {
 		void Init(vk::Device device, vk::Queue cmdQueue, vk::CommandPool vkCmdPool);
 		void Destroy(vk::Device device, vk::CommandPool vkCmdPool);
 		FenceRef Submit(const CmdSubmitInfo& sSubmitInfo);
+		FenceRef BarrierSubmit(const SemaphoreBarrier& barrier, std::span<vk::PipelineStageFlags> vecSemWaitMasks);
 
 		void PipelineBarrier2(const vk::DependencyInfo sDependencyInfo);
 		void Begin(const vk::CommandBufferBeginInfo& sBeginInfo);

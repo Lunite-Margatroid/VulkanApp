@@ -74,6 +74,38 @@ namespace LT {
 
 		return cmdBufferWithFence.refFence;
 	}
+	FenceRef CommandBufferWrapper::BarrierSubmit(const SemaphoreBarrier& barrier, std::span<vk::PipelineStageFlags> vecSemWaitMasks)
+	{
+		size_t index = m_qCmdBuffers.front();
+		CmdBufferWithFence& cmdBufferWithFence = Front();
+
+		vk::SubmitInfo si = {};
+		si
+			.setCommandBufferCount(1)
+			.setPCommandBuffers(&cmdBufferWithFence.cmdBuffer)
+			;
+
+		// 需要等待的Semaphore
+		if (barrier.GetWaitSemaphores().size() > 0)
+		{
+			si.setWaitSemaphores(barrier.GetWaitSemaphores());
+			si.setWaitDstStageMask(vecSemWaitMasks);
+		}
+		// 需要发射的Semaphore
+		if (barrier.GetSignalSemaphore())
+		{
+			si.setSignalSemaphores(barrier.GetSignalSemaphore());
+		}
+
+		m_queue.submit(
+			si,
+			cmdBufferWithFence.refFence.GetNativeFence()
+		);
+		m_qCmdBuffers.pop();
+		m_qCmdBuffers.push(index);
+
+		return cmdBufferWithFence.refFence;
+	}
 	void CommandBufferWrapper::PipelineBarrier2(const vk::DependencyInfo sDependencyInfo)
 	{
 		Front().cmdBuffer.pipelineBarrier2(sDependencyInfo);

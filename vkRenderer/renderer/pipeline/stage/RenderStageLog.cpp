@@ -109,13 +109,7 @@ namespace LT {
 		sStageBeginInfo.nDepthBufferID = sInOutExecuteInfo.nDepthBufferID;
 		sStageBeginInfo.vecRenderTarget = sInOutExecuteInfo.vecRenderTarget;
 		sStageBeginInfo.nFlightFrameIndex = nFlightFrameIndex;
-		//sStageBeginInfo.vecSemWait = sInOutExecuteInfo.vecSemWait;
-		//sStageBeginInfo.vecSemWaitMask = sInOutExecuteInfo.vecSemWaitMask;
-		//sStageBeginInfo.vecSemWait = barrierStageBegin.GetWaitSemaphores();
-		//sStageBeginInfo.vecSemWaitMask.resize(sStageBeginInfo.vecSemWait.size(), vk::PipelineStageFlagBits::eAllGraphics);
-		//sStageBeginInfo.vecSemSignal.push_back(barrierStageBegin.GetSignalSemaphore());
 		sStageBeginInfo.refFence = sInOutExecuteInfo.refFence;
-		//sStageBeginInfo.vecSemSignal.push_back(m_arrSemTransitionBegin[nFlightFrameIndex]);
 		StageBegin(sStageBeginInfo);
 		sInOutExecuteInfo.refFence = sStageBeginInfo.refFence;
 		// -------------------------- Draw ---------------------------------
@@ -136,6 +130,12 @@ namespace LT {
 				.setStoreOp(vk::AttachmentStoreOp::eStore)
 				.setClearValue(colorClear)
 				;
+
+			if (sInOutExecuteInfo.vecColorClear[i])
+			{
+				sInOutExecuteInfo.vecColorClear[i] = false;
+			}
+
 			vecColorAttachmentInfo.push_back(rai);
 		}
 

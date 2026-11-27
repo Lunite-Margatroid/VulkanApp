@@ -112,9 +112,7 @@ namespace LT {
 			
 			TransitionSubmitInfo sSubmitInfo;
 			sSubmitInfo.nFlightFrameIndex = sInOutBeginInfo.nFlightFrameIndex;
-			//sSubmitInfo.vecSemToSignal = sInOutBeginInfo.vecSemSignal;
-			//sSubmitInfo.vecSemToWait = sInOutBeginInfo.vecSemWait;
-			//sSubmitInfo.vecSemWaitMasks = sInOutBeginInfo.vecSemWaitMask;
+
 			sSubmitInfo.vecSemToSignal .push_back( barrier.m_vkSemaphoreToSignal);
 			sSubmitInfo.vecSemToWait = barrier.GetWaitSemaphores();
 			sSubmitInfo.vecSemWaitMasks.resize(sSubmitInfo.vecSemToWait.size(), vk::PipelineStageFlagBits::eAllGraphics);

@@ -30,8 +30,6 @@ namespace LT {
 		// debugScene
 		CameraID m_nCameraID;
 		NodeID m_nMainScene;
-		ImageID m_nImageID;
-		std::vector<MaterialID> m_vecMtlID;
 		View* m_pView;
 
 	private:

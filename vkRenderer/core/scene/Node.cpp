@@ -14,6 +14,9 @@ namespace LT {
 	}
 
 	Node::~Node() {
+		if (Node* pParent = GetParent()) {
+			pParent->RemoveChild(this);
+		}
 		// 父节点拥有子节点的所有权 析构时级联释放所有子节点
 		for (Node* pChild : m_listChildren)
 		{
