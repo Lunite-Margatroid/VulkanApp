@@ -15,7 +15,7 @@ Repo to Learn vulkan
 
 ## glm
 
-## Freeype
+## Freetype
 
 ## HarfBuzz
 
@@ -23,27 +23,108 @@ Repo to Learn vulkan
 
 ## sol2
 
+# 编译对象
 
+## vkRendrerer
 
+静态库
 
+基于Vulkan的渲染器，本项目的核心(core).
+
+## sandbox
+
+可执行程序
+
+用于启动渲染器的可执行程序。
+
+## logger
+
+静态库
+
+日志。被每一个编译对象依赖。
+
+## LunarImageIO
+
+静态库
+
+包装了`OpenImageIO`. 
+
+## LunarTextIO
+
+静态库
+
+包装了`Freetype`和`HarfBuzz`. 
+
+## SlangCompiler
+
+静态库
+
+slang编译器。包装了`slang` lib. 
+
+## SlangTest
+
+可执行程序
+
+测试着色器编译，长时间未维护，无法编译。
+
+## TextTest
+
+可执行程序
+
+测试`LunarTextIO`. 
+
+## TestSol2
+
+可执行程序
+
+测试`lua`和`sol2`. 
+
+## CopyAsset
+
+没有编译任务。把资源文件拷贝到输出目录。
+
+## CopyDlls
+
+没有编译任务。把.dll拷贝到输出目录。
+
+## CopySlang
+
+没有编译任务。把.slang拷贝到输出目录。
 
 # 构建
+
+> 推荐使用CMake构建
+
+## 依赖库
 
 设置变量，指定依赖库安装位置。
 
 `XXXX_INSTALLED_DIR` 表示特定库安装的位置
 
-OpenImageIO安装位置`OIIO_INSTALLED_DIR`
+请将第三方库的安装位置输入给CMake
 
-glm安装位置 `GLM_INSTALLED_DIR`
+| 第三方库              | 指示安装位置的变量       |
+| --------------------- | ------------------------ |
+| vulkan                | -                        |
+| OpenImageIO           | `OIIO_INSTALLED_DIR`     |
+| glm                   | `GLM_INSTALLED_DIR`      |
+| SDL3                  | `SDL3_INSTALLED_DIR`     |
+| VulkanMemoryAllocator | `VMA_INSTALLED_DIR`      |
+| slang                 | `SLANG_INSTALLED_DIR`    |
+| Freetype              | `FREETYPE_INSTALLED_DIR` |
+| HarfBuzz              | `HARFBUZZ_INSTALLED_DIR` |
+| Lua                   | `LUA_INSTALLED_DIR`      |
+| sol2                  | `SOL2_INSTALLED_DIR`     |
 
-SDL安装位置 `SDL3_INSTALLED_DIR`
 
-部分库会使用`find_package`
 
-如果没有找到，使用`XXXX_INSTALLED_DIR`链接。
+Vulkan库会使用`find_package`寻找。自行配置好环境。推荐使用LunarG提供的安装包。
 
 ## Windows
+
+在Windows上构建。
+
+自行安装或者使用仓库提供的第三方库的安装脚本。
 
 ### 安装Freetype
 
@@ -149,7 +230,7 @@ Slang, VulkanMemoryAllocator, SDL3, glm是可选项，请勾选。
 
 vulkan可以被`find_package`找到。
 
-### 命令
+### 构建命令
 
 ```bat
 cmake 	-D OIIO_INSTALLED_DIR=%CD%/vendor/dist ^
@@ -166,5 +247,5 @@ cmake 	-D OIIO_INSTALLED_DIR=%CD%/vendor/dist ^
 
 ## Linux
 
-
+长时间未维护，不保证可以编译。
 
