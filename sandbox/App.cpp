@@ -63,56 +63,64 @@ App::App()
 
 	m_pEngine->CreateDebugScene(m_pDisplaySurface);
 
-	m_pShell = std::make_unique<Shell>(m_pEngine);
+	m_pLua = std::make_unique<LuaScriptEngine>(m_pEngine);
+
+	m_pShell = std::make_unique<Shell>(m_pEngine, m_pLua.get());
 
 	std::vector<LT::NodeID> vecRootNodes;
 	m_pEngine->GetRootSceneNodes(vecRootNodes);
 	if (vecRootNodes.size() > 0)
 	{
 		m_pShell->SetShellVar(Shell::SELECTED_S, vecRootNodes[0]);
+		m_pLua->SetMainSceneNode(vecRootNodes[0]);
 	}
 
-	m_pShell->Command("img.file \"./TestAsset/UVTest.png\"");
-	m_pShell->Command("mtl \"Phong\"");
-	m_pShell->Command("mtl.prop $SELECTED_MTL \"TexDiffuse\" $SELECTED_IMG");
-	m_pShell->Command("mtl.prop $SELECTED_MTL \"ColorDiffuse\" vec(1.0,1.0,1.0)");
-	m_pShell->Command("mtl.prop $SELECTED_MTL \"Roughness\" 0.5");
-	m_pShell->Command("mtl.prop $SELECTED_MTL \"IOR\" 1.5");
-	m_pShell->Command("mtl.prop $SELECTED_MTL \"Metalness\" 0");
-	m_pShell->Command("mtl.prop $SELECTED_MTL \"ColorSpecular\" vec(1.0,1.0,1.0)");
+	m_pShell->Command("lua.file \"./TestAsset/DemoScene001.lua\"");
 
-	m_pShell->Command("node.light \"LightDirectional\"");
-	m_pShell->Command("node.light.color $SELECTED_N vec(1,1,1)");
-
-	for (int i = 0; i < 400; i++)
-{
-
-		m_pShell->Command("node.mesh.cube 1.0");
-		m_pShell->Command("node.mtl $SELECTED_N $SELECTED_MTL");
-		
-		std::array<float, 3> position = LT::util::RandomGenerator::RandomSampleSphere(20.f);
-		std::array<float, 3> rotate{0, 0, 0};
-		rotate[0] = LT::util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f);
-		rotate[1] = LT::util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f);
-		rotate[2] = LT::util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f);
-
-		{
-			std::ostringstream oss;
-			oss << "node.position " << "$SELECTED_N " << "vec(" << position[0] << ',' << position[1] << ',' << position[2] << ")";
-			m_pShell->Command(oss.view());
-		}
-		{
-			std::ostringstream oss;
-			oss.clear();
-			oss << "node.eulerXYZ " << "$SELECTED_N " << "vec(" << rotate[0] << ',' << rotate[1] << ',' << rotate[2] << ")";
-			m_pShell->Command(oss.view());
-		}
-}
+//
+//	m_pShell->Command("img.file \"./TestAsset/UVTest.png\"");
+//	m_pShell->Command("mtl \"Phong\"");
+//	m_pShell->Command("mtl.prop $SELECTED_MTL \"TexDiffuse\" $SELECTED_IMG");
+//	m_pShell->Command("mtl.prop $SELECTED_MTL \"ColorDiffuse\" vec(1.0,1.0,1.0)");
+//	m_pShell->Command("mtl.prop $SELECTED_MTL \"Roughness\" 0.5");
+//	m_pShell->Command("mtl.prop $SELECTED_MTL \"IOR\" 1.5");
+//	m_pShell->Command("mtl.prop $SELECTED_MTL \"Metalness\" 0");
+//	m_pShell->Command("mtl.prop $SELECTED_MTL \"ColorSpecular\" vec(1.0,1.0,1.0)");
+//
+//	m_pShell->Command("node.light \"LightDirectional\"");
+//	m_pShell->Command("node.light.color $SELECTED_N vec(1,1,1)");
+//
+//	for (int i = 0; i < 400; i++)
+//{
+//
+//		m_pShell->Command("node.mesh.cube 1.0");
+//		m_pShell->Command("node.mtl $SELECTED_N $SELECTED_MTL");
+//		
+//		std::array<float, 3> position = LT::util::RandomGenerator::RandomSampleSphere(20.f);
+//		std::array<float, 3> rotate{0, 0, 0};
+//		rotate[0] = LT::util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f);
+//		rotate[1] = LT::util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f);
+//		rotate[2] = LT::util::RandomGenerator::UniformDistribution<float>(0, glm::pi<float>() * 2.f);
+//
+//		{
+//			std::ostringstream oss;
+//			oss << "node.position " << "$SELECTED_N " << "vec(" << position[0] << ',' << position[1] << ',' << position[2] << ")";
+//			m_pShell->Command(oss.view());
+//		}
+//		{
+//			std::ostringstream oss;
+//			oss.clear();
+//			oss << "node.eulerXYZ " << "$SELECTED_N " << "vec(" << rotate[0] << ',' << rotate[1] << ',' << rotate[2] << ")";
+//			m_pShell->Command(oss.view());
+//		}
+//}
 }
 
 App::~App()
 {
 	m_pShell.reset();
+
+	m_pLua.reset();
 
 	m_pEngine->DestroyDebugScene();
 	m_pEngine->DeleteDisplaySurface(m_pDisplaySurface);

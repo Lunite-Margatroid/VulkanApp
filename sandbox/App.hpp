@@ -25,6 +25,8 @@
 #include <windows.h>
 #endif
 
+#include "LuaScriptEngine.hpp"
+
 class App {
 private:
 	SDL_Window* m_pWindow;
@@ -35,6 +37,7 @@ private:
 	std::atomic<bool> m_bEngineRun;
 
 	std::unique_ptr<Shell> m_pShell;
+	std::unique_ptr<LuaScriptEngine> m_pLua;
 
 public:
 	App();

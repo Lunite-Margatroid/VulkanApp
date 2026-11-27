@@ -74,6 +74,20 @@ if(NOT DEFINED LUA_INSTALLED_DIR)
 	set(LUA_INSTALLED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/dist")
 endif()
 
+# 查询lua lib文件名
+set(LUA_LIB_NAME "lua")
+if(EXISTS "${LUA_INSTALLED_DIR}/include/lua.h")
+	file(STRINGS "${LUA_INSTALLED_DIR}/include/lua.h" _lua_major_line REGEX "^#define LUA_VERSION_MAJOR")
+	file(STRINGS "${LUA_INSTALLED_DIR}/include/lua.h" _lua_minor_line REGEX "^#define LUA_VERSION_MINOR")
+	string(REGEX MATCH "[0-9]+" _lua_major "${_lua_major_line}")
+	string(REGEX MATCH "[0-9]+" _lua_minor "${_lua_minor_line}")
+	if(EXISTS "${LUA_INSTALLED_DIR}/lib/lua${_lua_major}${_lua_minor}.lib")
+		set(LUA_LIB_NAME "lua${_lua_major}${_lua_minor}")
+	endif()
+else()
+	message(FATAL_ERROR "Can not find lua header")
+endif()
+
 # sol2
 if(NOT DEFINED SOL2_INSTALLED_DIR)
 	set(SOL2_INSTALLED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/dist")

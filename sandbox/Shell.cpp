@@ -14,6 +14,7 @@
 
 #include "Timer.hpp"
 
+#include "LuaScriptEngine.hpp"
 
 namespace
 {
@@ -204,8 +205,9 @@ namespace
 	}
 }
 
-Shell::Shell(LT::Engine* pEngine)
+Shell::Shell(LT::Engine* pEngine, LuaScriptEngine* pLua)
 	:m_pEngine(pEngine)
+	,m_pLua(pLua)
 {
 #define IS_REAL(PType) (PType == LT::DataType::eInt64 || PType == LT::DataType::eFloat || PType == LT::DataType::eInt)
 
@@ -241,6 +243,22 @@ Shell::Shell(LT::Engine* pEngine)
 	// ----------------- 注册命令函数 ---------------------------
 	// 回调参数为std::vector<ShellVar> 每项携带数据类型与值
 	// 向量默认是float向量
+
+	// 调用lua
+	RegisterCommand(
+		[this](const std::vector<ShellVar>& vecParams) ->LT::EngineResult {
+			if (vecParams.size() < 1 || vecParams[0].m_eType != LT::DataType::eString)
+			{
+				return LT::EngineResult::eInvalidParam;
+			}
+
+			if (m_pLua->RunFile(vecParams[0].m_str))
+				return LT::EngineResult::eSuccess;
+			else
+				return LT::EngineResult::eFailed;
+		},
+		"lua","file"
+		);
 
 	// node.position
 	RegisterCommand(

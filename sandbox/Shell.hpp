@@ -26,6 +26,9 @@
 #include <vector>
 #include <set>
 
+
+class LuaScriptEngine;
+
 class Shell{
 
 public:
@@ -109,7 +112,10 @@ private:
 		{}
 	};
 	
+	// 没有所有权
 	LT::Engine* m_pEngine;
+	// 没有所有权
+	LuaScriptEngine* m_pLua;
 
 	CmdTree m_cmdTree;
 	
@@ -186,7 +192,7 @@ private:
 		m_cmdTree.AddFunc(vecKeys, func);
 	}
 public:
-	Shell(LT::Engine* pEngine);
+	Shell(LT::Engine* pEngine, LuaScriptEngine* pLua);
 	~Shell();
 	
 	// 字符串 "hello world"
